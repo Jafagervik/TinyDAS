@@ -1,11 +1,22 @@
-from src.trainer import Trainer
-from src.data import DataLoader
-from src.plots import *
+from typing import Any
+from src.dataset import DataSet
+from src.dataloader import DataLoader
 from src.utils import *
-from src.models.base import AE
+from src.models.ae import AE
+from tinygrad import TinyJit, GlobalCounters
+from tqdm import trange
+
+class Model: 
+    def __init__(self):
+        self.layers = [
+            nn.Linear(2137 * 7500, 1),
+            Tensor.sigmoid
+        ]
+
+    def __call__(self, x: Tensor) -> Tensor: return x.sequential(self.layers)
 
 
-def train():
+def main():
     DEBUG = 0
 
     args = parse_args()
@@ -15,31 +26,32 @@ def train():
 
     GPUS = get_gpus(config["gpus"])
 
+    ds = DataSet()
+    dl = DataLoader(dataset=ds, batch_size=config["batch_size"])
+
     print(f"Training on {GPUS}")
 
-    model = AE(
-        M=config["model_params"]["M"],
-        N=config["model_params"]["N"],
-        latent_dim=config["model_params"]["latent_dim"],
-        hidden_dim=config["model_params"]["hidden_dim"],
-    )
+    model = Model()
+    for k, x in nn.state.get_state_dict(model).items(): x.to_(GPUS)  # we put a copy of the model on every GPU
+    opt = nn.optim.Adam(nn.state.get_parameters(model))
 
-    for _, x in nn.state.get_state_dict(model).items(): x.to_(GPUS)  # we put a copy of the model on every GPU
-    opt = nn.optim.Adam(nn.state.get_parameters(model), lr=config["lr"])
+    @TinyJit
+    def step() -> Tensor:
+        with Tensor.train():
+            opt.zero_grad()
 
-    data = None
-    dl = DataLoader(data)
+            for data, _ in dl:
+                x = data.shard_(GPUS, axis=0).reshape(-1, 2137 * 7500)
 
-    if DEBUG > 1:
-        print(data.shape)
+                loss = model(x).sub(x).square().mean().backward()
+                opt.step()
+            return loss
+    
+    for epoch in (t:=trange(config["epochs"])):
+        GlobalCounters.reset()
+        loss = step()
+        t.set_description(f"loss: {loss.item():6.2f}")
 
-    trainer = Trainer(model, dl, opt, GPUS)
-
-    trainer.train(config["epochs"], **config)
 
 
-def anom_detect():
-    pass
-
-if __name__ == "__main__":
-    train()
+if __name__ == "__main__": main()

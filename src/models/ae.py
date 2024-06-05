@@ -3,7 +3,7 @@ from tinygrad import nn
 from ..loss import mse
 
 
-class AE(BaseAE):
+class AE:
     def __init__(self, **kwargs):
         self.M = kwargs["M"]
         self.N = kwargs["N"]

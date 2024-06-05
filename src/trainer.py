@@ -1,9 +1,10 @@
 from tinygrad import TinyJit
 from tinygrad.nn import Tensor
-from .data import DataLoader
+from .dataloader import DataLoader
 from .loss import mse
 from tqdm import trange
 from typing import List
+from tqdm import trange
 
 
 class Trainer: 

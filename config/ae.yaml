@@ -1,11 +1,12 @@
 epochs: 10
 lr: 0.001
 loss: "mse"
-bs: 5
+batch_size: 5
 name: "ae"
 dataset: "data/"
-gpus: 2
+gpus: 1
 M: 7500
 N: 2137
 hidden: 2048
 latent: 256
+seed: 1234
