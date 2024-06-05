@@ -3,10 +3,8 @@ from src.dataset import DataSet
 from src.dataloader import DataLoader
 from src.utils import *
 from src.trainer import Trainer
-from src.models.ae import AE
-from tinygrad import TinyJit, GlobalCounters, Tensor
+from tinygrad import  Tensor
 from tinygrad import nn
-from tqdm import trange
 
 class Model: 
     def __init__(self):
@@ -33,8 +31,9 @@ def main():
 
     print(f"Training on {GPUS}")
 
-    model = Model()
-    for _, x in nn.state.get_state_dict(model).items(): x.to_(GPUS)  # we put a copy of the model on every GPU
+    model = Model() 
+    # we put a copy of the model on every GPU
+    for _, x in nn.state.get_state_dict(model).items(): x.to_(GPUS) 
     opt = nn.optim.Adam(nn.state.get_parameters(model), lr=config["lr"])
 
     trainer = Trainer(model, dataloader=dl, optimizer=opt, devices=GPUS, **config)

@@ -1,5 +1,4 @@
 from tinygrad.nn import Tensor
-from tinygrad.dtype import dtypes
 
 import os
 from concurrent.futures import ThreadPoolExecutor
@@ -44,10 +43,3 @@ class DataSet():
         
         return {"data": all_data_tensor, "times": all_times_tensor}
 
-if __name__ == "__main__":
-    ds = DataSet()
-    print(ds)
-    print(len(ds))
-    print(ds.shape)
-    print(ds.rows)
-    print(ds.cols)

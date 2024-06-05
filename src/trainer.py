@@ -1,7 +1,6 @@
 from tinygrad import TinyJit, GlobalCounters
 from tinygrad.nn import Tensor
 from .dataloader import DataLoader
-from .losses import mse
 from typing import List
 from tqdm import trange
 from tinygrad.nn.optim import Optimizer
