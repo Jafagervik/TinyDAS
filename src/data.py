@@ -14,6 +14,10 @@ class DataLoader:
     def __call__(self):
         pass
 
+    def __iter__(self):
+        self.a = 1
+        return self
+
     def _read_das_matrix(self, das_path: str, transpose: bool = False):
         f = h5py.File(das_path, 'r')
         das_data = {
