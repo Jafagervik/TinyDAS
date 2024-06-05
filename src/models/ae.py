@@ -1,6 +1,6 @@
 from tinygrad.nn import Tensor
 from tinygrad import nn
-from ..loss import mse
+from ..losses import mse
 
 
 class AE:

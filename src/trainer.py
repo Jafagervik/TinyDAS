@@ -1,55 +1,40 @@
-from tinygrad import TinyJit
+from tinygrad import TinyJit, GlobalCounters
 from tinygrad.nn import Tensor
 from .dataloader import DataLoader
-from .loss import mse
-from tqdm import trange
+from .losses import mse
 from typing import List
 from tqdm import trange
+from tinygrad.nn.optim import Optimizer
 
 
 class Trainer: 
-    def __init__(self, model, dataloader: DataLoader, optimizer, gpus: List[str]) -> None:
+    def __init__(self, model, dataloader: DataLoader, optimizer: Optimizer, devices: List[str], **kwargs) -> None:
         self.model = model
         self.dataloader = dataloader
         self.optim = optimizer
-        self.gpus = gpus
+        self.gpus = devices
         self.best_loss = float("inf")
-        self.losses = []
+        self.epochs = kwargs["epochs"] if kwargs["epochs"] else 10
+        self.losses = [float(0)] * self.epochs
 
     @TinyJit
-    def _run_batch(self, data: Tensor, **kwargs):
+    def _run_epoch(self): 
         with Tensor.train():
-            self.optim.zero_grad()
+            # OPTIM ZERO GRAD
 
-            samples = Tensor.randint(512, high=X_train.shape[0])
-            Xt = data.shard_(self.gpus, axis=0)
-            
-            loss = self.model.loss_function().backward()
+            for data, _ in self.dataloader:
+                self.optim.zero_grad()
 
-            self.optim.step()
+                x = data.shard_(self.gpus, axis=0).reshape(-1, 2137 * 7500)
+                # Mse
+                loss = self.model(x).sub(x).square().mean().backward()
+                self.optim.step()
             return loss
 
-    def _run_epoch(self, epoch: int, **kwargs): 
-        print(f"Epoch {epoch + 1}")
-        for batch in self.dataloader:
-            loss = self._run_batch(batch, epoch, **kwargs)
-        self.losses.append(loss.item())
-
-    def train(self, epochs: int, **kwargs):
-        epochs = kwargs["epochs"]
-
-        print("Training...")
-        self.model.train()
-        for epoch in (t:= trange(epochs)):
-            self._run_epoch(epoch, **kwargs)
-        self._save_checkpoint(epochs, final=True)
-        pass
-
-    def test(self):
-        pass
-
-    def load(self):
-        pass
-    
-    def _save(self): pass
-        pass
+    def train(self):
+        print("Starting training...")
+        for epoch in (t := trange(self.epochs)):
+            GlobalCounters.reset()
+            loss = self._run_epoch()
+            self.losses[epoch] = loss.item()
+            t.set_description(f"Epoch: {epoch + 1} |> loss: {self.losses[epoch]:.2f}")

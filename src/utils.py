@@ -1,10 +1,10 @@
-from tinygrad import nn, Device
+from tinygrad import Device
 from tinygrad.nn import Tensor
 import random as rnd
 import argparse
 import os
 import yaml
-import tinygrad as tg
+from tinygrad.nn.state import safe_save, safe_load, get_state_dict, load_state_dict
 
 def seed_all(seed: int):
     Tensor.manual_seed(seed)
@@ -36,4 +36,4 @@ def get_config(path: str = "../config/ae.yaml"):
             print(exc)
             exit(1) 
 
-def save_model(model, path)
+def save_model(net, path: str): safe_save(get_state_dict(net), "model.safetensors")

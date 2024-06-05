@@ -7,6 +7,5 @@ dataset: "data/"
 gpus: 1
 M: 7500
 N: 2137
-hidden: 2048
-latent: 256
+dims: [8_013_000, 16_000]
 seed: 1234
