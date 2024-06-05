@@ -1,11 +1,10 @@
 from tinygrad.nn import Tensor
 from tinygrad import nn
-from .base import BaseAE
 from ..loss import mse
+
 
 class AE(BaseAE):
     def __init__(self, **kwargs):
-        super().__init__()
         self.M = kwargs["M"]
         self.N = kwargs["N"]
         self.inp = self.M * self.N
@@ -27,5 +26,5 @@ class AE(BaseAE):
     def __call__(self, x: Tensor) -> Tensor:
         return nn.sequential(self.net(x))
 
-    def loss_function(self, model, f, X: Tensor):
-        return super().loss_function(model, f, X)
+    def loss_function(self, model, X: Tensor):
+        return mse(model, X)

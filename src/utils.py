@@ -22,11 +22,12 @@ def parse_args():
         #default="../configs/vae.yaml",
         default=os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'config', "ae.yaml"))
     )
+    return parser.parse_args()
 
 def get_gpus(amount: int = 2): return [f'{Device.DEFAULT}:{i}' for i in range(os.getenv("GPUS", amount))]
 
 
-def get_config(path: str):
+def get_config(path: str = "../config/ae.yaml"):
     with open(path, "r") as f:
         try:
             return yaml.safe_load(f)
