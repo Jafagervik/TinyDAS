@@ -7,9 +7,10 @@ import yaml
 from tinygrad import Device
 from tinygrad.nn import Tensor
 from tinygrad.nn.state import get_state_dict, load_state_dict, safe_load, safe_save
+from typing import List
 
 
-def seed_all(seed: int):
+def seed_all(seed: int = 1234) -> None:
     Tensor.manual_seed(seed)
     rnd.seed(seed)
 
@@ -31,8 +32,8 @@ def parse_args():
     return parser.parse_args()
 
 
-def get_gpus(amount: int = 2) -> Tuple:
-    return tuple([(f"{Device.DEFAULT}:{i}" for i in range(os.getenv("GPUS", amount)))])
+def get_gpus(amount: int = 2) -> List[str]:
+    return [f"{Device.DEFAULT}:{i}" for i in range(os.getenv("GPUS", amount))]
 
 
 def get_config(path: str = "../config/ae.yaml"):

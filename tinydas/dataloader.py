@@ -1,6 +1,5 @@
 from tinydas.dataset import DataSet
 
-
 class DataLoader:
     def __init__(self, dataset: DataSet, batch_size: int):
         self.data = dataset.raw
