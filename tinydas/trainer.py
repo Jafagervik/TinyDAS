@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List
 
 from tinygrad import GlobalCounters, TinyJit
 from tinygrad.nn import Tensor
@@ -14,7 +14,7 @@ class Trainer:
         model,
         dataloader: DataLoader,
         optimizer: Optimizer,
-        devices: Tuple,
+        devices: List[str],
         **kwargs,
     ) -> None:
         self.model = model
@@ -51,4 +51,3 @@ class Trainer:
             loss = self._run_epoch()
             self.losses[epoch] = loss.item()
             t.set_description(f"Epoch: {epoch + 1} |> loss: {self.losses[epoch]:.2f}")
-

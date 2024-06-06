@@ -1,5 +1,3 @@
-from typing import Any
-
 from tinygrad import Tensor, nn
 from tinygrad.device import Device
 
@@ -28,13 +26,13 @@ def main():
 
     seed_all(config["seed"])
 
-    # GPUS = get_gpus(config["gpus"])
-    GPUS = tuple("CLANG")
+    GPUS = get_gpus(config["gpus"])
+    print(f"Training on {GPUS}")
 
     # ds = DataSet()
-    dl = DataLoader(dataset=DataSet(), batch_size=config["batch_size"])
-
-    print(f"Training on {GPUS}")
+    dl = DataLoader(
+        dataset=DataSet("./data", n=config["n"]), batch_size=config["batch_size"]
+    )
 
     model = Model()
     # we put a copy of the model on every GPU

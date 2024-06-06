@@ -39,14 +39,14 @@ class DataSet:
             data = data.T
         return data, times
 
-    def _init_data(self, n: int): 
-        #if entry.is_file() and entry.name.endswith('.h5')]
+    def _init_data(self, n: int):
+        # if entry.is_file() and entry.name.endswith('.h5')]
         filenames = [entry.path for entry in os.scandir(self.path)]
-        if n != -1: 
+        if n != -1:
             filenames = filenames[:n]
 
-        #with ThreadPoolExecutor() as executor:
-        #results = list(map(self._load_file, filenames))
+        # with ThreadPoolExecutor() as executor:
+        # results = list(map(self._load_file, filenames))
         results = [self._load_file(fs) for fs in filenames]
 
         all_data, all_times = zip(*results)
