@@ -7,7 +7,7 @@ function split_hdf5_file(file_path::String, segment_duration::Int, total_duratio
     num_segments = total_duration ÷ segment_duration
     original_filename = splitext(basename(file_path))[1]
     date_str, time_str = split(original_filename, '_')
-    segment_length = 2500
+    segment_length = 1250
 
     # Parse the initial timestamp
     initial_timestamp = DateTime(date_str * time_str, "yyyymmddHHMMSS")
@@ -45,7 +45,7 @@ end
 
 # Define the directory, segment duration, and total duration
 directory = "../../DAS/2023"  # Replace with your directory path
-segment_duration = 20  # Duration of each segment in Seconds
+segment_duration = 10  # Duration of each segment in Seconds
 total_duration = 600  # Total duration of the original file in seconds
 
 # Start the processing
