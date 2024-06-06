@@ -1,13 +1,21 @@
-from tinygrad.nn import Tensor
-
 import os
 from concurrent.futures import ThreadPoolExecutor
-import numpy as np
 
 import h5py
+import numpy as np
+from tinygrad.nn import Tensor
 
-class DataSet():
-    def __init__(self, path: str = ".\\data", transpose: bool = False):
+
+class DataSet:
+    """
+    DataSet class to load the data from the .h5 files
+
+    Args:
+        - path (str): Path to the data directory
+        - transpose (bool): Transpose the data or not
+    """
+
+    def __init__(self, path: str = "./data", transpose: bool = False):
         self.path = path
         self.transpose = transpose
         self.data = self._init_data()
@@ -20,17 +28,18 @@ class DataSet():
     def __repr__(self) -> str:
         return f"{self.data["data"].shape}"
 
-    def __len__(self) -> int :
+    def __len__(self) -> int:
         return self.data["data"].shape[0]
 
     def _load_file(self, filename):
         file_path = os.path.join(self.path, filename)
-        with h5py.File(file_path, 'r') as f:
-            data = np.array(f['raw'][:], dtype=np.float32).T
-            times = np.array(f['timestamp'][:])
-        if self.transpose: data = data.T
+        with h5py.File(file_path, "r") as f:
+            data = np.array(f["raw"][:], dtype=np.float32).T
+            times = np.array(f["timestamp"][:])
+        if self.transpose:
+            data = data.T
         return data, times
-    
+
     def _init_data(self):
         filenames = [f for f in os.listdir(self.path)]
 
@@ -40,6 +49,5 @@ class DataSet():
         all_data, all_times = zip(*results)
         all_data_tensor = Tensor(np.stack(all_data))
         all_times_tensor = Tensor(np.stack(all_times))
-        
-        return {"data": all_data_tensor, "times": all_times_tensor}
 
+        return {"data": all_data_tensor, "times": all_times_tensor}

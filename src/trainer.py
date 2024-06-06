@@ -1,13 +1,22 @@
-from tinygrad import TinyJit, GlobalCounters
+from typing import List, Tuple
+
+from tinygrad import GlobalCounters, TinyJit
 from tinygrad.nn import Tensor
-from .dataloader import DataLoader
-from typing import List
-from tqdm import trange
 from tinygrad.nn.optim import Optimizer
+from tqdm import trange
+
+from .dataloader import DataLoader
 
 
-class Trainer: 
-    def __init__(self, model, dataloader: DataLoader, optimizer: Optimizer, devices: List[str], **kwargs) -> None:
+class Trainer:
+    def __init__(
+        self,
+        model,
+        dataloader: DataLoader,
+        optimizer: Optimizer,
+        devices: Tuple,
+        **kwargs,
+    ) -> None:
         self.model = model
         self.dataloader = dataloader
         self.optim = optimizer
@@ -17,14 +26,19 @@ class Trainer:
         self.losses = [float(0)] * self.epochs
 
     @TinyJit
-    def _run_epoch(self): 
+    def _run_epoch(self):
         with Tensor.train():
             # OPTIM ZERO GRAD
+            loss = Tensor(float("inf"))
 
             for data, _ in self.dataloader:
                 self.optim.zero_grad()
 
-                x = data.shard_(self.gpus, axis=0).reshape(-1, 2137 * 7500)
+                x = (
+                    data.shard_(self.gpus, axis=0).reshape(-1, 2137 * 7500)
+                    if len(self.gpus) > 1 and any(self.gpus) != "CLANG"
+                    else data.reshape(-1, 2137 * 7500)
+                )
                 # Mse
                 loss = self.model(x).sub(x).square().mean().backward()
                 self.optim.step()
@@ -37,3 +51,4 @@ class Trainer:
             loss = self._run_epoch()
             self.losses[epoch] = loss.item()
             t.set_description(f"Epoch: {epoch + 1} |> loss: {self.losses[epoch]:.2f}")
+
