@@ -1,4 +1,3 @@
-import tinygrad
 from tinygrad.nn import Tensor
 
 from abc import abstractmethod

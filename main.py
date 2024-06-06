@@ -3,10 +3,10 @@ from typing import Any
 from tinygrad import Tensor, nn
 from tinygrad.device import Device
 
-from src.dataloader import DataLoader
-from src.dataset import DataSet
-from src.trainer import Trainer
-from src.utils import *
+from tinydas.dataloader import DataLoader
+from tinydas.dataset import DataSet
+from tinydas.trainer import Trainer
+from tinydas.utils import *
 
 
 class Model:

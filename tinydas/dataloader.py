@@ -1,4 +1,4 @@
-from .dataset import DataSet
+from tinydas.dataset import DataSet
 
 
 class DataLoader:

@@ -1,7 +1,7 @@
 from typing import Any
 from tinygrad.nn import Tensor
 from tinygrad import nn
-from ..losses import mse
+from tinydas.losses import mse
 
 class Encoder:
     def __init__(self) -> None:
