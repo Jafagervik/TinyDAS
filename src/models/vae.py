@@ -1,24 +1,36 @@
+import random
 from typing import Tuple
 
-from tinygrad import nn
+import matplotlib
+
+matplotlib.use("QT5Agg")
+import matplotlib.pyplot as plt
+from tinygrad import TinyJit, nn
 from tinygrad.nn import Tensor
+from tqdm import trange
+
+
+class LinearLayer:
+    def __init__(self, in_features: int, out_features: int):
+        self.net = [
+            nn.Linear(in_features, out_features),
+            Tensor.relu,
+            Tensor.dropout,
+        ]
+
+    def __call__(self, x: Tensor) -> Tensor:
+        return x.sequential(self.net)
 
 
 class Encoder:
     def __init__(self):
         self.layers = [
-            nn.Linear(2137 * 7500, 16384),
-            Tensor.gelu,
-            Tensor.dropout,
-            nn.Linear(16384, 4096),
-            Tensor.gelu,
-            Tensor.dropout,
-            nn.Linear(4096, 1024),
-            Tensor.gelu,
-            Tensor.dropout,
+            LinearLayer(28 * 28, 512),
+            LinearLayer(512, 256),
+            LinearLayer(256, 64),
         ]
-        self.mu = nn.Linear(1024, 256)
-        self.logvar = nn.Linear(1024, 256)
+        self.mu = nn.Linear(64, 32)
+        self.logvar = nn.Linear(64, 32)
 
     def __call__(self, x: Tensor) -> Tuple[Tensor, Tensor]:
         x = x.sequential(self.layers)
@@ -28,16 +40,10 @@ class Encoder:
 class Decoder:
     def __init__(self):
         self.layers = [
-            nn.Linear(256, 1024),
-            Tensor.gelu,
-            Tensor.dropout,
-            nn.Linear(1024, 4096),
-            Tensor.gelu,
-            Tensor.dropout,
-            nn.Linear(4096, 16384),
-            Tensor.gelu,
-            Tensor.dropout,
-            nn.Linear(16384, 2137 * 7500),
+            LinearLayer(32, 64),
+            LinearLayer(64, 256),
+            LinearLayer(256, 512),
+            nn.Linear(512, 28 * 28),
             Tensor.sigmoid,
         ]
 
@@ -51,12 +57,6 @@ def reconstruct(mu: Tensor, logvar: Tensor) -> Tensor:
     return mu + eps * std
 
 
-def elbo_loss(x: Tensor, x_hat: Tensor, mu: Tensor, logvar: Tensor) -> Tensor:
-    rec_loss = x.sub(x_hat).square().mean()
-    kl_loss = 0.5 * (1 + logvar - mu.square() - logvar.exp()).sum(axis=1).mean()
-    return rec_loss + kl_loss
-
-
 class VAE:
     def __init__(self):
         self.encoder = Encoder()
@@ -67,14 +67,71 @@ class VAE:
         z = reconstruct(mu, logvar)
         return self.decoder(z), mu, logvar
 
+    def criterion(
+        self, x: Tensor, x_hat: Tensor, mu: Tensor, logvar: Tensor
+    ) -> Tuple[Tensor, Tensor, Tensor]:
+        rec_loss = x.sub(x_hat).abs().mean()
+        kl_loss = 0.5 * (1 + logvar - mu.square() - logvar.exp()).sum(axis=1).mean()
+        elbo_loss = rec_loss + kl_loss
+        return elbo_loss, rec_loss, kl_loss
 
-def infer():
+    def plot_latent_space(self, x: Tensor):
+        mu, _ = self.encoder(x)
+        plt.scatter(
+            mu[:, 0].numpy(), mu[:, 1].numpy(), c=range(x.shape[0]), cmap="viridis"
+        )
+        plt.show()
+
+
+def plot_losses(losses):
+    transposed_data = list(zip(*losses))
+    x = range(1, len(losses) + 1)
+    names = ["ELBO", "KL", "Rec"]
+
+    for i, y in enumerate(transposed_data):
+        plt.plot(x, y, label=f"{names[i]}")
+
+    plt.xlabel("Epoch")
+    plt.ylabel("Value")
+    plt.title("Loss")
+    plt.legend()
+    plt.show()
+
+
+def train():
+    Tensor.manual_seed(0)
+    random.seed(0)
+    M, N = 28, 28
+
     model = VAE()
-    x = Tensor.randn((32, 2137 * 7500))
-    x_hat, mu, logvar = model(x)
-    print(x_hat.shape, mu.shape, logvar.shape)
+    optim = nn.optim.Adam(nn.state.get_parameters(model))
+
+    X = Tensor.randn((32, M * N))
+    EPS = 30
+    bs = 4
+    losses = [[0.0, 0.0, 0.0]] * EPS
+
+    @TinyJit
+    def step() -> Tuple[Tensor, Tensor, Tensor]:
+        with Tensor.train():
+            samples = Tensor.randint(bs, high=X.shape[0])
+            x = X[samples].reshape(-1, M * N)
+            optim.zero_grad()
+            x_hat, mu, logvar = model(x)
+            elbo, rec, kl = model.criterion(x, x_hat, mu, logvar)
+            elbo.backward()
+            optim.step()
+            return elbo, rec, kl
+
+    print("Training VAE...")
+
+    for epoch in (t := trange(EPS)):
+        elbo, kl, rec = step()
+        losses[epoch] = [elbo.item(), kl.item(), rec.item()]
+        t.set_description(f"Epoch {epoch+1} | Loss: {elbo.item():.2f}")
+
+    plot_losses(losses)
 
 
 if __name__ == "__main__":
-    infer()
-
+    train()
