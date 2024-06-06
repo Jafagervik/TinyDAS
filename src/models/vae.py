@@ -29,6 +29,7 @@ class Encoder:
             LinearLayer(512, 256),
             LinearLayer(256, 64),
         ]
+
         self.mu = nn.Linear(64, 32)
         self.logvar = nn.Linear(64, 32)
 
