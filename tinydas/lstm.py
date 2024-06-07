@@ -88,10 +88,10 @@ class Model:
         return out
 
 
-def test_lstm():
-    Tensor.manual_seed(1236)
+if __name__ == "__main__":
+    Tensor.manual_seed(42069)
     model = Model()
-    lr = 0.04
+    lr = 2.0
 
     params = nn.state.get_parameters(model)
     opt = nn.optim.Adam(params, lr)
@@ -116,12 +116,3 @@ def test_lstm():
     out = model(newd).reshape(5, 5)
 
     print(out.numpy())
-
-    # print(x.shape)
-    #
-    # out, hc = model(x)
-    # print(out.shape)
-
-
-if __name__ == "__main__":
-    test_lstm()
