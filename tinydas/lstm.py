@@ -60,10 +60,15 @@ class LSTM:
 
         for t in range(x.shape[0]):
             hc = _do_step(x[t] + 1 - 1, hc)  # TODO: why do we need to do this?
-            if output is None:
-                output = hc[-1:, : x.shape[1]]
-            else:
-                output = output.cat(hc[-1:, : x.shape[1]], dim=0).realize()
+            output = (
+                hc[-1:, : x.shape[1]]
+                if output is None
+                else output.cat(hc[-1:, : x.shape[1]], dim=0)
+            )
+            # if output is None:
+            #     output = hc[-1:, : x.shape[1]]
+            # else:
+            #     output = output.cat(hc[-1:, : x.shape[1]], dim=0).realize()
 
         return output, hc
 
@@ -86,7 +91,7 @@ class Model:
 def test_lstm():
     Tensor.manual_seed(1236)
     model = Model()
-    lr = 0.01
+    lr = 0.04
 
     params = nn.state.get_parameters(model)
     opt = nn.optim.Adam(params, lr)
@@ -104,11 +109,11 @@ def test_lstm():
     for i in (t := trange(50)):
         GlobalCounters.reset()
         loss = train_step()
-        t.set_description(f"e {i+1} | loss: {loss.item():6.4f}")
+        t.set_description(f"Epoch {i+1} <> Loss: {loss.item():.4f}")
 
     newd = Tensor.ones(5, 5)
 
-    out = model(newd)
+    out = model(newd).reshape(5, 5)
 
     print(out.numpy())
 
