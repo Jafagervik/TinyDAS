@@ -6,6 +6,7 @@ from tinygrad.nn.optim import Optimizer
 from tqdm import trange
 
 from .dataloader import DataLoader
+from .early_stopping import EarlyStopping
 
 
 class Trainer:
@@ -45,9 +46,15 @@ class Trainer:
             return loss
 
     def train(self):
+        early_stopping = EarlyStopping(patience=5, min_delta=0.001)
         print("Starting training...")
         for epoch in (t := trange(self.epochs)):
             GlobalCounters.reset()
             loss = self._run_epoch()
             self.losses[epoch] = loss.item()
             t.set_description(f"Epoch: {epoch + 1} |> loss: {self.losses[epoch]:.2f}")
+
+            early_stopping(loss.item())
+            if early_stopping.early_stop:
+                print(f"Early stopping at epoch {epoch+1}")
+                break
