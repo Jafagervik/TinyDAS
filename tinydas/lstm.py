@@ -1,10 +1,11 @@
-from typing import Any, Tuple
+from typing import Callable, List, Optional, Tuple
 
-from tinygrad import Tensor, TinyJit
+from tinygrad import GlobalCounters, Tensor, TinyJit, nn
+from tqdm import trange
 
 
 class LSTMCell:
-    def __init__(self, input_size: int, hidden_size: int, dropout):
+    def __init__(self, input_size: int, hidden_size: int, dropout=0.0):
         self.dropout = dropout
 
         self.weights_ih = Tensor.uniform(hidden_size * 4, input_size)
@@ -12,7 +13,7 @@ class LSTMCell:
         self.weights_hh = Tensor.uniform(hidden_size * 4, hidden_size)
         self.bias_hh = Tensor.uniform(hidden_size * 4)
 
-    def __call__(self, x, hc) -> Tensor:
+    def __call__(self, x: Tensor, hc: Tensor) -> Tensor:
         gates = x.linear(self.weights_ih.T, self.bias_ih) + hc[: x.shape[0]].linear(
             self.weights_hh.T, self.bias_hh
         )
@@ -45,9 +46,9 @@ class LSTM:
             for i in range(num_layers)
         ]
 
-    def __call__(self, x: Tensor, hc):
+    def __call__(self, x: Tensor, hc: Optional[Tensor] = None) -> Tuple[Tensor, Tensor]:
         @TinyJit
-        def _do_step(x_, hc_):
+        def _do_step(x_: Tensor, hc_: Tensor) -> Tensor:
             return self.do_step(x_, hc_)
 
         if hc is None:
@@ -55,7 +56,6 @@ class LSTM:
                 self.layers, 2 * x.shape[1], self.hidden_size, requires_grad=False
             )
 
-        # output = Tensor.empty()
         output = None
 
         for t in range(x.shape[0]):
@@ -67,7 +67,7 @@ class LSTM:
 
         return output, hc
 
-    def do_step(self, x, hc):
+    def do_step(self, x: Tensor, hc: Tensor) -> Tensor:
         new_hc = [x]
         for i, cell in enumerate(self.cells):
             new_hc.append(cell(new_hc[i][: x.shape[0]], hc[i]))
@@ -76,26 +76,46 @@ class LSTM:
 
 class Model:
     def __init__(self):
-        self.l = LSTM(5, 10)
+        self.l = LSTM(5, 1)
 
-    def __call__(self, x: Tensor):
-        return self.l(x, None)
-
-
-def mse(X: Tensor, Y: Tensor) -> Tensor:
-    return X.sub(Y).square().mean()
+    def __call__(self, x: Tensor) -> Tensor:
+        out, hc = self.l(x)
+        return out
 
 
 def test_lstm():
-    Tensor.manual_seed(1234)
-    # lstm = LSTM(10, 20, 2)
-    x = Tensor.uniform(5, 5)
-
+    Tensor.manual_seed(1236)
     model = Model()
+    lr = 0.01
 
-    out, hc = model(x)
-    print(out.shape)
+    params = nn.state.get_parameters(model)
+    opt = nn.optim.Adam(params, lr)
+
+    data = Tensor.ones(10, 5, 5)
+
+    # @TinyJit
+    def train_step() -> Tensor:
+        with Tensor.train():
+            opt.zero_grad()
+            loss = model(data).sub(data).square().mean().backward()
+            opt.step()
+            return loss
+
+    for i in (t := trange(50)):
+        GlobalCounters.reset()
+        loss = train_step()
+        t.set_description(f"e {i+1} | loss: {loss.item():6.4f}")
+
+    newd = Tensor.ones(5, 5)
+
+    out = model(newd)
+
     print(out.numpy())
+
+    # print(x.shape)
+    #
+    # out, hc = model(x)
+    # print(out.shape)
 
 
 if __name__ == "__main__":
