@@ -25,6 +25,7 @@ class Trainer:
         self.best_loss = float("inf")
         self.epochs = kwargs["epochs"] if kwargs["epochs"] else 10
         self.losses = [float(0)] * self.epochs
+        self.early_stopping = EarlyStopping(kwargs["patience"], kwargs["min_delta"])
 
     @TinyJit
     def _run_epoch(self):
@@ -46,7 +47,6 @@ class Trainer:
             return loss
 
     def train(self):
-        early_stopping = EarlyStopping(patience=5, min_delta=0.001)
         print("Starting training...")
         for epoch in (t := trange(self.epochs)):
             GlobalCounters.reset()
@@ -54,7 +54,7 @@ class Trainer:
             self.losses[epoch] = loss.item()
             t.set_description(f"Epoch: {epoch + 1} |> loss: {self.losses[epoch]:.2f}")
 
-            early_stopping(loss.item())
-            if early_stopping.early_stop:
+            self.early_stopping(loss.item())
+            if self.early_stopping.early_stop:
                 print(f"Early stopping at epoch {epoch+1}")
                 break
