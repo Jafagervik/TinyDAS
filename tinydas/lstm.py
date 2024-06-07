@@ -85,7 +85,7 @@ class Model:
 
     def __call__(self, x: Tensor) -> Tensor:
         out, hc = self.l(x)
-        return out
+        return out.relu()
 
 
 if __name__ == "__main__":
@@ -106,7 +106,7 @@ if __name__ == "__main__":
             opt.step()
             return loss
 
-    for i in (t := trange(50)):
+    for i in (t := trange(5)):
         GlobalCounters.reset()
         loss = train_step()
         t.set_description(f"Epoch {i+1} <> Loss: {loss.item():.4f}")
