@@ -1,12 +1,14 @@
 from tinygrad.nn import Tensor
 
-
-def mse(model, X: Tensor):
-    return model(X).sub(X).square().mean()
+# This need to be backwarded after used in te forward pass
 
 
-def mae(model, X: Tensor):
-    return model(X).sub(X).abs().mean()
+def mse(X: Tensor, Y: Tensor):
+    return Y.sub(X).square().mean()
+
+
+def mae(X: Tensor, Y: Tensor):
+    return Y.sub(X).abs().mean()
 
 
 def kl_div(X: Tensor, Y: Tensor):
@@ -30,4 +32,3 @@ def elbo_loss(encoder, decoder, X: Tensor):
     elbo = kl + recloss
 
     return {"elbo": elbo, "kl": kl, "rec": recloss}
-

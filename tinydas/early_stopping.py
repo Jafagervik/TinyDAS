@@ -19,3 +19,14 @@ class EarlyStopping:
             self.counter += 1
             if self.counter >= self.patience:
                 self.early_stop = True
+
+
+if __name__ == "__main__":
+    early_stopping = EarlyStopping(patience=3, min_delta=0.0)
+    losses = [10, 9, 8, 7, 7, 7, 7, 7, 7, 7]
+    for i, loss in enumerate(losses):
+        print(f"Epoch {i+1}: loss={loss}")
+        early_stopping(loss)
+        if early_stopping.early_stop:
+            print("Early stopping")
+            break
