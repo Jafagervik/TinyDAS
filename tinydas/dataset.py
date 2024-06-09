@@ -15,7 +15,7 @@ class DataSet:
         - transpose (bool): Transpose the data or not
     """
 
-    def __init__(self, path: str = "./2023", transpose: bool = False, n: int = -1):
+    def __init__(self, path: str = "./data", transpose: bool = False, n: int = -1):
         self.path = path
         self.transpose = transpose
         self.data = self._init_data(n)
