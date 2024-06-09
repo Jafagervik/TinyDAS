@@ -52,7 +52,7 @@ class Trainer:
             GlobalCounters.reset()
             loss = self._run_epoch()
             self.losses[epoch] = loss.item()
-            t.set_description(f"Epoch: {epoch + 1} |> loss: {self.losses[epoch]:.2f}")
+            t.set_description(f"Epoch: {epoch + 1} | loss: {self.losses[epoch]:.2f}")
 
             self.early_stopping(loss.item())
             if self.early_stopping.early_stop:
