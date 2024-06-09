@@ -1,5 +1,6 @@
 from tinygrad import Tensor, nn
 from tinygrad.device import Device
+from tinygrad.nn.state import get_state_dict, load_state_dict, safe_load, safe_save
 
 from tinydas.dataloader import DataLoader
 from tinydas.dataset import DataSet
@@ -10,39 +11,38 @@ from tinydas.utils import *
 class Model:
     def __init__(self):
         self.layers = [
-            nn.Linear(2137 * 7500, 10),
+            nn.Linear(100, 10),
             Tensor.gelu,
-            nn.Linear(10, 2137 * 7500),
+            nn.Linear(10, 100),
             Tensor.sigmoid,
         ]
 
     def __call__(self, x: Tensor) -> Tensor:
         return x.sequential(self.layers)
 
+    def predict(self, x: Tensor) -> Tensor:
+        return self(x)
+
+    def criterion(self, X: Tensor) -> Tensor:
+        return self(X).sub(X).square().mean()
+
+
+def save_model(model, path: str):
+    state_dict = get_state_dict(model)
+    safe_save(state_dict, path)
+    print(f"Model saved to {path}")
+
 
 def main():
-    args = parse_args()
-    config = get_config(args.filename)
-
-    seed_all(config["seed"])
-
-    GPUS = get_gpus(config["gpus"])
-    print(f"Training on {GPUS}")
-
-    # ds = DataSet()
-    dl = DataLoader(
-        dataset=DataSet("./data", n=config["n"]), batch_size=config["batch_size"]
-    )
-
     model = Model()
-    # we put a copy of the model on every GPU
-    if len(GPUS) > 1 and any(GPUS) == "CLANG":
-        for _, x in nn.state.get_state_dict(model).items():
-            x.to_(GPUS)
-    opt = nn.optim.Adam(nn.state.get_parameters(model), lr=config["lr"])
+    path = "model.safetensors"
 
-    trainer = Trainer(model, dataloader=dl, optimizer=opt, devices=GPUS, **config)
-    trainer.train()
+    # save_model(model, "model.safetensors")
+
+    # and load it back in
+    state_dict = safe_load(path)
+    load_state_dict(model, state_dict)
+    print(f"Model loaded from {path}")
 
 
 if __name__ == "__main__":

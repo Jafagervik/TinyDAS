@@ -1,13 +1,12 @@
 import argparse
 import os
 import random as rnd
-from typing import Tuple
+from typing import List, Tuple
 
 import yaml
 from tinygrad import Device
 from tinygrad.nn import Tensor
 from tinygrad.nn.state import get_state_dict, load_state_dict, safe_load, safe_save
-from typing import List
 
 
 def seed_all(seed: int = 1234) -> None:
@@ -45,5 +44,13 @@ def get_config(path: str = "../config/ae.yaml"):
             exit(1)
 
 
-def save_model(net, path: str):
-    safe_save(get_state_dict(net), "model.safetensors")
+def save_model(model, path: str):
+    state_dict = get_state_dict(model)
+    safe_save(state_dict, path)
+    print(f"Model saved to {path}")
+
+
+def reconstruct(mu: Tensor, logvar: Tensor) -> Tensor:
+    std = logvar.exp().sqrt()
+    eps = Tensor.randn(mu.shape)
+    return mu + eps * std

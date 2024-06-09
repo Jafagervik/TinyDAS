@@ -1,8 +1,19 @@
+from abc import ABC, abstractmethod
+
 from tinygrad.nn import Tensor
 
-from abc import abstractmethod
 
-class BaseAE:
+class BaseAE(ABC):
+    """
+    Base class for autoencoders with single optimizer.
+
+    # Methods:
+    - __init__: Constructor method.
+    - __call__: Forward pass.
+    - criterion: Loss function.
+    - predict: Run a forward pass and return the output.
+    """
+
     @abstractmethod
     def __init__(self):
         pass
@@ -12,7 +23,8 @@ class BaseAE:
         pass
 
     @abstractmethod
-    def loss_function(self, model, f, X: Tensor):
-        return f(model(X), X)
+    def criterion(self, X: Tensor) -> Tensor:
+        pass
 
-
+    def predict(self, x: Tensor) -> Tensor:
+        return self(x)[0]

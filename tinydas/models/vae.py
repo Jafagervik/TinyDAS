@@ -9,6 +9,8 @@ from tinygrad import TinyJit, nn
 from tinygrad.nn import Tensor
 from tqdm import trange
 
+from tinydas.utils import reconstruct
+
 
 class LinearLayer:
     def __init__(self, in_features: int, out_features: int):
@@ -50,12 +52,6 @@ class Decoder:
 
     def __call__(self, x: Tensor) -> Tensor:
         return x.sequential(self.layers)
-
-
-def reconstruct(mu: Tensor, logvar: Tensor) -> Tensor:
-    std = logvar.exp().sqrt()
-    eps = Tensor.randn(mu.shape)
-    return mu + eps * std
 
 
 class VAE:

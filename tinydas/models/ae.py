@@ -3,11 +3,8 @@ from typing import Optional
 from tinygrad import TinyJit, dtypes, nn
 from tinygrad.nn import Tensor
 
-# from tinydas.losses import mse
-
-
-def mse(X: Tensor, Y: Tensor):
-    return Y.sub(X).square().mean()
+from tinydas.losses import mse
+from tinydas.models.base import BaseAE
 
 
 class LL:
@@ -23,8 +20,9 @@ class LL:
         return x.sequential(self.net)
 
 
-class AE:
+class AE(BaseAE):
     def __init__(self, **kwargs):
+        super().__init__()
         self.M = 28
         self.N = 28
         self.inp = self.M * self.N
@@ -42,21 +40,12 @@ class AE:
     def __call__(self, x: Tensor) -> Tensor:
         return x.sequential(self.net)
 
-    def loss_function(self, X: Tensor, Y: Tensor) -> Tensor:
-        return mse(X, Y)
-
-    def predict(self, x: Tensor) -> Tensor:
-        return self(x)
+    def criterion(self, X: Tensor) -> Tensor:
+        return mse(X, model(X))
 
 
 if __name__ == "__main__":
-    import random as rnd
-
-    Tensor.manual_seed(574)
-    rnd.seed(574)
-
     model = AE()
-    # print(model)
 
     data = Tensor.ones(1, 28, 28, dtype=dtypes.float32).reshape(-1, 28 * 28)
 
@@ -69,4 +58,3 @@ if __name__ == "__main__":
     pred = model.predict(data)
 
     print(f"Prediction: \n{pred.numpy().mean():.3f}")
-
