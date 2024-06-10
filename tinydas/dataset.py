@@ -1,12 +1,13 @@
 import os
-from concurrent.futures import ThreadPoolExecutor
 
 import h5py
 import numpy as np
 from tinygrad.nn import Tensor
 
+# from concurrent.futures import ThreadPoolExecutor
 
-class DataSet:
+
+class Dataset:
     """
     DataSet class to load the data from the .h5 files
 
@@ -50,7 +51,13 @@ class DataSet:
         results = [self._load_file(fs) for fs in filenames]
 
         all_data, all_times = zip(*results)
-        all_data_tensor = Tensor(np.stack(all_data))
-        all_times_tensor = Tensor(np.stack(all_times))
+        all_data_tensor = Tensor(np.stack(all_data), requires_grad=True)
+        all_times_tensor = Tensor(np.stack(all_times), requires_grad=True)
 
         return {"data": all_data_tensor, "times": all_times_tensor}
+
+
+if __name__ == "__main__":
+    data = Dataset()
+    print(data)
+    print(data.data["times"].shape)

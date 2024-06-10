@@ -1,49 +1,61 @@
 from typing import List
 
+from dataloader import DataLoader
+from dataset import Dataset
+from early_stopping import EarlyStopping
+from models.ae import AE
+from models.base import BaseAE
 from tinygrad import GlobalCounters, TinyJit
 from tinygrad.nn import Tensor
 from tinygrad.nn.optim import Optimizer
+from tinygrad.nn.state import load_state_dict, safe_load
 from tqdm import trange
-
-from .dataloader import DataLoader
-from .early_stopping import EarlyStopping
 
 
 class Trainer:
     def __init__(
         self,
-        model,
+        model: BaseAE,
         dataloader: DataLoader,
         optimizer: Optimizer,
         devices: List[str],
         **kwargs,
     ) -> None:
         self.model = model
+        if kwargs["load"]:
+            self.load_model(kwargs["path"])
         self.dataloader = dataloader
         self.optim = optimizer
-        self.gpus = devices
+        self.devices = devices
         self.best_loss = float("inf")
         self.epochs = kwargs["epochs"] if kwargs["epochs"] else 10
         self.losses = [float(0)] * self.epochs
         self.early_stopping = EarlyStopping(kwargs["patience"], kwargs["min_delta"])
 
-    @TinyJit
-    def _run_epoch(self):
-        with Tensor.train():
-            # OPTIM ZERO GRAD
-            loss = Tensor(float("inf"))
+    def load_model(self, path: str) -> None:
+        # Example: config/ae/best.safetensors
+        full_path = f"{path}/ae/best.safetensors"
+        state_dict = safe_load(full_path)
+        load_state_dict(self.model, state_dict)
+        print(f"Model loaded from {path}")
 
+    @TinyJit
+    def _run_epoch(self) -> Tensor:
+        with Tensor.train():
+            # running_loss = Tensor(0.0, requires_grad=False)
             for data, _ in self.dataloader:
                 self.optim.zero_grad()
+                # x = data.reshape(-1, 625 * 2137)
+                x = data.flatten(start_dim=1)
+                # if len(self.devices) > 1 and any(self.devices) != "CLANG"
 
-                x = (
-                    data.shard_(self.gpus, axis=0).reshape(-1, 2137 * 7500)
-                    if len(self.gpus) > 1 and any(self.gpus) != "CLANG"
-                    else data.reshape(-1, 2137 * 7500)
-                )
-                # Mse
-                loss = self.model(x).sub(x).square().mean().backward()
+                loss = self.model.criterion(x)
+
+                loss.backward()
                 self.optim.step()
+
+                # running_loss += loss
+            # return running_loss
             return loss
 
     def train(self):
@@ -58,3 +70,20 @@ class Trainer:
             if self.early_stopping.early_stop:
                 print(f"Early stopping at epoch {epoch+1}")
                 break
+
+
+if __name__ == "__main__":
+    from tinygrad import nn
+
+    model = AE()
+
+    dataset = Dataset(n=10)
+    dl = DataLoader(dataset, batch_size=2)
+    optim = nn.optim.Adam(nn.state.get_parameters(model), lr=0.001)
+    devices = ["CLANG"]
+
+    trainer = Trainer(
+        model, dl, optim, devices, epochs=10, patience=5, min_delta=0.0, load=False
+    )
+
+    trainer.train()

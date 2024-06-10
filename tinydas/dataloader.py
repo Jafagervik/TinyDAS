@@ -1,9 +1,12 @@
-from tinydas.dataset import DataSet
 import random as rnd
 
+from dataset import Dataset
+
+
 class DataLoader:
-    def __init__(self, dataset: DataSet, batch_size: int, shuffle: bool = False):
-        if shuffle: rnd.shuffle(dataset)
+    def __init__(self, dataset: Dataset, batch_size: int, shuffle: bool = False):
+        if shuffle:
+            rnd.shuffle(dataset.data)
         self.data = dataset.raw
         self.times = dataset.times
         self.batch_size = batch_size

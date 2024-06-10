@@ -27,12 +27,6 @@ class Model:
         return self(X).sub(X).square().mean()
 
 
-def save_model(model, path: str):
-    state_dict = get_state_dict(model)
-    safe_save(state_dict, path)
-    print(f"Model saved to {path}")
-
-
 def main():
     model = Model()
     path = "model.safetensors"

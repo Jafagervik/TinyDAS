@@ -2,7 +2,7 @@ using HDF5
 using Dates
 using Distributed
 
-addprocs(16)
+addprocs(4)
 
 @everywhere using Dates
 @everywhere using HDF5
@@ -22,8 +22,8 @@ addprocs(16)
     rm(file_path)
 
     for i in 0:(num_segments-1)
-        bf = i * segment_length+1
-        n = (i+1)*segment_length
+        bf = i * segment_length + 1
+        n = (i + 1) * segment_length
 
         raw_segment = raw_data[bf:n, :]
         timestamp_segment = timestamp_data[bf:n]
@@ -44,11 +44,11 @@ function process_directory(directory::String, segment_duration::Int, total_durat
     @sync for file in files
         @spawn split_hdf5_file(file, segment_duration, total_duration)
     end
-    "DONE" |> println
 end
 
-directory = "..\\..\\DAS\\2023"
-segment_duration = 5 
-total_duration = 600 
+#directory = "..\\..\\DAS\\2023"
+directory = "../data/"
+segment_duration = 5
+total_duration = 600
 
 process_directory(directory, segment_duration, total_duration)

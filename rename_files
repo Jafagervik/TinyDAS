@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Directory containing the files
+DIRECTORY="data"
+
+# Change to the specified directory
+cd "$DIRECTORY" || { echo "Directory not found"; exit 1; }
+
+# Function to rename a file by removing the prefix
+rename_file() {
+  FILE="$1"
+  BASENAME=$(basename "$FILE")
+  NEW_NAME="${BASENAME#FORESEE_UTC_}"
+  mv "$BASENAME" "$NEW_NAME"
+  echo "Renamed $BASENAME to $NEW_NAME"
+}
+
+export -f rename_file
+
+# Find all files with the prefix FORESEE_UTC_ and process them in parallel
+find . -maxdepth 1 -type f -name 'FORESEE_UTC_*' -print0 | parallel -0 rename_file
+
