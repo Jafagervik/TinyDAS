@@ -55,13 +55,8 @@ class AE(BaseAE):
             kwargs["M"] * kwargs["N"], kwargs["hidden"], kwargs["latent"]
         )
 
-        self.net = [
-            self.encoder,
-            self.decoder,
-        ]
-
     def __call__(self, x: Tensor) -> Tensor:
-        return x.sequential(self.net)
+        return self.decoder(self.encoder(x))
 
     def criterion(self, X: Tensor) -> Tensor:
         return mse(X, self(X))
