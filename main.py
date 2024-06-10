@@ -48,7 +48,7 @@ def main():
     match args.type:
         case "train":
             train_mode(args)
-        case "anomaly":
+        case "detect":
             anomaly_mode(args)
         case _:
             print("Invalid mode")

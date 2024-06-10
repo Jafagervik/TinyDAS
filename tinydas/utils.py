@@ -21,7 +21,7 @@ def parse_args():
         "--type",
         "-t",
         dest="type",
-        help="Train or infer mode",
+        help="Train or detect mode",
         default="train",
     )
     parser.add_argument(
