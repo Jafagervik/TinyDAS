@@ -38,7 +38,6 @@ class AE(BaseAE):
         ]
 
     def __call__(self, x: Tensor) -> Tensor:
-        # x = x.reshape(-1, self.inp)
         return x.sequential(self.net)
 
     def criterion(self, X: Tensor) -> Tensor:

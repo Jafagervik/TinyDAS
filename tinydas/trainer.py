@@ -41,22 +41,21 @@ class Trainer:
 
     @TinyJit
     def _run_epoch(self) -> Tensor:
+        running_loss = 0.0
         with Tensor.train():
             # running_loss = Tensor(0.0, requires_grad=False)
             for data, _ in self.dataloader:
                 self.optim.zero_grad()
-                # x = data.reshape(-1, 625 * 2137)
-                x = data.flatten(start_dim=1)
+                x = data.reshape(-1, 625 * 2137)
+                # x = data.flatten(start_dim=1)
                 # if len(self.devices) > 1 and any(self.devices) != "CLANG"
 
-                loss = self.model.criterion(x)
+                loss = self.model.criterion(x).backward()
 
-                loss.backward()
                 self.optim.step()
 
-                # running_loss += loss
-            # return running_loss
-            return loss
+                running_loss += loss.item()
+        return Tensor(running_loss)
 
     def train(self):
         print("Starting training...")
@@ -79,7 +78,7 @@ if __name__ == "__main__":
 
     dataset = Dataset(n=10)
     dl = DataLoader(dataset, batch_size=2)
-    optim = nn.optim.Adam(nn.state.get_parameters(model), lr=0.001)
+    optim = nn.optim.AdamW(nn.state.get_parameters(model), lr=0.5)
     devices = ["CLANG"]
 
     trainer = Trainer(
