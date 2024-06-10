@@ -1,9 +1,9 @@
 from typing import Optional
 
-from losses import mse
 from tinygrad import dtypes, nn
 from tinygrad.nn import Tensor
 
+from ..losses import mse
 from .base import BaseAE
 
 

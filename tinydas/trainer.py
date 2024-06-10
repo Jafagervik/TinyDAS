@@ -1,15 +1,16 @@
 from typing import List
 
-from dataloader import DataLoader
-from dataset import Dataset
-from early_stopping import EarlyStopping
-from models.ae import AE
-from models.base import BaseAE
 from tinygrad import GlobalCounters, TinyJit
 from tinygrad.nn import Tensor
 from tinygrad.nn.optim import Optimizer
 from tinygrad.nn.state import load_state_dict, safe_load
 from tqdm import trange
+
+from .dataloader import DataLoader
+from .dataset import Dataset
+from .early_stopping import EarlyStopping
+from .models.ae import AE
+from .models.base import BaseAE
 
 
 class Trainer:
