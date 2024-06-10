@@ -70,20 +70,3 @@ class Trainer:
             if self.early_stopping.early_stop:
                 print(f"Early stopping at epoch {epoch+1}")
                 break
-
-
-if __name__ == "__main__":
-    from tinygrad import nn
-
-    model = AE()
-
-    dataset = Dataset(n=10)
-    dl = DataLoader(dataset, batch_size=2)
-    optim = nn.optim.AdamW(nn.state.get_parameters(model), lr=0.5)
-    devices = ["CLANG"]
-
-    trainer = Trainer(
-        model, dl, optim, devices, epochs=10, patience=5, min_delta=0.0, load=False
-    )
-
-    trainer.train()
