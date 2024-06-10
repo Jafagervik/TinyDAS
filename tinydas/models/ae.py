@@ -11,6 +11,7 @@ class LL:
     def __init__(self, i: int, o: int, do: Optional[float] = None) -> None:
         self.net = [
             nn.Linear(i, o),
+            # Tensor.batchnorm,
             Tensor.relu,
         ]
         if do:
@@ -23,11 +24,11 @@ class LL:
 class AE(BaseAE):
     def __init__(self, **kwargs):
         super().__init__()
-        self.M = 625
-        self.N = 2137
+        self.M = kwargs["M"] or 625
+        self.N = kwargs["N"] or 2137
         self.inp = self.M * self.N
-        self.hidden = 64
-        self.latent = 8
+        self.hidden = kwargs["hidden"] or 128
+        self.latent = kwargs["latent"] or 64
 
         self.net = [
             LL(self.inp, self.hidden, do=0.2),

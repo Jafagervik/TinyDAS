@@ -1,11 +1,16 @@
 epochs: 10
 lr: 0.001
-loss: "mse"
-batch_size: 5
+batch_size: 2
 name: "ae"
 dataset: "data/"
 gpus: 1
-M: 7500
+M: 625
 N: 2137
-dims: [8_013_000, 16_000]
+hidden: 128
+latent: 64
 seed: 1234
+patience: 5
+min_delta: 0.0
+load: False
+nfiles: 10
+

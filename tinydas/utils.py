@@ -28,6 +28,13 @@ def parse_args():
             os.path.join(os.path.dirname(__file__), "..", "config", "ae.yaml")
         ),
     )
+    parser.add_argument(
+        "--mode",
+        "-m",
+        dest="mode",
+        help="Train or infer mode",
+        default="train",
+    )
     return parser.parse_args()
 
 

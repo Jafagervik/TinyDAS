@@ -8,19 +8,39 @@ from tinydas.trainer import Trainer
 from tinydas.utils import *
 
 
-def main():
-    model = AE()
+def train_mode(args):
+    config = get_config(args.filename)
+    seed_all(config["seed"])
 
-    dataset = Dataset(n=10)
-    dl = DataLoader(dataset, batch_size=2)
-    optim = nn.optim.AdamW(nn.state.get_parameters(model), lr=0.5)
     devices = ["CLANG"]
 
-    trainer = Trainer(
-        model, dl, optim, devices, epochs=10, patience=5, min_delta=0.0, load=False
-    )
+    model = AE(**config)
+
+    dataset = Dataset(n=config["nfiles"])
+    dl = DataLoader(dataset, batch_size=config["batch_size"])
+
+    optim = nn.optim.AdamW(nn.state.get_parameters(model), lr=config["lr"])
+
+    trainer = Trainer(model, dl, optim, devices, **config)
 
     trainer.train()
+
+
+def anomaly_mode():
+    print("TBI")
+
+
+def main():
+    args = parse_args()
+
+    match args.mode:
+        case "train":
+            train_mode(args)
+        case "anomaly":
+            anomaly_mode()
+        case _:
+            print("Invalid mode")
+            exit(1)
 
 
 if __name__ == "__main__":
