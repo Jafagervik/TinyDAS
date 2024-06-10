@@ -13,3 +13,4 @@ patience: 5
 min_delta: 0.0
 load: False
 nfiles: 10
+loss: "mse"
