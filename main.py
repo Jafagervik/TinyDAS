@@ -3,6 +3,7 @@ from tinygrad import nn
 from tinydas.dataloader import DataLoader
 from tinydas.dataset import Dataset
 from tinydas.models.ae import AE
+from tinydas.models.cnn_ae import CNNAE
 from tinydas.models.vae import VAE
 from tinydas.trainer import Trainer
 from tinydas.utils import *
@@ -21,6 +22,8 @@ def train_mode(args):
             model = AE(**config)
         case "vae":
             model = VAE(**config)
+        case "cnnae":
+            model = CNNAE(**config)
         case _:
             model = AE(**config)
 
