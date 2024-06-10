@@ -2,6 +2,7 @@ from typing import List, Optional
 
 import numpy as np
 from sklearn.metrics import classification_report
+from tinygrad import Tensor
 
 """
 1. Measure error between the input and the reconstruction for each sample. gather these in a vector.
@@ -38,6 +39,14 @@ def anomaly_classification_report(
     y_pred = np.array(y_pred)
     target_names = target_names or ["normal", "anomaly"]
     return classification_report(y_true, y_pred, target_names=target_names)
+
+
+def find_anomalies(y_true, y_pred, threshold: float = 0.99):
+    y_true = np.array(y_true)
+    y_pred = Tensor(y_pred).numpy()
+
+    # return the indices of the anomalies
+    return y_pred > threshold
 
 
 if __name__ == "__main__":

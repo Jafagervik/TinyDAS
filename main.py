@@ -27,6 +27,18 @@ def train_mode(args):
         case _:
             model = AE(**config)
 
+    if args.load:
+        config["load"] = True
+        load_model(model)
+
+    # if config["load"]:
+    # path = os.path.join(
+    #     "checkpoints", model.__class__.__name__.lower(), "best.safetensors"
+    # )
+    # state_dict = safe_load(path)
+    # load_state_dict(model, state_dict)
+    # print(f"Model loaded from {path}")
+
     dataset = Dataset(n=config["nfiles"])
     dl = DataLoader(dataset, batch_size=config["batch_size"])
 

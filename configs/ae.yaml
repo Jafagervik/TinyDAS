@@ -1,7 +1,6 @@
-epochs: 10
+epochs: 5
 lr: 0.001
 batch_size: 2
-name: "ae"
 dataset: "data/"
 gpus: 1
 M: 625

@@ -7,10 +7,9 @@ from tinygrad.nn.state import load_state_dict, safe_load
 from tqdm import trange
 
 from .dataloader import DataLoader
-from .dataset import Dataset
 from .early_stopping import EarlyStopping
-from .models.ae import AE
 from .models.base import BaseAE
+from .utils import save_model
 
 
 class Trainer:
@@ -23,8 +22,6 @@ class Trainer:
         **kwargs,
     ) -> None:
         self.model = model
-        if kwargs["load"]:
-            self.load_model(kwargs["path"])
         self.dataloader = dataloader
         self.optim = optimizer
         self.devices = devices
@@ -33,18 +30,10 @@ class Trainer:
         self.losses = [float(0)] * self.epochs
         self.early_stopping = EarlyStopping(kwargs["patience"], kwargs["min_delta"])
 
-    def load_model(self, path: str) -> None:
-        # Example: config/ae/best.safetensors
-        full_path = f"{path}/ae/best.safetensors"
-        state_dict = safe_load(full_path)
-        load_state_dict(self.model, state_dict)
-        print(f"Model loaded from {path}")
-
     @TinyJit
     def _run_epoch(self) -> Tensor:
         running_loss = 0.0
         with Tensor.train():
-            # running_loss = Tensor(0.0, requires_grad=False)
             for data, _ in self.dataloader:
                 self.optim.zero_grad()
                 x = data.reshape(-1, 625 * 2137)
@@ -63,10 +52,16 @@ class Trainer:
         for epoch in (t := trange(self.epochs)):
             GlobalCounters.reset()
             loss = self._run_epoch()
-            self.losses[epoch] = loss.item()
-            t.set_description(f"Epoch: {epoch + 1} | loss: {self.losses[epoch]:.2f}")
+            li = loss.item()
+            self.losses[epoch] = li
+            t.set_description(f"Epoch: {epoch + 1} | Loss: {li:.2f}")
 
-            self.early_stopping(loss.item())
+            if li < self.best_loss:
+                self.best_loss = li
+                self.early_stopping.best_loss = self.best_loss
+                save_model(self.model)
+
+            self.early_stopping(li)
             if self.early_stopping.early_stop:
                 print(f"Early stopping at epoch {epoch+1}")
                 break
