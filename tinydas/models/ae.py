@@ -21,21 +21,43 @@ class LinearBlockLayer:
         return x.sequential(self.net)
 
 
+class Encoder:
+    def __init__(self, input_dim: int, hidden_dim: int, latent_dim: int):
+        self.net = [
+            LinearBlockLayer(input_dim, hidden_dim),
+            LinearBlockLayer(hidden_dim, latent_dim),
+        ]
+
+    def __call__(self, x: Tensor) -> Tensor:
+        return x.sequential(self.net)
+
+
+class Decoder:
+    def __init__(self, input_dim: int, hidden_dim: int, latent_dim: int):
+        self.net = [
+            LinearBlockLayer(latent_dim, hidden_dim),
+            nn.Linear(hidden_dim, input_dim),
+            Tensor.sigmoid,
+        ]
+
+    def __call__(self, x: Tensor) -> Tensor:
+        return x.sequential(self.net)
+
+
 class AE(BaseAE):
     def __init__(self, **kwargs):
         super().__init__()
-        self.M = kwargs["M"] or 625
-        self.N = kwargs["N"] or 2137
-        self.inp = self.M * self.N
-        self.hidden = 512  # kwargs["hidden"] or 128
-        self.latent = 256  # kwargs["latent"] or 64
+
+        self.encoder = Encoder(
+            kwargs["M"] * kwargs["N"], kwargs["hidden"], kwargs["latent"]
+        )
+        self.decoder = Decoder(
+            kwargs["M"] * kwargs["N"], kwargs["hidden"], kwargs["latent"]
+        )
 
         self.net = [
-            LinearBlockLayer(self.inp, self.hidden, do=0.2),
-            LinearBlockLayer(self.hidden, self.latent),
-            LinearBlockLayer(self.latent, self.hidden),
-            nn.Linear(self.hidden, self.inp),
-            Tensor.sigmoid,
+            self.encoder,
+            self.decoder,
         ]
 
     def __call__(self, x: Tensor) -> Tensor:
