@@ -9,6 +9,7 @@ from tinydas.utils import *
 
 
 def train_mode(args):
+    """Train the model on the dataset."""
     config = get_config(args.filename)
     seed_all(config["seed"])
 
@@ -26,7 +27,7 @@ def train_mode(args):
     trainer.train()
 
 
-def anomaly_mode():
+def anomaly_mode(args):
     print("TBI")
 
 
@@ -37,7 +38,7 @@ def main():
         case "train":
             train_mode(args)
         case "anomaly":
-            anomaly_mode()
+            anomaly_mode(args)
         case _:
             print("Invalid mode")
             exit(1)
