@@ -1,7 +1,11 @@
 from typing import Any
-from tinygrad.nn import Tensor
+
 from tinygrad import nn
+from tinygrad.nn import Tensor
+
 from tinydas.losses import mse
+from tinydas.models.base import BaseAE
+
 
 class Encoder:
     def __init__(self) -> None:
@@ -11,14 +15,17 @@ class Encoder:
         self.fc = nn.Linear(1000, 128)
 
     def conv_block(self, inp: int, outp: int):
-        return nn.Conv2d(in_channels=inp, out_channels=outp, kernel_size=(3,3), stride=2, padding=1)
+        return nn.Conv2d(
+            in_channels=inp, out_channels=outp, kernel_size=(3, 3), stride=2, padding=1
+        )
 
-    def __call__(self, X: Tensor): 
+    def __call__(self, X: Tensor):
         X = self.c1(X)
         X = self.c2(X)
-        X = self.c2(X)
+        X = self.c3(X)
         X = X.flatten()
         return self.fc(X)
+
 
 class Decoder:
     def __init__(self):
@@ -47,3 +54,15 @@ class Decoder:
         x = nn.sigmoid(self.conv1(x))
         return x
 
+
+class CNNAE(BaseAE):
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.encoder = Encoder()
+        self.decoder = Decoder()
+
+    def __call__(self, x: Tensor) -> Tensor:
+        return self.decoder(self.encoder(x))
+
+    def criterion(self, X: Tensor) -> Tensor:
+        return mse(X, self(X))

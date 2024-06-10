@@ -7,8 +7,8 @@ from ..losses import mse
 from .base import BaseAE
 
 
-class LL:
-    def __init__(self, i: int, o: int, do: Optional[float] = None) -> None:
+class LinearBlockLayer:
+    def __init__(self, i: int, o: int, do: Optional[float] = None):
         self.net = [
             nn.Linear(i, o),
             # Tensor.batchnorm,
@@ -27,13 +27,13 @@ class AE(BaseAE):
         self.M = kwargs["M"] or 625
         self.N = kwargs["N"] or 2137
         self.inp = self.M * self.N
-        self.hidden = kwargs["hidden"] or 128
-        self.latent = kwargs["latent"] or 64
+        self.hidden = 512  # kwargs["hidden"] or 128
+        self.latent = 256  # kwargs["latent"] or 64
 
         self.net = [
-            LL(self.inp, self.hidden, do=0.2),
-            LL(self.hidden, self.latent),
-            LL(self.latent, self.hidden),
+            LinearBlockLayer(self.inp, self.hidden, do=0.2),
+            LinearBlockLayer(self.hidden, self.latent),
+            LinearBlockLayer(self.latent, self.hidden),
             nn.Linear(self.hidden, self.inp),
             Tensor.sigmoid,
         ]

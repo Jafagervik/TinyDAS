@@ -3,6 +3,9 @@ from typing import Tuple
 
 import matplotlib
 
+from tinydas.losses import kl_divergence, mae
+from tinydas.models.base import BaseAE
+
 matplotlib.use("QT5Agg")
 import matplotlib.pyplot as plt
 from tinygrad import TinyJit, nn
@@ -54,7 +57,7 @@ class Decoder:
         return x.sequential(self.layers)
 
 
-class VAE:
+class VAE(BaseAE):
     def __init__(self):
         self.encoder = Encoder()
         self.decoder = Decoder()
@@ -67,8 +70,8 @@ class VAE:
     def criterion(
         self, x: Tensor, x_hat: Tensor, mu: Tensor, logvar: Tensor
     ) -> Tuple[Tensor, Tensor, Tensor]:
-        rec_loss = x.sub(x_hat).abs().mean()
-        kl_loss = 0.5 * (1 + logvar - mu.square() - logvar.exp()).sum(axis=1).mean()
+        rec_loss = mae(x, x_hat)
+        kl_loss = kl_divergence(mu, logvar)
         elbo_loss = rec_loss + kl_loss
         return elbo_loss, rec_loss, kl_loss
 

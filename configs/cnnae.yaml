@@ -1,0 +1,15 @@
+epochs: 20
+lr: 0.001
+batch_size: 2
+name: "cnnae"
+dataset: "data/"
+gpus: 1
+M: 625
+N: 2137
+hidden: 128
+latent: 64
+seed: 1234
+patience: 5
+min_delta: 0.0
+load: False
+nfiles: 10

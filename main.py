@@ -1,21 +1,28 @@
-from tinygrad import Tensor, nn
-from tinygrad.device import Device
+from tinygrad import nn
 
 from tinydas.dataloader import DataLoader
 from tinydas.dataset import Dataset
 from tinydas.models.ae import AE
+from tinydas.models.vae import VAE
 from tinydas.trainer import Trainer
 from tinydas.utils import *
 
 
 def train_mode(args):
     """Train the model on the dataset."""
-    config = get_config(args.filename)
+
+    config = get_config(args.model)
     seed_all(config["seed"])
 
     devices = ["CLANG"]
 
-    model = AE(**config)
+    match args.model:
+        case "ae":
+            model = AE(**config)
+        case "vae":
+            model = VAE(**config)
+        case _:
+            model = AE(**config)
 
     dataset = Dataset(n=config["nfiles"])
     dl = DataLoader(dataset, batch_size=config["batch_size"])
@@ -28,13 +35,14 @@ def train_mode(args):
 
 
 def anomaly_mode(args):
+    _ = args
     print("TBI")
 
 
 def main():
     args = parse_args()
 
-    match args.mode:
+    match args.type:
         case "train":
             train_mode(args)
         case "anomaly":

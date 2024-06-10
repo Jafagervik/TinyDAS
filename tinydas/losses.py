@@ -11,8 +11,8 @@ def mae(X: Tensor, Y: Tensor):
     return Y.sub(X).abs().mean()
 
 
-def kl_div(X: Tensor, Y: Tensor):
-    pass
+def kl_divergence(mu: Tensor, logvar: Tensor):
+    return 0.5 * (1 + logvar - mu.square() - logvar.exp()).sum(axis=1).mean()
 
 
 def reconstruct(mu: Tensor, logvar: Tensor):
