@@ -36,7 +36,7 @@ if __name__ == "__main__":
     import h5py
     from tinygrad import Tensor
 
-    with h5py.File("./data/20200301_000015.hdf5", "r") as f:
+    with h5py.File("./data/20200301_001650.hdf5", "r") as f:
         data = Tensor(np.array(f["raw"][:], dtype=np.float32).T)
         times = Tensor(np.array(f["timestamp"][:]))
         print(data.shape)
