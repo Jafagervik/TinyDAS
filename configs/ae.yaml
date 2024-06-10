@@ -1,6 +1,6 @@
-epochs: 5
+epochs: 200
 lr: 0.001
-batch_size: 2
+batch_size: 5
 dataset: "data/"
 gpus: 1
 M: 625
@@ -11,4 +11,4 @@ seed: 1234
 patience: 5
 min_delta: 0.0
 load: False
-nfiles: 10
+nfiles: 100

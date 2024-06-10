@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from tinygrad import nn
 
 from tinydas.dataloader import DataLoader
@@ -5,6 +6,7 @@ from tinydas.dataset import Dataset
 from tinydas.models.ae import AE
 from tinydas.models.cnn_ae import CNNAE
 from tinydas.models.vae import VAE
+from tinydas.plots import plot_loss
 from tinydas.trainer import Trainer
 from tinydas.utils import *
 
@@ -17,7 +19,7 @@ def train_mode(args):
 
     devices = ["CLANG"]
 
-    match args.model:
+    match args.model.lower():
         case "ae":
             model = AE(**config)
         case "vae":
@@ -31,14 +33,6 @@ def train_mode(args):
         config["load"] = True
         load_model(model)
 
-    # if config["load"]:
-    # path = os.path.join(
-    #     "checkpoints", model.__class__.__name__.lower(), "best.safetensors"
-    # )
-    # state_dict = safe_load(path)
-    # load_state_dict(model, state_dict)
-    # print(f"Model loaded from {path}")
-
     dataset = Dataset(n=config["nfiles"])
     dl = DataLoader(dataset, batch_size=config["batch_size"])
 
@@ -47,6 +41,8 @@ def train_mode(args):
     trainer = Trainer(model, dl, optim, devices, **config)
 
     trainer.train()
+
+    plot_loss(trainer, save=True)
 
 
 def anomaly_mode(args):
