@@ -3,7 +3,6 @@ from typing import List
 from tinygrad import GlobalCounters, TinyJit
 from tinygrad.nn import Tensor
 from tinygrad.nn.optim import Optimizer
-from tinygrad.nn.state import load_state_dict, safe_load
 from tqdm import trange
 
 from .dataloader import DataLoader
@@ -36,7 +35,10 @@ class Trainer:
         with Tensor.train():
             for data, _ in self.dataloader:
                 self.optim.zero_grad()
-                x = data.reshape(-1, 625 * 2137)
+                if len(self.devices) > 1:
+                    x = data.shard_(self.devices, axis=0).reshape(-1, 625 * 2137)
+                else:
+                    x = data.reshape(-1, 625 * 2137)
 
                 loss = self.model.criterion(x).backward()
 

@@ -17,13 +17,18 @@ def train_mode(args):
     seed_all(config["seed"])
 
     # TODO: Use multiple GPUs
-    devices = ["CLANG"]
+    # devices = ["CLANG"]
+    devices = get_gpus(2)
 
     model = select_model(args.model, **config)
 
     if args.load:
         config["load"] = True
         load_model(model)
+
+    if len(devices) > 1:
+        for _, x in nn.state.get_state_dict(model).items():
+            x.to_(devices)
 
     dataset = Dataset(n=config["nfiles"])
     dl = DataLoader(dataset, batch_size=config["batch_size"])
