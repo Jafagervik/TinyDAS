@@ -47,7 +47,7 @@ def train_mode(args):
         print(dl.num_samples)
 
 
-    optim = nn.optim.AdamW(nn.state.get_parameters(model), lr=config["lr"])
+    optim = nn.optim.Adam(nn.state.get_parameters(model), lr=config["lr"])
     params = nn.state.get_parameters(model)
     # optim = select_optimizer(config["optimizer"], params, config["lr"])
 
