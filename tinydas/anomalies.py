@@ -63,44 +63,31 @@ def get_datetime_of_first_anomaly(times, row: int) -> datetime:
     return datetime.fromtimestamp(times[row])
 
 
+def alert_anomaly(dt: datetime):
+    print(f"Anomaly found at {dt}")
+
+
 def predict_file(filename: str, **config):
     data, times = load_das_file(filename)
     data, times = Tensor(data), np.array(times)
-
-    data = custom_flatten(data)
 
     model = select_model("ae", **config)
 
     reconstructed = model.predict(data)
 
-    reconstruction_loss = mse(data, reconstructed)
-
-    data = reshape_back(data)
-    reconstructed = reshape_back(reconstructed)
-
-    print(f"{reconstructed.shape=}")
-    print(f"{data.shape=}")
+    # reconstruction_loss = mse(data, reconstructed)
 
     anomalies = find_anomalies(data, reconstructed)
 
-    print(anomalies.shape)
-
     first_row = find_first_anomaly_index(anomalies)
 
-    print(f"{first_row=}")
+    if first_row is None:
+        return
 
     dt = get_datetime_of_first_anomaly(times, first_row)
 
-    print(dt)
-
     # plot anomalies and alert of times
-
-
-if __name__ == "__main__":
-    config = get_config("ae")
-    filename = "./data/20200301_000015.hdf5"
-
-    predict_file(filename, **config)
+    alert_anomaly(dt)
 
 
 def stream_predict():

@@ -27,4 +27,10 @@ class BaseAE(ABC):
         pass
 
     def predict(self, x: Tensor) -> Tensor:
-        return self(x)[0]
+        """
+        Input tensor is being processed to fit encoder
+        after decoder is done, it is reshaped back
+        """
+        x = x.reshape(-1, 625 * 2137)
+        out = self(x)
+        return out.reshape(625, 2137)
