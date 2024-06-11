@@ -97,3 +97,7 @@ def stream_predict():
     3. When an anomaly is found, get the timestamp and
     """
     raise NotImplemented()
+
+
+def send_email(user_mail: str):
+    pass
