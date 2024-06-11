@@ -3,9 +3,10 @@
 #SBATCH -p GPUQ
 #SBATCH -J tinydas_ae
 #SBATCH --account=ie-idi
-#SBATCH -t 02:00:00
+#SBATCH -t 04:00:00
 #SBATCH -N 1 # Two nodes
-#SBATCH --gres=gpu:a100:2
+#SBATCH --mem=40960
+#SBATCH --gres=gpu:2
 #SBATCH --constraint="gpu40g|gpu80g"
 #SBATCH --output=log.txt # Log file
 
@@ -15,4 +16,4 @@ source /cluster/home/jorgenaf/master/bin/activate
 
 # WORKDIR = ${SLURM_SUBMIT_DIR}
 # cd ${WORKDIR}
-python main.py -t train -m ae
+python main.py -t train -m ae 

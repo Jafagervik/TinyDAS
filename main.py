@@ -13,31 +13,48 @@ from tinydas.utils import *
 def train_mode(args):
     """Train the model on the dataset."""
 
+    debug = True
     config = get_config(args.model)
     seed_all(config["seed"])
 
     # TODO: Use multiple GPUs
     # devices = ["CLANG"]
     devices = get_gpus(2)
+    if debug: 
+        print(devices)
 
     model = select_model(args.model, **config)
-
-    if args.load:
+    
+    if args.load == True:
         config["load"] = True
         load_model(model)
+
+    if debug: 
+        print(model)
 
     if len(devices) > 1:
         for _, x in nn.state.get_state_dict(model).items():
             x.to_(devices)
 
     dataset = Dataset(n=config["nfiles"])
+    #dataset = Dataset()
+
+    if debug: 
+        print(dataset.shape)
     dl = DataLoader(dataset, batch_size=config["batch_size"])
+
+    if debug: 
+        print(dl.num_samples)
+
 
     optim = nn.optim.AdamW(nn.state.get_parameters(model), lr=config["lr"])
     params = nn.state.get_parameters(model)
     # optim = select_optimizer(config["optimizer"], params, config["lr"])
 
     trainer = Trainer(model, dl, optim, devices, **config)
+
+    if debug:
+        print(trainer.best_loss)
 
     trainer.train()
 

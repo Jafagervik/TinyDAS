@@ -5,7 +5,7 @@ from tinygrad.nn import Tensor
 
 from tinydas.utils import load_das_file
 
-# from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 
 
 class Dataset:
@@ -39,9 +39,10 @@ class Dataset:
         if n != -1:
             filenames = filenames[:n]
 
-        # with ThreadPoolExecutor() as executor:
-        # results = list(map(self._load_file, filenames))
-        results = [load_das_file(fs) for fs in filenames]
+        with ThreadPoolExecutor() as executor:
+            results = list(map(load_das_file, filenames))
+        #results = [load_das_file(fs) for fs in filenames]
+        results = [tup for tup in results if tup[0].shape == (625, 2137)]
 
         all_data, all_times = zip(*results)
         all_data_tensor = Tensor(np.stack(all_data), requires_grad=True)

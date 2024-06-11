@@ -11,4 +11,4 @@ seed: 1234
 patience: 5
 min_delta: 0.0
 load: False
-nfiles: 100
+nfiles: 1000

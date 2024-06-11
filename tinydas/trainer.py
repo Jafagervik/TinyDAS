@@ -40,6 +40,7 @@ class Trainer:
                 else:
                     x = data.reshape(-1, 625 * 2137)
 
+                print(x.shape)
                 loss = self.model.criterion(x).backward()
 
                 self.optim.step()
