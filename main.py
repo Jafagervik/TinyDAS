@@ -28,9 +28,9 @@ def train_mode(args):
     dataset = Dataset(n=config["nfiles"])
     dl = DataLoader(dataset, batch_size=config["batch_size"])
 
-    # optim = nn.optim.AdamW(nn.state.get_parameters(model), lr=config["lr"])
+    optim = nn.optim.AdamW(nn.state.get_parameters(model), lr=config["lr"])
     params = nn.state.get_parameters(model)
-    optim = select_optimizer(config["optimizer"], params, config["lr"])
+    # optim = select_optimizer(config["optimizer"], params, config["lr"])
 
     trainer = Trainer(model, dl, optim, devices, **config)
 
