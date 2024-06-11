@@ -37,8 +37,6 @@ class Trainer:
             for data, _ in self.dataloader:
                 self.optim.zero_grad()
                 x = data.reshape(-1, 625 * 2137)
-                # x = data.flatten(start_dim=1)
-                # if len(self.devices) > 1 and any(self.devices) != "CLANG"
 
                 loss = self.model.criterion(x).backward()
 
@@ -64,4 +62,5 @@ class Trainer:
             self.early_stopping(li)
             if self.early_stopping.early_stop:
                 print(f"Early stopping at epoch {epoch+1}")
+                save_model(self.model, final=True)
                 break

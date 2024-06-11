@@ -1,8 +1,9 @@
 import os
 
-import h5py
 import numpy as np
 from tinygrad.nn import Tensor
+
+from tinydas.utils import load_das_file
 
 # from concurrent.futures import ThreadPoolExecutor
 
@@ -32,14 +33,6 @@ class Dataset:
     def __len__(self) -> int:
         return self.data["data"].shape[0]
 
-    def _load_file(self, filename: str):
-        with h5py.File(filename, "r") as f:
-            data = np.array(f["raw"][:], dtype=np.float32).T
-            times = np.array(f["timestamp"][:])
-        if self.transpose:
-            data = data.T
-        return data, times
-
     def _init_data(self, n: int):
         # if entry.is_file() and entry.name.endswith('.h5')]
         filenames = [entry.path for entry in os.scandir(self.path)]
@@ -48,7 +41,7 @@ class Dataset:
 
         # with ThreadPoolExecutor() as executor:
         # results = list(map(self._load_file, filenames))
-        results = [self._load_file(fs) for fs in filenames]
+        results = [load_das_file(fs) for fs in filenames]
 
         all_data, all_times = zip(*results)
         all_data_tensor = Tensor(np.stack(all_data), requires_grad=True)

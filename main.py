@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 from tinygrad import nn
 
+from tinydas.anomalies import predict_file
 from tinydas.dataloader import DataLoader
 from tinydas.dataset import Dataset
-from tinydas.models.ae import AE
-from tinydas.models.cnn_ae import CNNAE
-from tinydas.models.vae import VAE
 from tinydas.plots import plot_loss
+from tinydas.selections import select_model, select_optimizer
 from tinydas.trainer import Trainer
 from tinydas.utils import *
 
@@ -17,17 +16,10 @@ def train_mode(args):
     config = get_config(args.model)
     seed_all(config["seed"])
 
+    # TODO: Use multiple GPUs
     devices = ["CLANG"]
 
-    match args.model.lower():
-        case "ae":
-            model = AE(**config)
-        case "vae":
-            model = VAE(**config)
-        case "cnnae":
-            model = CNNAE(**config)
-        case _:
-            model = AE(**config)
+    model = select_model(args.model, **config)
 
     if args.load:
         config["load"] = True
@@ -36,7 +28,9 @@ def train_mode(args):
     dataset = Dataset(n=config["nfiles"])
     dl = DataLoader(dataset, batch_size=config["batch_size"])
 
-    optim = nn.optim.AdamW(nn.state.get_parameters(model), lr=config["lr"])
+    # optim = nn.optim.AdamW(nn.state.get_parameters(model), lr=config["lr"])
+    params = nn.state.get_parameters(model)
+    optim = select_optimizer(config["optimizer"], params, config["lr"])
 
     trainer = Trainer(model, dl, optim, devices, **config)
 
@@ -46,8 +40,24 @@ def train_mode(args):
 
 
 def anomaly_mode(args):
-    _ = args
-    print("TBI")
+    # stream or img mode
+
+    config = get_config(args.model)
+    filename = "./data/20200301_000015.hdf5"
+
+    predict_file(filename, **config)
+
+    # img mode
+
+    # das_img = None
+
+    # model = load_model()
+
+    # anomalies = find_anomalies(das_img, model)
+
+    # plot anomalies
+
+    # find anomaly scores and so on
 
 
 def main():
@@ -59,7 +69,7 @@ def main():
         case "detect":
             anomaly_mode(args)
         case _:
-            print("Invalid mode")
+            print("Invalid mode, please select train or detect.")
             exit(1)
 
 

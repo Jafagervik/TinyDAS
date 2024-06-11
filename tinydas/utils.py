@@ -1,12 +1,23 @@
 import argparse
 import os
 import random as rnd
-from typing import List, Tuple
+from typing import List
 
+import h5py
+import numpy as np
 import yaml
 from tinygrad import Device
 from tinygrad.nn import Tensor
 from tinygrad.nn.state import get_state_dict, load_state_dict, safe_load, safe_save
+
+
+def custom_flatten(t: Tensor) -> Tensor:
+    return t.reshape(1, t.shape[0] * t.shape[1])
+
+
+def reshape_back(t: Tensor) -> Tensor:
+    # TODO: Fix name and hardcoded values
+    return t.reshape(625, 2137)
 
 
 def seed_all(seed: int = 1234) -> None:
@@ -83,3 +94,13 @@ def reconstruct(mu: Tensor, logvar: Tensor) -> Tensor:
     std = logvar.exp().sqrt()
     eps = Tensor.randn(mu.shape)
     return mu + eps * std
+
+
+def load_das_file(filename: str, transpose: bool = False):
+    """Loads a single das file in to a tuple of the data and the timestamps."""
+    with h5py.File(filename, "r") as f:
+        data = np.array(f["raw"][:], dtype=np.float32).T
+        times = np.array(f["timestamp"][:])
+    if transpose:
+        data = data.T
+    return data, times

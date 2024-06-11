@@ -1,8 +1,13 @@
+from datetime import datetime
 from typing import List, Optional
 
 import numpy as np
 from sklearn.metrics import classification_report
 from tinygrad import Tensor
+
+from tinydas.losses import mse
+from tinydas.selections import select_model
+from tinydas.utils import custom_flatten, get_config, load_das_file, reshape_back
 
 """
 1. Measure error between the input and the reconstruction for each sample. gather these in a vector.
@@ -41,15 +46,67 @@ def anomaly_classification_report(
     return classification_report(y_true, y_pred, target_names=target_names)
 
 
-def find_anomalies(y_true, y_pred, threshold: float = 0.99):
-    y_true = np.array(y_true)
-    y_pred = Tensor(y_pred).numpy()
+def find_anomalies(y_true: Tensor, y_pred: Tensor, threshold: float = 0.99):
+    difference = y_pred.sub(y_true).abs()
 
     # return the indices of the anomalies
-    return y_pred > threshold
+    return difference.numpy() > threshold
+
+
+def find_first_anomaly_index(anomalies) -> Optional[int]:
+    """Find the row where the first anomaly occurs"""
+    row_mask = np.any(anomalies, axis=1)
+    return int(np.argmax(row_mask)) if np.any(row_mask) else None
+
+
+def get_datetime_of_first_anomaly(times, row: int) -> datetime:
+    return datetime.fromtimestamp(times[row])
+
+
+def predict_file(filename: str, **config):
+    data, times = load_das_file(filename)
+    data, times = Tensor(data), np.array(times)
+
+    data = custom_flatten(data)
+
+    model = select_model("ae", **config)
+
+    reconstructed = model.predict(data)
+
+    reconstruction_loss = mse(data, reconstructed)
+
+    data = reshape_back(data)
+    reconstructed = reshape_back(reconstructed)
+
+    print(f"{reconstructed.shape=}")
+    print(f"{data.shape=}")
+
+    anomalies = find_anomalies(data, reconstructed)
+
+    print(anomalies.shape)
+
+    first_row = find_first_anomaly_index(anomalies)
+
+    print(f"{first_row=}")
+
+    dt = get_datetime_of_first_anomaly(times, first_row)
+
+    print(dt)
+
+    # plot anomalies and alert of times
 
 
 if __name__ == "__main__":
-    y_true = [0, 1, 0, 1]
-    y_pred = [0, 0, 0, 1]
-    print(anomaly_classification_report(y_true, y_pred))
+    config = get_config("ae")
+    filename = "./data/20200301_000015.hdf5"
+
+    predict_file(filename, **config)
+
+
+def stream_predict():
+    """
+    1. find folder of das files
+    2. stream them one by one according to model
+    3. When an anomaly is found, get the timestamp and
+    """
+    raise NotImplemented()
