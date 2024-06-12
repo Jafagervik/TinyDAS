@@ -54,12 +54,14 @@ class Trainer:
             loss = self._run_epoch()
             li = loss.item()
             self.losses[epoch] = li
-            t.set_description(f"Epoch: {epoch + 1} | Loss: {li:.2f}")
-
+            msg = f"Epoch: {epoch + 1} | Loss: {li:.2f}"
             if li < self.best_loss:
                 self.best_loss = li
                 self.early_stopping.best_loss = self.best_loss
                 save_model(self.model)
+                msg  = f"New best loss: {li:.2f}"
+                
+            t.set_description(msg)
 
             self.early_stopping(li)
             if self.early_stopping.early_stop:

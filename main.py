@@ -12,18 +12,20 @@ from tinydas.utils import *
 def train_mode(args):
     """Train the model on the dataset."""
 
-    debug = False
-    devices = get_gpus(2)
+    debug = True
     config = get_config(args.model)
     seed_all(config["seed"])
 
+    devices = get_gpus(2)
     # TODO: Use multiple GPUs
     #devices = ["CUDA:0"]
 
     if debug: 
         print(devices)
 
-    dataset = Dataset(n=config["nfiles"])
+    dataset = Dataset(max_files=config["nfiles"])
+    if debug:
+        print(dataset)
     dl = DataLoader(dataset, batch_size=config["batch_size"])
 
     if debug: 
@@ -43,6 +45,8 @@ def train_mode(args):
 
     if len(devices) > 1:
         for _, x in nn.state.get_state_dict(model).items():
+            # USE
+            #if config["half_prec"]: x = x.float().half()
             x.to_(devices)
 
     params = nn.state.get_parameters(model)

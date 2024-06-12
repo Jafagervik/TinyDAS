@@ -73,13 +73,13 @@ def get_config(model: str):
             exit(1)
 
 
-def save_model(model, final: bool = False):
+def save_model(model, final: bool = False, show: bool = False):
     state_dict = get_state_dict(model)
     model_name = model.__class__.__name__.lower()
     final_or_best = "final.safetensors" if final else "best.safetensors"
     path_to_checkpoints = os.path.join("/cluster/home/jorgenaf/TinyDAS/checkpoints", model_name, final_or_best)
     safe_save(state_dict, path_to_checkpoints)
-    print(f"Model saved to {path_to_checkpoints}")
+    if show: print(f"Model saved to {path_to_checkpoints}")
 
 
 def load_model(model):
@@ -93,7 +93,7 @@ def load_model(model):
     print(f"Model loaded from {path}")
 
 
-def reconstruct(mu: Tensor, logvar: Tensor) -> Tensor:
+def reparameterize(mu: Tensor, logvar: Tensor) -> Tensor:
     std = logvar.exp().sqrt()
     eps = Tensor.randn(mu.shape)
     return mu + eps * std

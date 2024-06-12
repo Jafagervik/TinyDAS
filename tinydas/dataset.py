@@ -2,21 +2,56 @@ import os
 
 import numpy as np
 from tinygrad.nn import Tensor
-
-from tinydas.utils import load_das_file
+from tinygrad.dtype import dtypes
 
 from concurrent.futures import ThreadPoolExecutor
 
+from typing import List
+import h5py
 
 class Dataset:
-    """
-    DataSet class to load the data from the .h5 files
+    def __init__(self, path: str = "./data", transpose: bool = False, max_files: int = -1):
+        self.path = path
+        self.transpose = transpose
+        self.max_files = max_files
+        self.filenames = self._get_filtered_filenames()
+        self.sample_shape = (625, 2137)
 
-    Args:
-        - path (str): Path to the data directory
-        - transpose (bool): Transpose the data or not
-    """
+    def __repr__(self) -> str:
+        return f"Dataset with {len(self.filenames)} files, sample shape: {self.sample_shape}"
 
+    def __len__(self) -> int:
+        return len(self.filenames)
+
+    def _get_filtered_filenames(self) -> List[str]:
+        filenames = [entry.path for entry in os.scandir(self.path)]
+        filtered_filenames = []
+
+        for filename in filenames:
+            if len(filtered_filenames) >= self.max_files > 0:
+                break
+            try:
+                with h5py.File(filename, 'r') as f:
+                    data_shape = np.array(f['raw'][:]).shape
+                    if data_shape == (2137, 625):
+                        filtered_filenames.append(filename)
+                        continue
+
+            except Exception as e:
+                print(f"Could not read file {filename}: {e}")
+
+        return filtered_filenames
+
+    def load_file(self, filename: str):
+        with h5py.File(filename, 'r') as f:
+            data = np.array(f['raw'][:], dtype=np.float32).T
+            if self.transpose:
+                data = data.T
+        return data
+
+
+"""
+class Dataset:
     def __init__(self, path: str = "./data", transpose: bool = False, n: int = -1):
         self.path = path
         self.transpose = transpose
@@ -48,6 +83,7 @@ class Dataset:
 
         return {"data": all_data_tensor}#, "times": all_times_tensor}
 
+"""
 
 if __name__ == "__main__":
     data = Dataset()
