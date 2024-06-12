@@ -19,7 +19,7 @@ def train_mode(args):
 
     # TODO: Use multiple GPUs
     # devices = ["CLANG"]
-    devices = get_gpus(2)
+    devices = get_gpus(4)
     if debug: 
         print(devices)
 
