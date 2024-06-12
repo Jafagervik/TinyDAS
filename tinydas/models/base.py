@@ -31,6 +31,9 @@ class BaseAE(ABC):
         Input tensor is being processed to fit encoder
         after decoder is done, it is reshaped back
         """
+        Tensor.no_grad = True
         x = x.reshape(-1, 625 * 2137)
         out = self(x)
-        return out.reshape(625, 2137)
+        out = out.reshape(625, 2137)
+        Tensor.no_grad = False 
+        return out

@@ -62,18 +62,21 @@ class VAE(BaseAE):
         self.encoder = Encoder()
         self.decoder = Decoder()
 
-    def __call__(self, x: Tensor):
+    def __call__(self, x: Tensor) -> Tensor:
         mu, logvar = self.encoder(x)
         z = reconstruct(mu, logvar)
-        return self.decoder(z), mu, logvar
+        return self.decoder(z)
 
-    def criterion(
-        self, x: Tensor, x_hat: Tensor, mu: Tensor, logvar: Tensor
-    ) -> Tuple[Tensor, Tensor, Tensor]:
+    def criterion(self, x: Tensor) -> Tensor:
+        mu, logvar = self.encoder(x)
+        x_hat = self(x)
         rec_loss = mae(x, x_hat)
         kl_loss = kl_divergence(mu, logvar)
         elbo_loss = rec_loss + kl_loss
-        return elbo_loss, rec_loss, kl_loss
+        return elbo_loss
+    
+    def predict(self, x: Tensor) -> Tensor:
+        return self(x)
 
     def plot_latent_space(self, x: Tensor):
         mu, _ = self.encoder(x)

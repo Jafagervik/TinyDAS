@@ -9,7 +9,6 @@ from tinydas.selections import select_model, select_optimizer
 from tinydas.trainer import Trainer
 from tinydas.utils import *
 
-
 def train_mode(args):
     """Train the model on the dataset."""
 
@@ -19,9 +18,18 @@ def train_mode(args):
 
     # TODO: Use multiple GPUs
     # devices = ["CLANG"]
-    devices = get_gpus(4)
+    devices = get_gpus(2)
     if debug: 
         print(devices)
+
+    dataset = Dataset(n=config["nfiles"])
+    dl = DataLoader(dataset, batch_size=config["batch_size"])
+
+    if debug: 
+        print(dataset.shape)
+
+    if debug: 
+        print(dl.num_samples)
 
     model = select_model(args.model, **config)
     
@@ -36,19 +44,9 @@ def train_mode(args):
         for _, x in nn.state.get_state_dict(model).items():
             x.to_(devices)
 
-    dataset = Dataset(n=config["nfiles"])
-    #dataset = Dataset()
-
-    if debug: 
-        print(dataset.shape)
-    dl = DataLoader(dataset, batch_size=config["batch_size"])
-
-    if debug: 
-        print(dl.num_samples)
-
-
-    optim = nn.optim.Adam(nn.state.get_parameters(model), lr=config["lr"])
     params = nn.state.get_parameters(model)
+    optim = nn.optim.Adam(params, lr=config["lr"])
+
     # optim = select_optimizer(config["optimizer"], params, config["lr"])
 
     trainer = Trainer(model, dl, optim, devices, **config)

@@ -3,11 +3,11 @@ from tinygrad.nn import Tensor
 # This need to be backwarded after used in te forward pass
 
 
-def mse(X: Tensor, Y: Tensor):
+def mse(X: Tensor, Y: Tensor) -> Tensor:
     return Y.sub(X).square().mean()
 
 
-def mae(X: Tensor, Y: Tensor):
+def mae(X: Tensor, Y: Tensor) -> Tensor:
     return Y.sub(X).abs().mean()
 
 

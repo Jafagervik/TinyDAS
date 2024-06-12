@@ -5,10 +5,10 @@ from tinygrad.nn import Tensor
 from tinygrad.nn.optim import Optimizer
 from tqdm import trange
 
-from .dataloader import DataLoader
-from .early_stopping import EarlyStopping
-from .models.base import BaseAE
-from .utils import save_model
+from tinydas.dataloader import DataLoader
+from tinydas.early_stopping import EarlyStopping
+from tinydas.models.base import BaseAE
+from tinydas.utils import save_model
 
 
 class Trainer:
@@ -33,17 +33,16 @@ class Trainer:
     def _run_epoch(self) -> Tensor:
         running_loss = 0.0
         with Tensor.train():
+            self.optim.zero_grad()
             for data, _ in self.dataloader:
-                self.optim.zero_grad()
-                if len(self.devices) > 1:
-                    x = data.shard_(self.devices, axis=0).reshape(-1, 625 * 2137)
-                else:
-                    x = data.reshape(-1, 625 * 2137)
+                x = data.reshape(-1, 625 * 2137).shard_(self.devices, axis=0)
+                #if len(self.devices) > 1:
+                #    x = data.shard_(self.devices, axis=0)
 
-                print(x.shape)
                 loss = self.model.criterion(x).backward()
 
                 self.optim.step()
+                loss.backward()
 
                 running_loss += loss.item()
         return Tensor(running_loss)

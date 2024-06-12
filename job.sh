@@ -5,8 +5,8 @@
 #SBATCH --account=ie-idi
 #SBATCH -t 02:00:00
 #SBATCH -N 1 # Two nodes
-#SBATCH --mem=40960
-#SBATCH --gres=gpu:4
+#SBATCH --mem=40G
+#SBATCH --gres=gpu:2
 #SBATCH --constraint="gpu40g|gpu80g"
 #SBATCH --output=log.txt # Log file
 
