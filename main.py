@@ -12,13 +12,14 @@ from tinydas.utils import *
 def train_mode(args):
     """Train the model on the dataset."""
 
-    debug = True
+    debug = False
+    devices = get_gpus(2)
     config = get_config(args.model)
     seed_all(config["seed"])
 
     # TODO: Use multiple GPUs
-    # devices = ["CLANG"]
-    devices = get_gpus(2)
+    #devices = ["CUDA:0"]
+
     if debug: 
         print(devices)
 
@@ -56,7 +57,7 @@ def train_mode(args):
 
     trainer.train()
 
-    plot_loss(trainer, save=True)
+    #plot_loss(trainer, save=True)
 
 
 def anomaly_mode(args):

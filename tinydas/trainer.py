@@ -33,16 +33,16 @@ class Trainer:
     def _run_epoch(self) -> Tensor:
         running_loss = 0.0
         with Tensor.train():
-            self.optim.zero_grad()
-            for data, _ in self.dataloader:
-                x = data.reshape(-1, 625 * 2137).shard_(self.devices, axis=0)
-                #if len(self.devices) > 1:
-                #    x = data.shard_(self.devices, axis=0)
+            for x in self.dataloader:
+                if len(self.devices) > 1:
+                    x.shard_(self.devices, axis=0)
+                x = x.reshape(-1, 625 * 2137)
 
-                loss = self.model.criterion(x).backward()
+                loss = self.model.criterion(x)
 
-                self.optim.step()
+                self.optim.zero_grad()
                 loss.backward()
+                self.optim.step()
 
                 running_loss += loss.item()
         return Tensor(running_loss)
@@ -66,3 +66,4 @@ class Trainer:
                 print(f"Early stopping at epoch {epoch+1}")
                 save_model(self.model, final=True)
                 break
+        save_model(self.model, final=True)

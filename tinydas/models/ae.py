@@ -1,6 +1,6 @@
 from typing import Optional
 
-from tinygrad import dtypes, nn
+from tinygrad import dtypes, nn, TinyJit
 from tinygrad.nn import Tensor
 
 from ..losses import mse
@@ -56,7 +56,7 @@ class AE(BaseAE):
         )
 
     def __call__(self, x: Tensor) -> Tensor:
-        return self.decoder(self.encoder(x))
+        return self.decoder(self.encoder(x)).realize()
 
     def criterion(self, X: Tensor) -> Tensor:
         return mse(X, self(X))

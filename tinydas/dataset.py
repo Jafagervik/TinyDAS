@@ -24,8 +24,6 @@ class Dataset:
         self.rows = self.data["data"].shape[1]
         self.cols = self.data["data"].shape[2]
         self.shape = self.data["data"].shape
-        self.raw = self.data["data"]
-        self.times = self.data["times"]
 
     def __repr__(self) -> str:
         return f"{self.data['data'].shape}"
@@ -45,10 +43,10 @@ class Dataset:
         results = [tup for tup in results if tup[0].shape == (625, 2137)]
 
         all_data, all_times = zip(*results)
-        all_data_tensor = Tensor(np.stack(all_data), requires_grad=True)
-        all_times_tensor = Tensor(np.stack(all_times), requires_grad=True)
+        all_data_tensor = Tensor(np.stack(all_data), requires_grad=False)
+        all_times_tensor = Tensor(np.stack(all_times), requires_grad=False)
 
-        return {"data": all_data_tensor, "times": all_times_tensor}
+        return {"data": all_data_tensor}#, "times": all_times_tensor}
 
 
 if __name__ == "__main__":

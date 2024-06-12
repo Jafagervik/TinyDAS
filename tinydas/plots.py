@@ -7,7 +7,7 @@ import numpy as np
 from tinydas.trainer import Trainer
 
 
-def plot_loss(trainer: Trainer, show: bool = True, save: bool = True) -> None:
+def plot_loss(trainer: Trainer, show: bool = False, save: bool = False) -> None:
     plt.figure(figsize=(10, 5))
     plt.plot(np.arange(len(trainer.losses)), trainer.losses)
     plt.xlabel("Epochs")

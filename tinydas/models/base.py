@@ -36,4 +36,4 @@ class BaseAE(ABC):
         out = self(x)
         out = out.reshape(625, 2137)
         Tensor.no_grad = False 
-        return out
+        return out.realize()

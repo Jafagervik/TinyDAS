@@ -10,7 +10,6 @@ from tinygrad import Device
 from tinygrad.nn import Tensor
 from tinygrad.nn.state import get_state_dict, load_state_dict, safe_load, safe_save
 
-
 def custom_flatten(t: Tensor) -> Tensor:
     return t.reshape(1, t.shape[0] * t.shape[1])
 
@@ -22,6 +21,7 @@ def reshape_back(t: Tensor) -> Tensor:
 
 def seed_all(seed: int = 1234) -> None:
     Tensor.manual_seed(seed)
+    np.random.seed(seed)
     rnd.seed(seed)
 
 
@@ -59,7 +59,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def get_gpus(amount: int = 2) -> List[str]:
+def get_gpus(amount: int = 1) -> List[str]:
     return [f"{Device.DEFAULT}:{i}" for i in range(os.getenv("GPUS", amount))]
 
 
@@ -77,14 +77,16 @@ def save_model(model, final: bool = False):
     state_dict = get_state_dict(model)
     model_name = model.__class__.__name__.lower()
     final_or_best = "final.safetensors" if final else "best.safetensors"
-    path_to_checkpoints = os.path.join("checkpoints", model_name, final_or_best)
+    path_to_checkpoints = os.path.join("/cluster/home/jorgenaf/TinyDAS/checkpoints", model_name, final_or_best)
     safe_save(state_dict, path_to_checkpoints)
     print(f"Model saved to {path_to_checkpoints}")
 
 
 def load_model(model):
     path = os.path.join(
-        "checkpoints", model.__class__.__name__.lower(), "best.safetensors"
+        "/cluster/home/jorgenaf/TinyDAS/checkpoints", 
+        model.__class__.__name__.lower(), 
+        "best.safetensors"
     )
     state_dict = safe_load(path)
     load_state_dict(model, state_dict)

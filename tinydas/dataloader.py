@@ -7,8 +7,8 @@ class DataLoader:
     def __init__(self, dataset: Dataset, batch_size: int, shuffle: bool = False):
         if shuffle:
             rnd.shuffle(dataset.data)
-        self.data = dataset.raw
-        self.times = dataset.times
+        self.data = dataset.data["data"]
+        #self.times = dataset.data["times"]
         self.batch_size = batch_size
         self.num_samples = dataset.shape[0]
         self.current_index = 0
@@ -23,7 +23,7 @@ class DataLoader:
 
         end_index = min(self.current_index + self.batch_size, self.num_samples)
         batch_data = self.data[self.current_index : end_index]
-        batch_times = self.times[self.current_index : end_index]
+        #batch_times = self.times[self.current_index : end_index]
         self.current_index = end_index
 
-        return batch_data, batch_times
+        return batch_data#, batch_times
