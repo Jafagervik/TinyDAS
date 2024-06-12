@@ -52,18 +52,16 @@ class Trainer:
         for epoch in (t := trange(self.epochs)):
             GlobalCounters.reset()
             loss = self._run_epoch()
-            li = loss.item()
-            self.losses[epoch] = li
-            msg = f"Epoch: {epoch + 1} | Loss: {li:.2f}"
-            if li < self.best_loss:
-                self.best_loss = li
+            self.losses[epoch] = loss.item()
+
+            t.set_description(f"Epoch: {epoch + 1} | Loss: {loss.item():.2f}")
+
+            if loss.item() < self.best_loss:
+                self.best_loss = loss.item()
                 self.early_stopping.best_loss = self.best_loss
                 save_model(self.model)
-                msg  = f"New best loss: {li:.2f}"
-                
-            t.set_description(msg)
 
-            self.early_stopping(li)
+            self.early_stopping(loss.item())
             if self.early_stopping.early_stop:
                 print(f"Early stopping at epoch {epoch+1}")
                 save_model(self.model, final=True)

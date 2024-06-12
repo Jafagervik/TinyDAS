@@ -16,20 +16,17 @@ def train_mode(args):
     config = get_config(args.model)
     seed_all(config["seed"])
 
-    devices = get_gpus(2)
-    # TODO: Use multiple GPUs
-    #devices = ["CUDA:0"]
+    devices = get_gpus(4)
+    #devices = ["CLANG"]
 
     if debug: 
         print(devices)
 
-    dataset = Dataset(max_files=config["nfiles"])
+    dataset = Dataset(n=config["nfiles"])
     if debug:
         print(dataset)
     dl = DataLoader(dataset, batch_size=config["batch_size"])
 
-    if debug: 
-        print(dataset.shape)
 
     if debug: 
         print(dl.num_samples)

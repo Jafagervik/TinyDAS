@@ -6,9 +6,11 @@ from tinygrad.dtype import dtypes
 
 from concurrent.futures import ThreadPoolExecutor
 
+from tinydas.utils import load_das_file
 from typing import List
 import h5py
 
+"""
 class Dataset:
     def __init__(self, path: str = "./data", transpose: bool = False, max_files: int = -1):
         self.path = path
@@ -47,8 +49,6 @@ class Dataset:
             if self.transpose:
                 data = data.T
         return data
-
-
 """
 class Dataset:
     def __init__(self, path: str = "./data", transpose: bool = False, n: int = -1):
@@ -82,7 +82,6 @@ class Dataset:
 
         return {"data": all_data_tensor}#, "times": all_times_tensor}
 
-"""
 
 if __name__ == "__main__":
     data = Dataset()

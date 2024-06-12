@@ -12,7 +12,7 @@ from tinygrad import TinyJit, nn
 from tinygrad.nn import Tensor
 from tqdm import trange
 
-from tinydas.utils import reconstruct
+from tinydas.utils import reparameterize
 
 
 class LinearLayer:
@@ -64,7 +64,7 @@ class VAE(BaseAE):
 
     def __call__(self, x: Tensor) -> Tensor:
         mu, logvar = self.encoder(x)
-        z = reconstruct(mu, logvar)
+        z = reparameterize(mu, logvar)
         return self.decoder(z)
 
     def criterion(self, x: Tensor) -> Tensor:

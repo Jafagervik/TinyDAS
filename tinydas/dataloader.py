@@ -5,6 +5,7 @@ from .dataset import Dataset
 from tinygrad import Tensor
 import numpy as np
 
+"""
 class DataLoader:
     def __init__(self, dataset: Dataset, batch_size: int, shuffle: bool = False):
         self.dataset = dataset
@@ -33,8 +34,8 @@ class DataLoader:
         batch_data_tensor = Tensor(np.stack(batch_data), requires_grad=False)
 
         return batch_data_tensor
-
 """
+
 class DataLoader:
     def __init__(self, dataset: Dataset, batch_size: int, shuffle: bool = False):
         if shuffle:
@@ -59,4 +60,3 @@ class DataLoader:
         self.current_index = end_index
 
         return batch_data#, batch_times
-"""
