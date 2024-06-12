@@ -35,7 +35,6 @@ class Dataset:
                     data_shape = np.array(f['raw'][:]).shape
                     if data_shape == (2137, 625):
                         filtered_filenames.append(filename)
-                        continue
 
             except Exception as e:
                 print(f"Could not read file {filename}: {e}")
