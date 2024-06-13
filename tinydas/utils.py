@@ -98,7 +98,7 @@ def reparameterize(mu: Tensor, logvar: Tensor) -> Tensor:
     eps = Tensor.randn(*std.shape)
     print(eps.shape)
     print(std.shape)
-    print(eps.mul(std).shape)
+    print((eps * std).shape)
     return eps.mul(std).add(mu)
     #return eps * std + mu
 
