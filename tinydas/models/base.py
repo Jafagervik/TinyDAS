@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 
 from tinygrad.nn import Tensor
 
+from typing import Tuple, Dict
+
 
 class BaseAE(ABC):
     """
@@ -19,11 +21,11 @@ class BaseAE(ABC):
         pass
 
     @abstractmethod
-    def __call__(self, x: Tensor) -> Tensor:
+    def __call__(self, x: Tensor) -> Tuple[Tensor, ...]:
         pass
 
     @abstractmethod
-    def criterion(self, X: Tensor) -> Tensor:
+    def criterion(self, x: Tensor) -> Dict[str, Tensor]:
         pass
 
     def predict(self, x: Tensor) -> Tensor:

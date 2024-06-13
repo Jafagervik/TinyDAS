@@ -1,9 +1,8 @@
-import random
-from typing import Tuple
+from typing import Tuple, Dict
 
 import matplotlib
 
-from tinydas.losses import kl_divergence, mae
+from tinydas.losses import kl_divergence, mae, mse
 from tinydas.models.base import BaseAE
 
 matplotlib.use("QT5Agg")
@@ -28,15 +27,14 @@ class LinearLayer:
 
 
 class Encoder:
-    def __init__(self):
+    def __init__(self, i: int, h: int, l: int):
         self.layers = [
-            LinearLayer(28 * 28, 512),
-            LinearLayer(512, 256),
-            LinearLayer(256, 64),
+            LinearLayer(625 * 2137, 128),
+            LinearLayer(128, 32),
         ]
 
-        self.mu = nn.Linear(64, 32)
-        self.logvar = nn.Linear(64, 32)
+        self.mu = nn.Linear(32, 4)
+        self.logvar = nn.Linear(32, 4)
 
     def __call__(self, x: Tensor) -> Tuple[Tensor, Tensor]:
         x = x.sequential(self.layers)
@@ -44,13 +42,10 @@ class Encoder:
 
 
 class Decoder:
-    def __init__(self):
+    def __init__(self, i: int, h: int, l: int):
         self.layers = [
-            LinearLayer(32, 64),
-            LinearLayer(64, 256),
-            LinearLayer(256, 512),
-            nn.Linear(512, 28 * 28),
-            Tensor.sigmoid,
+            LinearLayer(l, h),
+            nn.Linear(h, i), Tensor.sigmoid,
         ]
 
     def __call__(self, x: Tensor) -> Tensor:
@@ -58,26 +53,33 @@ class Decoder:
 
 
 class VAE(BaseAE):
-    def __init__(self):
-        self.encoder = Encoder()
-        self.decoder = Decoder()
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.encoder = Encoder(
+            kwargs["M"] * kwargs["N"], kwargs["hidden"], kwargs["latent"]
+        )
+        self.decoder = Decoder(
+            kwargs["M"] * kwargs["N"], kwargs["hidden"], kwargs["latent"]
+        )
 
-    def __call__(self, x: Tensor) -> Tensor:
+    def __call__(self, x: Tensor) -> Tuple[Tensor, ...]:
         mu, logvar = self.encoder(x)
         z = reparameterize(mu, logvar)
-        return self.decoder(z)
+        return self.decoder(z), mu, logvar
 
-    def criterion(self, x: Tensor) -> Tensor:
-        mu, logvar = self.encoder(x)
-        x_hat = self(x)
-        rec_loss = mae(x, x_hat)
+    def criterion(self, x: Tensor) -> Dict[str, Tensor]:
+        x_hat, mu, logvar = self(x)
+
+        rec_loss = mse(x, x_hat)
         kl_loss = kl_divergence(mu, logvar)
-        elbo_loss = rec_loss + kl_loss
-        return elbo_loss
-    
-    def predict(self, x: Tensor) -> Tensor:
-        return self(x)
 
+        elbo_loss = rec_loss + kl_loss
+        return {
+            "loss": elbo_loss,
+            "klloss": kl_loss,
+            "recloss": rec_loss
+        }
+    
     def plot_latent_space(self, x: Tensor):
         mu, _ = self.encoder(x)
         plt.scatter(
@@ -99,42 +101,3 @@ def plot_losses(losses):
     plt.title("Loss")
     plt.legend()
     plt.show()
-
-
-def train():
-    Tensor.manual_seed(0)
-    random.seed(0)
-    M, N = 28, 28
-
-    model = VAE()
-    optim = nn.optim.Adam(nn.state.get_parameters(model))
-
-    X = Tensor.randn((32, M * N))
-    EPS = 30
-    bs = 4
-    losses = [[0.0, 0.0, 0.0]] * EPS
-
-    @TinyJit
-    def step() -> Tuple[Tensor, Tensor, Tensor]:
-        with Tensor.train():
-            samples = Tensor.randint(bs, high=X.shape[0])
-            x = X[samples].reshape(-1, M * N)
-            optim.zero_grad()
-            x_hat, mu, logvar = model(x)
-            elbo, rec, kl = model.criterion(x, x_hat, mu, logvar)
-            elbo.backward()
-            optim.step()
-            return elbo, rec, kl
-
-    print("Training VAE...")
-
-    for epoch in (t := trange(EPS)):
-        elbo, kl, rec = step()
-        losses[epoch] = [elbo.item(), kl.item(), rec.item()]
-        t.set_description(f"Epoch {epoch+1} | Loss: {elbo.item():.2f}")
-
-    plot_losses(losses)
-
-
-if __name__ == "__main__":
-    train()

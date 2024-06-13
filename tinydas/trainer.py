@@ -17,13 +17,13 @@ class Trainer:
         model: BaseAE,
         dataloader: DataLoader,
         optimizer: Optimizer,
-        devices: List[str],
+        #devices: List[str],
         **kwargs,
     ) -> None:
         self.model = model
         self.dataloader = dataloader
         self.optim = optimizer
-        self.devices = devices
+        #self.devices = devices
         self.best_loss = float("inf")
         self.epochs = kwargs["epochs"] if kwargs["epochs"] else 10
         self.losses = [float(0)] * self.epochs
@@ -38,7 +38,8 @@ class Trainer:
                 #    x.shard_(self.devices, axis=0)
                 x = x.reshape(-1, 625 * 2137)
 
-                loss = self.model.criterion(x)
+                loss_dict = self.model.criterion(x)
+                loss = loss_dict["loss"]
 
                 self.optim.zero_grad()
                 loss.backward()

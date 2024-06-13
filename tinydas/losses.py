@@ -12,7 +12,7 @@ def mae(X: Tensor, Y: Tensor) -> Tensor:
 
 
 def kl_divergence(mu: Tensor, logvar: Tensor):
-    return 0.5 * (1 + logvar - mu.square() - logvar.exp()).sum(axis=1).mean()
+    return -0.5 * (1 + logvar - mu.square() - logvar.exp()).sum(axis=1).mean()
 
 
 def reconstruct(mu: Tensor, logvar: Tensor):

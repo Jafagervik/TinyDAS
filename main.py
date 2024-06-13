@@ -9,6 +9,7 @@ from tinydas.selections import select_model, select_optimizer
 from tinydas.trainer import Trainer
 from tinydas.utils import *
 
+
 def train_mode(args):
     """Train the model on the dataset."""
 
@@ -51,7 +52,7 @@ def train_mode(args):
 
     # optim = select_optimizer(config["optimizer"], params, config["lr"])
 
-    trainer = Trainer(model, dl, optim, devices, **config)
+    trainer = Trainer(model, dl, optim, **config)
 
     if debug:
         print(trainer.best_loss)

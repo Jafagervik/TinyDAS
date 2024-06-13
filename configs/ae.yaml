@@ -1,12 +1,12 @@
-epochs: 5
+epochs: 50
 lr: 0.001
-batch_size: 10
+batch_size: 4
 dataset: "data/"
 gpus: 1
 M: 625
 N: 2137
 hidden: 128 
-latent: 16
+latent: 4
 seed: 1234
 patience: 5
 min_delta: 0.0

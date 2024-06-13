@@ -94,9 +94,13 @@ def load_model(model):
 
 
 def reparameterize(mu: Tensor, logvar: Tensor) -> Tensor:
-    std = logvar.exp().sqrt()
-    eps = Tensor.randn(mu.shape)
-    return mu + eps * std
+    std = (0.5 * logvar).exp()
+    eps = Tensor.randn(*std.shape)
+    print(eps.shape)
+    print(std.shape)
+    print(eps.mul(std).shape)
+    return eps.mul(std).add(mu)
+    #return eps * std + mu
 
 
 def load_das_file(filename: str, transpose: bool = False):

@@ -1,10 +1,10 @@
-from typing import Optional
+from typing import Optional, Tuple, Dict
 
 from tinygrad import dtypes, nn, TinyJit
 from tinygrad.nn import Tensor
 
-from ..losses import mse
-from .base import BaseAE
+from tinydas.losses import mse
+from tinydas.models.base import BaseAE
 
 
 class LinearBlockLayer:
@@ -55,8 +55,9 @@ class AE(BaseAE):
             kwargs["M"] * kwargs["N"], kwargs["hidden"], kwargs["latent"]
         )
 
-    def __call__(self, x: Tensor) -> Tensor:
-        return self.decoder(self.encoder(x)).realize()
+    def __call__(self, x: Tensor) -> Tuple[Tensor, ...]:
+        return (self.decoder(self.encoder(x)), )
 
-    def criterion(self, X: Tensor) -> Tensor:
-        return mse(X, self(X))
+    def criterion(self, x: Tensor) -> Dict[str, Tensor]:
+        x_hat, = self(x)
+        return { "loss": mse(x, x_hat) }
