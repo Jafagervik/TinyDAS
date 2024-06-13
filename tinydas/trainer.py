@@ -34,8 +34,8 @@ class Trainer:
         running_loss = 0.0
         with Tensor.train():
             for x in self.dataloader:
-                if len(self.devices) > 1:
-                    x.shard_(self.devices, axis=0)
+                #if len(self.devices) > 1:
+                #    x.shard_(self.devices, axis=0)
                 x = x.reshape(-1, 625 * 2137)
 
                 loss = self.model.criterion(x)

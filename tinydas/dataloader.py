@@ -1,4 +1,5 @@
 import random as rnd
+from typing import List
 
 from .dataset import Dataset
 
@@ -37,7 +38,7 @@ class DataLoader:
 """
 
 class DataLoader:
-    def __init__(self, dataset: Dataset, batch_size: int, shuffle: bool = False):
+    def __init__(self, dataset: Dataset, batch_size: int, devices: List[str], shuffle: bool = False):
         if shuffle:
             rnd.shuffle(dataset.data)
         self.data = dataset.data["data"]
@@ -45,6 +46,7 @@ class DataLoader:
         self.batch_size = batch_size
         self.num_samples = dataset.shape[0]
         self.current_index = 0
+        self.devices = devices
 
     def __iter__(self):
         self.current_index = 0
@@ -59,4 +61,4 @@ class DataLoader:
         #batch_times = self.times[self.current_index : end_index]
         self.current_index = end_index
 
-        return batch_data#, batch_times
+        return batch_data.shard(self.devices, axis=0)

@@ -12,11 +12,11 @@ from tinydas.utils import *
 def train_mode(args):
     """Train the model on the dataset."""
 
-    debug = True
+    debug = False
     config = get_config(args.model)
     seed_all(config["seed"])
 
-    devices = get_gpus(4)
+    devices = get_gpus(2)
     #devices = ["CLANG"]
 
     if debug: 
@@ -25,7 +25,7 @@ def train_mode(args):
     dataset = Dataset(n=config["nfiles"])
     if debug:
         print(dataset)
-    dl = DataLoader(dataset, batch_size=config["batch_size"])
+    dl = DataLoader(dataset, batch_size=config["batch_size"], devices=devices)
 
 
     if debug: 
