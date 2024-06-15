@@ -1,0 +1,28 @@
+epochs: 250
+gpus: 1
+load: False
+data:
+  batch_size: 5
+  dataset: "data/"
+  seed: 42069
+  nfiles: 100
+  half_prec: True
+
+opt:
+  lr: 0.001
+  b1: 0.9
+  b2: 0.99
+
+mod:
+  M: 625
+  N: 2137
+  hidden_layers: [32, 16]
+  latent: 2
+  kld_weight: 0.00025
+  p: 0.0 # dropout
+  beta: 4
+  loss_type: "H"
+
+es:
+  patience: 50
+  min_delta: 0.005
