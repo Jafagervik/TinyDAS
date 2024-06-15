@@ -89,7 +89,7 @@ class BETAVAE(BaseAE):
         rec_loss = mse(x, x_hat)
         kl_loss = kl_divergence(mu, logvar)
 
-        if self.loss_type == "H":  # https://openreview.net/forum?id=Sy2fzU9gl
+        if self.loss_type == "H":
             loss = rec_loss + self.beta * self.kld_weight * kl_loss
         else:
             raise ValueError("Undefined loss type.")
