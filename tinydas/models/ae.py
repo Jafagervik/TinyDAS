@@ -40,7 +40,6 @@ class Decoder:
         for i in range(len(hidden_dims) - 1):
             self.net.append(LinearBlockLayer(hidden_dims[i], hidden_dims[i + 1]))
         self.last = Linear(hidden_dims[-1], input_dim)
-        # self.net.append(Tensor.sigmoid)
 
     def __call__(self, x: Tensor) -> Tensor:
         x = x.sequential(self.net)
