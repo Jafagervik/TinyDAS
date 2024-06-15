@@ -1,71 +1,77 @@
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 
-import matplotlib
-
-from tinydas.losses import kl_divergence, mae, mse
-from tinydas.models.base import BaseAE
-
-matplotlib.use("QT5Agg")
-import matplotlib.pyplot as plt
-from tinygrad import TinyJit, nn
+from tinygrad import nn
 from tinygrad.nn import Tensor
-from tqdm import trange
 
+from tinydas.linearblock import LinearBlockLayer
+from tinydas.losses import kl_divergence, mse
+from tinydas.models.base import BaseAE
 from tinydas.utils import reparameterize
 
 
-class LinearLayer:
-    def __init__(self, in_features: int, out_features: int):
-        self.net = [
-            nn.Linear(in_features, out_features),
-            Tensor.relu,
-            Tensor.dropout,
-        ]
-
-    def __call__(self, x: Tensor) -> Tensor:
-        return x.sequential(self.net)
-
-
 class Encoder:
-    def __init__(self, i: int, h: int, l: int):
-        self.layers = [
-            LinearLayer(625 * 2137, 128),
-            LinearLayer(128, 32),
+    def __init__(
+        self,
+        input_dim: int,
+        hidden_dims: List[int],
+        latent_dim: int,
+        do: float,
+    ):
+        self.net = [
+            LinearBlockLayer(input_dim, hidden_dims[0], do),
         ]
+        for i in range(len(hidden_dims) - 1):
+            self.net.append(LinearBlockLayer(hidden_dims[i], hidden_dims[i + 1], do))
 
-        self.mu = nn.Linear(32, 4)
-        self.logvar = nn.Linear(32, 4)
+        self.mu = nn.Linear(hidden_dims[-1], latent_dim)
+        self.logvar = nn.Linear(hidden_dims[-1], latent_dim)
 
     def __call__(self, x: Tensor) -> Tuple[Tensor, Tensor]:
-        x = x.sequential(self.layers)
+        x = x.sequential(self.net)
         return self.mu(x), self.logvar(x)
 
 
 class Decoder:
-    def __init__(self, i: int, h: int, l: int):
-        self.layers = [
-            LinearLayer(l, h),
-            nn.Linear(h, i),
-            Tensor.sigmoid,
+    def __init__(
+        self,
+        input_dim: int,
+        hidden_dims: List[int],
+        latent_dim: int,
+        do: float,
+    ):
+        self.net = [
+            LinearBlockLayer(latent_dim, hidden_dims[0], do),
         ]
+        for i in range(len(hidden_dims) - 1):
+            self.net.append(LinearBlockLayer(hidden_dims[i], hidden_dims[i + 1], do))
+
+        self.last = nn.Linear(hidden_dims[-1], input_dim)
 
     def __call__(self, x: Tensor) -> Tensor:
-        return x.sequential(self.layers)
+        x = x.sequential(self.net)
+        return self.last(x).sigmoid()
 
 
 class VAE(BaseAE):
     def __init__(self, **kwargs):
         super().__init__()
+
+        hidden_layers = kwargs["mod"]["hidden_layers"]
+
         self.encoder = Encoder(
-            kwargs["model"]["M"] * kwargs["model"]["N"],
-            kwargs["model"]["hidden"],
-            kwargs["model"]["latent"],
+            kwargs["mod"]["M"] * kwargs["mod"]["N"],
+            hidden_layers,
+            kwargs["mod"]["latent"],
+            kwargs["mod"]["p"],
         )
 
+        hidden_layers = hidden_layers[::-1]
+
         self.decoder = Decoder(
-            kwargs["model"]["M"] * kwargs["model"]["N"],
-            kwargs["model"]["hidden"],
-            kwargs["model"]["latent"],
+            kwargs["mod"]["M"] * kwargs["mod"]["N"],
+            hidden_layers,
+            kwargs["mod"]["latent"],
+            kwargs["mod"]["p"],
         )
 
     def __call__(self, x: Tensor) -> Tuple[Tensor, ...]:
@@ -82,24 +88,25 @@ class VAE(BaseAE):
         elbo_loss = rec_loss + kl_loss
         return {"loss": elbo_loss, "klloss": kl_loss, "recloss": rec_loss}
 
-    def plot_latent_space(self, x: Tensor):
-        mu, _ = self.encoder(x)
-        plt.scatter(
-            mu[:, 0].numpy(), mu[:, 1].numpy(), c=range(x.shape[0]), cmap="viridis"
-        )
-        plt.show()
+
+#    def plot_latent_space(self, x: Tensor):
+#        mu, _ = self.encoder(x)
+#        plt.scatter(
+#            mu[:, 0].numpy(), mu[:, 1].numpy(), c=range(x.shape[0]), cmap="viridis"
+#        )
+#        plt.show()
 
 
-def plot_losses(losses):
-    transposed_data = list(zip(*losses))
-    x = range(1, len(losses) + 1)
-    names = ["ELBO", "KL", "Rec"]
-
-    for i, y in enumerate(transposed_data):
-        plt.plot(x, y, label=f"{names[i]}")
-
-    plt.xlabel("Epoch")
-    plt.ylabel("Value")
-    plt.title("Loss")
-    plt.legend()
-    plt.show()
+# def plot_losses(losses):
+#    transposed_data = list(zip(*losses))
+#    x = range(1, len(losses) + 1)
+#    names = ["ELBO", "KL", "Rec"]
+#
+#    for i, y in enumerate(transposed_data):
+#        plt.plot(x, y, label=f"{names[i]}")
+#
+#    plt.xlabel("Epoch")
+#    plt.ylabel("Value")
+#    plt.title("Loss")
+#    plt.legend()
+#    plt.show()

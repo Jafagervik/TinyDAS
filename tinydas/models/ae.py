@@ -39,11 +39,12 @@ class Decoder:
         ]
         for i in range(len(hidden_dims) - 1):
             self.net.append(LinearBlockLayer(hidden_dims[i], hidden_dims[i + 1]))
-        self.net.append(Linear(hidden_dims[-1], input_dim))
-        self.net.append(Tensor.sigmoid)
+        self.last = Linear(hidden_dims[-1], input_dim)
+        # self.net.append(Tensor.sigmoid)
 
     def __call__(self, x: Tensor) -> Tensor:
-        return x.sequential(self.net)
+        x = x.sequential(self.net)
+        return self.last(x).sigmoid()
 
 
 class AE(BaseAE):
@@ -56,7 +57,7 @@ class AE(BaseAE):
             kwargs["mod"]["M"] * kwargs["mod"]["N"],
             hidden_layers,
             kwargs["mod"]["latent"],
-            kwargs["data"]["p"],
+            kwargs["mod"]["p"],
         )
 
         hidden_layers = hidden_layers[::-1]
@@ -65,7 +66,7 @@ class AE(BaseAE):
             kwargs["mod"]["M"] * kwargs["mod"]["N"],
             hidden_layers,
             kwargs["mod"]["latent"],
-            kwargs["data"]["p"],
+            kwargs["mod"]["p"],
         )
 
     def __call__(self, x: Tensor) -> Tuple[Tensor, ...]:

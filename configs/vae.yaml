@@ -1,4 +1,4 @@
-epochs: 100
+epochs: 10
 gpus: 1
 load: False
 data:
@@ -7,7 +7,6 @@ data:
   seed: 69420
   nfiles: 100
   half_prec: True
-  p: 0.0 # dropout
 
 opt:
   lr: 0.001
@@ -19,7 +18,8 @@ mod:
   N: 2137
   hidden_layers: [32, 16]
   latent: 2
+  p: 0.0 # dropout
 
 es:
-  patience: 20
+  patience: 30
   min_delta: 0.005

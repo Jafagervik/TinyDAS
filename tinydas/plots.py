@@ -1,8 +1,11 @@
 import os
 from typing import List, Optional
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+
+matplotlib.use("QT5Agg")
 
 from tinydas.models.base import BaseAE
 
