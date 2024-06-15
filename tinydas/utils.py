@@ -1,6 +1,7 @@
 import argparse
 import os
 import random as rnd
+from sys import getsizeof
 from typing import List
 
 import h5py
@@ -9,6 +10,12 @@ import yaml
 from tinygrad import Device, dtypes
 from tinygrad.nn import Tensor
 from tinygrad.nn.state import get_state_dict, load_state_dict, safe_load, safe_save
+
+
+def get_size_in_gb(t: Tensor) -> float:
+    sz = getsizeof(t) / 1e9
+    print(f"Size: {sz:.2f} GB")
+    return sz
 
 
 def custom_flatten(t: Tensor) -> Tensor:
@@ -106,15 +113,15 @@ def reparameterize(mu: Tensor, logvar: Tensor) -> Tensor:
     return eps.mul(std).add(mu)
 
 
-def load_das_file(filename: str, transpose: bool = False, dtype=np.float16):
+def load_das_file(filename: str, transpose: bool = False, dtype=dtypes.float16):
     """Loads a single das file in to a tuple of the data and the timestamps."""
     with h5py.File(filename, "r") as f:
-        data = minmax(np.array(f["raw"][:], dtype=dtype).T)
-        times = np.array(f["timestamp"][:])
+        data = minmax(Tensor(f["raw"][:], dtype=dtype).T)
+        times = Tensor(f["timestamp"][:])
     if transpose:
         data = data.T
     return data, times
 
 
-def minmax(data):
+def minmax(data: Tensor) -> Tensor:
     return (data - data.min()) / (data.max() - data.min())

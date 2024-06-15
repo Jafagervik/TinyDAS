@@ -78,13 +78,8 @@ class Dataset:
         results = [tup for tup in results if tup[0].shape == (625, 2137)]
 
         all_data, all_times = zip(*results)
-        all_data_tensor = Tensor(np.stack(all_data), requires_grad=False)
-        # all_times_tensor = Tensor(np.stack(all_times), requires_grad=False)
+        # all_data_tensor = Tensor(np.stack(all_data), requires_grad=False)
+        # all_times_tensor = all_times[0].stack(*all_times[1:], dim=0)
+        all_data_tensor = all_data[0].stack(*all_data[1:], dim=0)
 
         return {"data": all_data_tensor}  # , "times": all_times_tensor}
-
-
-if __name__ == "__main__":
-    data = Dataset()
-    print(data)
-    print(data.data["times"].shape)
