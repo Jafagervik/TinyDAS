@@ -60,7 +60,7 @@ def parse_args():
 
 
 def get_gpus(amount: int = 1) -> List[str]:
-    return [f"{Device.DEFAULT}:{i}" for i in range(os.getenv("GPUS", amount))]
+    return [f"{Device.DEFAULT}:{i}" for i in range(amount)]
 
 
 def get_config(model: str):

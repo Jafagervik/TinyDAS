@@ -1,16 +1,18 @@
-epochs: 30
-batch_size: 5
-dataset: "data/"
+epochs: 100
 gpus: 1
-seed: 69420
 load: False
-nfiles: 100
-half_prec: True
+data:
+  batch_size: 5
+  dataset: "data/"
+  seed: 69420
+  nfiles: 100
+  half_prec: True
+  p: 0.0 # dropout
 
 opt:
-  lr: 0.015
+  lr: 0.001
   b1: 0.9
-  b2: 0.8
+  b2: 0.99
 
 mod:
   M: 625
@@ -19,5 +21,5 @@ mod:
   latent: 2
 
 es:
-  patience: 5
-  min_delta: 1.0
+  patience: 20
+  min_delta: 0.005

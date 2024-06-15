@@ -1,24 +1,24 @@
 import os
-from typing import Optional
+from typing import List, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-from tinydas.trainer import Trainer
+from tinydas.models.base import BaseAE
 
 
-def plot_loss(trainer: Trainer, show: bool = False, save: bool = False) -> None:
+def plot_loss(
+    losses: List[float], model: BaseAE, show: bool = False, save: bool = False
+) -> None:
     plt.figure(figsize=(10, 5))
-    plt.plot(np.arange(len(trainer.losses)), trainer.losses)
+    plt.plot(np.arange(start=1, stop=len(losses) + 1), losses)
     plt.xlabel("Epochs")
     plt.ylabel("Loss")
     plt.title("Loss vs Epochs")
     if show:
         plt.show()
     if save:
-        plt.savefig(
-            os.path.join("figs", trainer.model.__class__.__name__.lower(), "loss.png")
-        )
+        plt.savefig(os.path.join("figs", model.__class__.__name__.lower(), "loss.png"))
 
 
 def plot_das_as_heatmap(

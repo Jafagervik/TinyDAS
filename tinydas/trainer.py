@@ -9,6 +9,7 @@ from tqdm import trange
 from tinydas.dataloader import DataLoader
 from tinydas.early_stopping import EarlyStopping
 from tinydas.models.base import BaseAE
+from tinydas.plots import plot_loss
 from tinydas.utils import save_model
 
 
@@ -37,12 +38,10 @@ class Trainer:
         with Tensor.train():
             # running_loss = 0.0
             # for x in self.dataloader:
-            samples = Tensor(
-                np.random.randint(
-                    0, self.dataloader.num_samples, self.dataloader.batch_size
-                )
+            samples = Tensor.randint(
+                self.dataloader.batch_size, high=self.dataloader.num_samples
             )
-            print(samples.numpy())
+
             x = self.dataloader.data[samples]
             x = x.reshape(-1, 625 * 2137)
 
@@ -75,5 +74,6 @@ class Trainer:
             if self.early_stopping.early_stop:
                 print(f"Early stopping at epoch {epoch+1}")
                 save_model(self.model, final=True)
+                plot_loss(self.losses, self.model)
                 break
         save_model(self.model, final=True)

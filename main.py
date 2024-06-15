@@ -15,18 +15,18 @@ def train_mode(args):
 
     debug = False
     config = get_config(args.model)
-    seed_all(config["seed"])
+    seed_all(config["data"]["seed"])
 
-    # devices = get_gpus(2)
+    # devices = get_gpus(config["gpus"])
     devices = ["CLANG"]
 
     if debug:
         print(devices)
 
-    dataset = Dataset(n=config["nfiles"])
+    dataset = Dataset(n=config["data"]["nfiles"])
     if debug:
         print(dataset)
-    dl = DataLoader(dataset, batch_size=config["batch_size"], devices=devices)
+    dl = DataLoader(dataset, batch_size=config["data"]["batch_size"], devices=devices)
 
     if debug:
         print(dl.num_samples)
@@ -40,7 +40,7 @@ def train_mode(args):
     if debug:
         print(model)
 
-    if config["half_prec"]:
+    if config["data"]["half_prec"]:
         for x in nn.state.get_state_dict(model).values():
             x = x.float().half()
 
@@ -65,7 +65,7 @@ def train_mode(args):
 
     trainer.train()
 
-    plot_loss(trainer, save=True)
+    plot_loss(trainer.losses, trainer.model, save=True)
 
 
 def show_imgs():
