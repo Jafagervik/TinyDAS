@@ -65,6 +65,8 @@ class VAE(BaseAE):
             kwargs["mod"]["p"],
         )
 
+        self.kld_weight = kwargs["mod"]["kld_weight"]
+
         hidden_layers = hidden_layers[::-1]
 
         self.decoder = Decoder(
@@ -85,7 +87,7 @@ class VAE(BaseAE):
         rec_loss = mse(x, x_hat)
         kl_loss = kl_divergence(mu, logvar)
 
-        elbo_loss = rec_loss + kl_loss
+        elbo_loss = rec_loss + kl_loss * self.kld_weight
         return {"loss": elbo_loss, "klloss": kl_loss, "recloss": rec_loss}
 
 
