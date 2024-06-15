@@ -26,6 +26,8 @@ def train_mode(args):
     dataset = Dataset(n=config["data"]["nfiles"])
     if debug:
         print(dataset)
+        get_size_in_gb(dataset.data["data"])
+
     dl = DataLoader(dataset, batch_size=config["data"]["batch_size"], devices=devices)
 
     if debug:
