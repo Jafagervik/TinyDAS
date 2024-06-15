@@ -56,3 +56,9 @@ batch_size: 16
 or alternatively
 
 `python main.py -t detect -m ae`
+
+# NOTES:
+
+- Dataset gets name of all files sorted
+- Dataloader gets bs of n items, loads them and stacks them for learning
+- dataloader performs transforms?

@@ -47,7 +47,7 @@ class DataLoader:
         shuffle: bool = False,
     ):
         if shuffle:
-            rnd.shuffle(dataset.data)
+            rnd.shuffle(dataset.data["data"])
         self.data = dataset.data["data"]
         # self.times = dataset.data["times"]
         self.batch_size = batch_size
@@ -73,4 +73,3 @@ class DataLoader:
             if len(self.devices) > 1
             else batch_data
         )
-
