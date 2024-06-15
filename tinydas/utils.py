@@ -10,6 +10,7 @@ from tinygrad import Device
 from tinygrad.nn import Tensor
 from tinygrad.nn.state import get_state_dict, load_state_dict, safe_load, safe_save
 
+
 def custom_flatten(t: Tensor) -> Tensor:
     return t.reshape(1, t.shape[0] * t.shape[1])
 
@@ -55,7 +56,6 @@ def parse_args():
         default=False,
     )
 
-
     return parser.parse_args()
 
 
@@ -77,16 +77,23 @@ def save_model(model, final: bool = False, show: bool = False):
     state_dict = get_state_dict(model)
     model_name = model.__class__.__name__.lower()
     final_or_best = "final.safetensors" if final else "best.safetensors"
-    path_to_checkpoints = os.path.join("/cluster/home/jorgenaf/TinyDAS/checkpoints", model_name, final_or_best)
+    path_to_checkpoints = os.path.join(
+        # "/cluster/home/jorgenaf/TinyDAS/checkpoints",
+        "/home/jaf/prog/ntnu/TinyDAS/checkpoints",
+        model_name,
+        final_or_best,
+    )
     safe_save(state_dict, path_to_checkpoints)
-    if show: print(f"Model saved to {path_to_checkpoints}")
+    if show:
+        print(f"Model saved to {path_to_checkpoints}")
 
 
 def load_model(model):
     path = os.path.join(
-        "/cluster/home/jorgenaf/TinyDAS/checkpoints", 
-        model.__class__.__name__.lower(), 
-        "best.safetensors"
+        # "/cluster/home/jorgenaf/TinyDAS/checkpoints",
+        "/home/jaf/prog/ntnu/TinyDAS/checkpoints",
+        model.__class__.__name__.lower(),
+        "best.safetensors",
     )
     state_dict = safe_load(path)
     load_state_dict(model, state_dict)
@@ -100,7 +107,7 @@ def reparameterize(mu: Tensor, logvar: Tensor) -> Tensor:
     print(std.shape)
     print((eps * std).shape)
     return eps.mul(std).add(mu)
-    #return eps * std + mu
+    # return eps * std + mu
 
 
 def load_das_file(filename: str, transpose: bool = False):

@@ -1,14 +1,13 @@
 import os
-
-import numpy as np
-from tinygrad.nn import Tensor
-from tinygrad.dtype import dtypes
-
 from concurrent.futures import ThreadPoolExecutor
+from typing import List
+
+import h5py
+import numpy as np
+from tinygrad.dtype import dtypes
+from tinygrad.nn import Tensor
 
 from tinydas.utils import load_das_file
-from typing import List
-import h5py
 
 """
 class Dataset:
@@ -50,6 +49,8 @@ class Dataset:
                 data = data.T
         return data
 """
+
+
 class Dataset:
     def __init__(self, path: str = "./data", transpose: bool = False, n: int = -1):
         self.path = path
@@ -73,14 +74,15 @@ class Dataset:
 
         with ThreadPoolExecutor() as executor:
             results = list(map(load_das_file, filenames))
-        #results = [load_das_file(fs) for fs in filenames]
+        # results = [load_das_file(fs) for fs in filenames]
         results = [tup for tup in results if tup[0].shape == (625, 2137)]
 
         all_data, all_times = zip(*results)
-        all_data_tensor = Tensor(np.stack(all_data), requires_grad=False)
-        all_times_tensor = Tensor(np.stack(all_times), requires_grad=False)
+        all_data_tensor = np.stack(all_data)
+        # all_data_tensor = Tensor(np.stack(all_data), requires_grad=False)
+        # all_times_tensor = Tensor(np.stack(all_times), requires_grad=False)
 
-        return {"data": all_data_tensor}#, "times": all_times_tensor}
+        return {"data": all_data_tensor}  # , "times": all_times_tensor}
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 from typing import List
 
+import numpy as np
 from tinygrad import GlobalCounters, TinyJit
 from tinygrad.nn import Tensor
 from tinygrad.nn.optim import Optimizer
@@ -17,13 +18,13 @@ class Trainer:
         model: BaseAE,
         dataloader: DataLoader,
         optimizer: Optimizer,
-        #devices: List[str],
+        # devices: List[str],
         **kwargs,
     ) -> None:
         self.model = model
         self.dataloader = dataloader
         self.optim = optimizer
-        #self.devices = devices
+        # self.devices = devices
         self.best_loss = float("inf")
         self.epochs = kwargs["epochs"] if kwargs["epochs"] else 10
         self.losses = [float(0)] * self.epochs
@@ -31,22 +32,26 @@ class Trainer:
 
     @TinyJit
     def _run_epoch(self) -> Tensor:
-        running_loss = 0.0
         with Tensor.train():
-            for x in self.dataloader:
-                #if len(self.devices) > 1:
-                #    x.shard_(self.devices, axis=0)
-                x = x.reshape(-1, 625 * 2137)
+            # running_loss = 0.0
+            # for x in self.dataloader:
+            samples = np.random.randint(
+                0, self.dataloader.num_samples, self.dataloader.batch_size
+            )
+            x = Tensor(self.dataloader.data[samples], requires_grad=False)
+            x = x.reshape(-1, 625 * 2137)
 
-                loss_dict = self.model.criterion(x)
-                loss = loss_dict["loss"]
+            loss_dict = self.model.criterion(x)
+            loss = loss_dict["loss"]
 
-                self.optim.zero_grad()
-                loss.backward()
-                self.optim.step()
+            self.optim.zero_grad()
+            loss.backward()
+            self.optim.step()
 
-                running_loss += loss.item()
-        return Tensor(running_loss)
+            return loss
+            # running_loss += loss.item()
+
+            # return Tensor(running_loss)
 
     def train(self):
         print("Starting training...")
@@ -59,7 +64,6 @@ class Trainer:
 
             if loss.item() < self.best_loss:
                 self.best_loss = loss.item()
-                self.early_stopping.best_loss = self.best_loss
                 save_model(self.model)
 
             self.early_stopping(loss.item())

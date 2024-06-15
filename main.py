@@ -17,10 +17,10 @@ def train_mode(args):
     config = get_config(args.model)
     seed_all(config["seed"])
 
-    devices = get_gpus(2)
-    #devices = ["CLANG"]
+    # devices = get_gpus(2)
+    devices = ["CLANG"]
 
-    if debug: 
+    if debug:
         print(devices)
 
     dataset = Dataset(n=config["nfiles"])
@@ -28,23 +28,22 @@ def train_mode(args):
         print(dataset)
     dl = DataLoader(dataset, batch_size=config["batch_size"], devices=devices)
 
-
-    if debug: 
+    if debug:
         print(dl.num_samples)
 
     model = select_model(args.model, **config)
-    
+
     if args.load == True:
         config["load"] = True
         load_model(model)
 
-    if debug: 
+    if debug:
         print(model)
 
     if len(devices) > 1:
-        for _, x in nn.state.get_state_dict(model).items():
+        for x in nn.state.get_state_dict(model).values():
             # USE
-            #if config["half_prec"]: x = x.float().half()
+            # if config["half_prec"]: x = x.float().half()
             x.to_(devices)
 
     params = nn.state.get_parameters(model)
@@ -59,7 +58,7 @@ def train_mode(args):
 
     trainer.train()
 
-    #plot_loss(trainer, save=True)
+    # plot_loss(trainer, save=True)
 
 
 def anomaly_mode(args):
