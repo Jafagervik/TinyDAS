@@ -37,17 +37,20 @@ def plot_das_as_heatmap(
 
 
 if __name__ == "__main__":
-    from datetime import datetime
+    # from datetime import datetime
 
     import h5py
-    from tinygrad import Tensor
 
-    with h5py.File("./data/20200301_001650.hdf5", "r") as f:
-        data = Tensor(np.array(f["raw"][:], dtype=np.float32).T)
-        times = Tensor(np.array(f["timestamp"][:]))
-        print(data.shape)
-        timestamp = times.numpy()[0]
-        print(timestamp)
-        dt_object = datetime.fromtimestamp(timestamp)
+    # from tinygrad import Tensor
 
-        print("Datetime object:", dt_object)
+    with h5py.File("../data/20200301_001650.hdf5", "r") as f:
+        data = np.array(f["raw"][:], dtype=np.float32).T
+        plot_das_as_heatmap(data)
+
+        # times = Tensor(np.array(f["timestamp"][:]))
+        # print(data.shape)
+        # timestamp = times.numpy()[0]
+        # print(timestamp)
+        # dt_object = datetime.fromtimestamp(timestamp)
+
+        # print("Datetime object:", dt_object)

@@ -28,17 +28,22 @@ class Trainer:
         self.best_loss = float("inf")
         self.epochs = kwargs["epochs"] if kwargs["epochs"] else 10
         self.losses = [float(0)] * self.epochs
-        self.early_stopping = EarlyStopping(kwargs["patience"], kwargs["min_delta"])
+        self.early_stopping = EarlyStopping(
+            kwargs["es"]["patience"], kwargs["es"]["min_delta"]
+        )
 
     @TinyJit
     def _run_epoch(self) -> Tensor:
         with Tensor.train():
             # running_loss = 0.0
             # for x in self.dataloader:
-            samples = np.random.randint(
-                0, self.dataloader.num_samples, self.dataloader.batch_size
+            samples = Tensor(
+                np.random.randint(
+                    0, self.dataloader.num_samples, self.dataloader.batch_size
+                )
             )
-            x = Tensor(self.dataloader.data[samples], requires_grad=False)
+            print(samples.numpy())
+            x = self.dataloader.data[samples]
             x = x.reshape(-1, 625 * 2137)
 
             loss_dict = self.model.criterion(x)
@@ -60,7 +65,7 @@ class Trainer:
             loss = self._run_epoch()
             self.losses[epoch] = loss.item()
 
-            t.set_description(f"Epoch: {epoch + 1} | Loss: {loss.item():.2f}")
+            t.set_description(f"Epoch: {epoch + 1} | Loss: {loss.item():.4f}")
 
             if loss.item() < self.best_loss:
                 self.best_loss = loss.item()

@@ -1,4 +1,4 @@
-from typing import Tuple, Dict
+from typing import Dict, Tuple
 
 import matplotlib
 
@@ -45,7 +45,8 @@ class Decoder:
     def __init__(self, i: int, h: int, l: int):
         self.layers = [
             LinearLayer(l, h),
-            nn.Linear(h, i), Tensor.sigmoid,
+            nn.Linear(h, i),
+            Tensor.sigmoid,
         ]
 
     def __call__(self, x: Tensor) -> Tensor:
@@ -56,10 +57,15 @@ class VAE(BaseAE):
     def __init__(self, **kwargs):
         super().__init__()
         self.encoder = Encoder(
-            kwargs["M"] * kwargs["N"], kwargs["hidden"], kwargs["latent"]
+            kwargs["model"]["M"] * kwargs["model"]["N"],
+            kwargs["model"]["hidden"],
+            kwargs["model"]["latent"],
         )
+
         self.decoder = Decoder(
-            kwargs["M"] * kwargs["N"], kwargs["hidden"], kwargs["latent"]
+            kwargs["model"]["M"] * kwargs["model"]["N"],
+            kwargs["model"]["hidden"],
+            kwargs["model"]["latent"],
         )
 
     def __call__(self, x: Tensor) -> Tuple[Tensor, ...]:
@@ -74,12 +80,8 @@ class VAE(BaseAE):
         kl_loss = kl_divergence(mu, logvar)
 
         elbo_loss = rec_loss + kl_loss
-        return {
-            "loss": elbo_loss,
-            "klloss": kl_loss,
-            "recloss": rec_loss
-        }
-    
+        return {"loss": elbo_loss, "klloss": kl_loss, "recloss": rec_loss}
+
     def plot_latent_space(self, x: Tensor):
         mu, _ = self.encoder(x)
         plt.scatter(

@@ -1,15 +1,23 @@
-epochs: 10
-lr: 0.005
-batch_size: 2
+epochs: 100
+batch_size: 5
 dataset: "data/"
 gpus: 1
-M: 625
-N: 2137
-hidden: 128
-latent: 4
 seed: 69420
-patience: 5
-min_delta: 0.0
 load: False
-nfiles: 8
+nfiles: 100
 half_prec: True
+
+opt:
+  lr: 0.001
+  b1: 0.9
+  b2: 0.99
+
+mod:
+  M: 625
+  N: 2137
+  hidden_layers: [32, 16]
+  latent: 2
+
+es:
+  patience: 10
+  min_delta: 0.005

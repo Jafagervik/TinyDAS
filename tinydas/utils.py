@@ -6,7 +6,7 @@ from typing import List
 import h5py
 import numpy as np
 import yaml
-from tinygrad import Device
+from tinygrad import Device, dtypes
 from tinygrad.nn import Tensor
 from tinygrad.nn.state import get_state_dict, load_state_dict, safe_load, safe_save
 
@@ -110,11 +110,15 @@ def reparameterize(mu: Tensor, logvar: Tensor) -> Tensor:
     # return eps * std + mu
 
 
-def load_das_file(filename: str, transpose: bool = False):
+def load_das_file(filename: str, transpose: bool = False, dtype=np.float16):
     """Loads a single das file in to a tuple of the data and the timestamps."""
     with h5py.File(filename, "r") as f:
-        data = np.array(f["raw"][:], dtype=np.float32).T
+        data = minmax(np.array(f["raw"][:], dtype=dtype).T)
         times = np.array(f["timestamp"][:])
     if transpose:
         data = data.T
     return data, times
+
+
+def minmax(data):
+    return (data - data.min()) / (data.max() - data.min())

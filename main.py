@@ -4,7 +4,7 @@ from tinygrad import nn
 from tinydas.anomalies import predict_file
 from tinydas.dataloader import DataLoader
 from tinydas.dataset import Dataset
-from tinydas.plots import plot_loss
+from tinydas.plots import plot_das_as_heatmap, plot_loss
 from tinydas.selections import select_model, select_optimizer
 from tinydas.trainer import Trainer
 from tinydas.utils import *
@@ -40,14 +40,21 @@ def train_mode(args):
     if debug:
         print(model)
 
+    if config["half_prec"]:
+        for x in nn.state.get_state_dict(model).values():
+            x = x.float().half()
+
     if len(devices) > 1:
         for x in nn.state.get_state_dict(model).values():
-            # USE
-            # if config["half_prec"]: x = x.float().half()
             x.to_(devices)
 
     params = nn.state.get_parameters(model)
-    optim = nn.optim.Adam(params, lr=config["lr"])
+    optim = nn.optim.Adam(
+        params,
+        lr=config["opt"]["lr"],
+        b1=config["opt"]["b1"],
+        b2=config["opt"]["b2"],
+    )
 
     # optim = select_optimizer(config["optimizer"], params, config["lr"])
 
@@ -58,7 +65,23 @@ def train_mode(args):
 
     trainer.train()
 
-    # plot_loss(trainer, save=True)
+    plot_loss(trainer, save=True)
+
+
+def show_imgs():
+    import h5py
+
+    with h5py.File("./data/20200301_001650.hdf5", "r") as f:
+        data = np.array(f["raw"][:], dtype=np.float32).T
+        print(data[0, 0])
+        print(data[100, 100])
+        print(data[200, 200])
+        print(data[600, 2100])
+
+        t = Tensor(data)
+        t = minmax(t)
+
+        plot_das_as_heatmap(t.numpy())
 
 
 def anomaly_mode(args):
