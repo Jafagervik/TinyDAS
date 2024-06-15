@@ -1,4 +1,4 @@
-epochs: 100
+epochs: 1
 gpus: 1
 load: False
 data:
