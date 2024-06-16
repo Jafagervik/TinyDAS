@@ -1,7 +1,6 @@
 from typing import List
 
-import numpy as np
-from tinygrad import GlobalCounters, TinyJit
+from tinygrad import GlobalCounters, TinyJit, dtypes
 from tinygrad.nn import Tensor
 from tinygrad.nn.optim import Optimizer
 from tqdm import trange
@@ -34,46 +33,48 @@ class Trainer:
         )
 
     @TinyJit
-    def _run_epoch(self) -> Tensor:
-        # running_loss = 0.0
-        # for x in self.dataloader:
-        samples = Tensor.randint(
-            self.dataloader.batch_size, high=self.dataloader.num_samples
-        )
+    def _run_epoch(self):  # -> Tensor:
+        # samples = Tensor.randint(
+        #    self.dataloader.batch_size, high=self.dataloader.num_samples
+        # )
+        Tensor.training = True
+        running_loss = 0.0
+        for x in self.dataloader:
+            # x = self.dataloader.data[samples]
+            x = x.reshape(-1, 625 * 2137)
 
-        x = self.dataloader.data[samples]
-        x = x.reshape(-1, 625 * 2137)
+            self.optim.zero_grad()
 
-        loss_dict = self.model.criterion(x)
-        loss = loss_dict["loss"]
+            loss_dict = self.model.criterion(x)
+            loss = loss_dict["loss"]
 
-        self.optim.zero_grad()
-        loss.backward()
-        self.optim.step()
+            loss.backward()
+            self.optim.step()
 
-        return loss
-        # running_loss += loss.item()
+            running_loss += loss.item()
 
-        # return Tensor(running_loss)
+        running_loss /= self.dataloader.num_samples / self.dataloader.batch_size
+        return Tensor(running_loss)
+        # return loss
 
     def train(self):
         print("Starting training...")
-        with Tensor.train():
-            for epoch in (t := trange(self.epochs)):
-                GlobalCounters.reset()
-                loss = self._run_epoch()
-                self.losses[epoch] = loss.item()
+        for epoch in (t := trange(self.epochs)):
+            GlobalCounters.reset()
+            loss = self._run_epoch()
+            self.losses[epoch] = loss.item()
 
-                t.set_description(f"Epoch: {epoch + 1} | Loss: {loss.item():.4f}")
+            t.set_description(f"Epoch: {epoch + 1} | Loss: {loss.item():.4f}")
 
-                if loss.item() < self.best_loss:
-                    self.best_loss = loss.item()
-                    save_model(self.model)
+            if loss.item() < self.best_loss:
+                self.best_loss = loss.item()
+                save_model(self.model)
 
-                self.early_stopping(loss.item())
-                if self.early_stopping.early_stop:
-                    print(f"Early stopping at epoch {epoch+1}")
-                    save_model(self.model, final=True)
-                    plot_loss(self.losses, self.model)
-                    break
-            save_model(self.model, final=True)
+            self.early_stopping(loss.item())
+            if self.early_stopping.early_stop:
+                print(f"Early stopping at epoch {epoch}")
+                save_model(self.model, final=True)
+                plot_loss(self.losses, self.model)
+
+                break
+        save_model(self.model, final=True)
