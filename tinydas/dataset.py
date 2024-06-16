@@ -10,9 +10,16 @@ from tinydas.utils import load_das_file, minmax
 
 
 class Dataset:
-    def __init__(self, path: str = "./data", transpose: bool = False, n: int = -1):
+    def __init__(
+        self,
+        path: str = "./data",
+        transpose: bool = False,
+        n: int = -1,
+        normalize: bool = True,
+    ):
         self.path = path
         self.transpose = transpose
+        self.normalize = normalize
         self.data = self._init_data(n)
         self.rows = self.data["data"].shape[1]
         self.cols = self.data["data"].shape[2]
@@ -38,6 +45,8 @@ class Dataset:
         all_data, all_times = zip(*results)
         # all_data_tensor = Tensor(np.stack(all_data), requires_grad=False)
         # all_times_tensor = all_times[0].stack(*all_times[1:], dim=0)
-        all_data_tensor = minmax(all_data[0].stack(*all_data[1:], dim=0))
+        all_data_tensor = all_data[0].stack(*all_data[1:], dim=0)
+        if self.normalize:
+            all_data_tensor = minmax(all_data_tensor)
 
         return {"data": all_data_tensor}  # , "times": all_times_tensor}

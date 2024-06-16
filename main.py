@@ -5,7 +5,7 @@ from tinydas.anomalies import predict_file
 from tinydas.dataloader import DataLoader
 from tinydas.dataset import Dataset
 from tinydas.plots import plot_das_as_heatmap, plot_loss
-from tinydas.selections import select_model, select_optimizer
+from tinydas.selections import Opti, select_model, select_optimizer
 from tinydas.trainer import Trainer
 from tinydas.utils import *
 
@@ -23,12 +23,13 @@ def train_mode(args):
     if debug:
         print(devices)
 
-    dataset = Dataset(n=config["data"]["nfiles"])
+    dataset = Dataset(n=config["data"]["nfiles"], normalize=True)
+
     if debug:
         print(dataset)
         get_size_in_gb(dataset.data["data"])
-    d = dataset.data["data"]
-    print(d.min().item(), d.max().item())
+        d = dataset.data["data"]
+        print(d.min().item(), d.max().item())
 
     dl = DataLoader(dataset, batch_size=config["data"]["batch_size"], devices=devices)
 
@@ -53,14 +54,10 @@ def train_mode(args):
             x.to_(devices)
 
     params = nn.state.get_parameters(model)
-    optim = nn.optim.Adam(
-        params,
-        lr=config["opt"]["lr"],
-        b1=config["opt"]["b1"],
-        b2=config["opt"]["b2"],
-    )
 
-    # optim = select_optimizer(config["optimizer"], params, config["lr"])
+    optim = select_optimizer(Opti.ADAM, params, **config["opt"])
+    if debug:
+        print(optim)
 
     trainer = Trainer(model, dl, optim, **config)
 

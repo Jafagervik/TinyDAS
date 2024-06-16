@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import List
 
 from tinygrad import Tensor, nn
@@ -8,16 +9,37 @@ from tinydas.models.cnn_ae import CNNAE
 from tinydas.models.vae import VAE
 
 
-def select_optimizer(optimizer: str, parameters: List[Tensor], lr: float) -> Optimizer:
-    match optimizer.lower():
-        case "adam":
-            return nn.optim.Adam(parameters, lr=lr)
-        case "adamw":
-            return nn.optim.AdamW(parameters, lr=lr)
-        case "sgd":
-            return nn.optim.SGD(parameters, lr=lr)
+class Opti(Enum):
+    ADAM = "adam"
+    ADAMW = "adamw"
+    SGD = "sgd"
+
+
+def select_optimizer(optimizer: Opti, parameters: List[Tensor], **config) -> Optimizer:
+    match optimizer:
+        case Opti.ADAM:
+            return nn.optim.Adam(
+                parameters,
+                lr=config["lr"],
+                b1=config["b1"],
+                b2=config["b2"],
+            )
+        case Opti.ADAMW:
+            return nn.optim.AdamW(
+                parameters,
+                lr=config["lr"],
+                b1=config["b1"],
+                b2=config["b2"],
+            )
+        case Opti.SGD:
+            return nn.optim.SGD(parameters, lr=config["lr"])
         case _:
-            return nn.optim.Adam(parameters, lr=lr)
+            return nn.optim.Adam(
+                parameters,
+                lr=config["lr"],
+                b1=config["b1"],
+                b2=config["b2"],
+            )
 
 
 def select_model(model: str, **config):
