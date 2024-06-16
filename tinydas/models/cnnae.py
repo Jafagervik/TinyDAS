@@ -17,22 +17,27 @@ class CNNAE(BaseAE):
 
         sizes = [1, 16, 32, 64, 128]
 
-        self.encoder = [ConvBlock(i, i + 1) for i in range(len(sizes) - 1)]
+        self.encoder = [
+            ConvBlock(sizes[i], sizes[i + 1], stride=1, padding=1)
+            for i in range(len(sizes) - 1)
+        ]
 
         sizes = sizes[::-1]
 
-        self.decoder = [DeconvBlock(i, i + 1) for i in range(len(sizes) - 1)]
+        self.decoder = [
+            DeconvBlock(sizes[i], sizes[i + 1], stride=1, padding=1, output_padding=0)
+            for i in range(len(sizes) - 1)
+        ]
 
     def __call__(self, x: Tensor) -> Tuple[Tensor, ...]:
         # Reshape the input tensor to include a channel dimension
         y = x.reshape(-1, 1, self.M, self.N)  # (batch_size, 1, 625, 2137)
         y = y.sequential(self.encoder)
         y = y.sequential(self.decoder)
-        # Reshape the output tensor to the original input shape without the channel dimension
-        y = y.reshape(x.shape[0], x.shape[2], x.shape[3])  # (batch_size, 625, 2137)
-        return x, y
+        y = y.reshape(x.shape[0], self.M, self.N)  # (batch_size, 625, 2137)
+        return (y,)
 
     def criterion(self, x: Tensor) -> Dict[str, Tensor]:
-        x, y = self(x)
+        (y,) = self(x)
         loss = mse(x, y)
         return {"loss": loss}
