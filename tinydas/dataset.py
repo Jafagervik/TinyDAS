@@ -1,11 +1,6 @@
 import os
 from concurrent.futures import ThreadPoolExecutor
 
-import h5py
-import numpy as np
-from tinygrad.dtype import dtypes
-from tinygrad.nn import Tensor
-
 from tinydas.utils import load_das_file, minmax
 
 
