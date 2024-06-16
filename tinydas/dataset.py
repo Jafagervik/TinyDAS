@@ -6,7 +6,7 @@ import numpy as np
 from tinygrad.dtype import dtypes
 from tinygrad.nn import Tensor
 
-from tinydas.utils import load_das_file
+from tinydas.utils import load_das_file, minmax
 
 
 class Dataset:
@@ -38,6 +38,6 @@ class Dataset:
         all_data, all_times = zip(*results)
         # all_data_tensor = Tensor(np.stack(all_data), requires_grad=False)
         # all_times_tensor = all_times[0].stack(*all_times[1:], dim=0)
-        all_data_tensor = all_data[0].stack(*all_data[1:], dim=0)
+        all_data_tensor = minmax(all_data[0].stack(*all_data[1:], dim=0))
 
         return {"data": all_data_tensor}  # , "times": all_times_tensor}

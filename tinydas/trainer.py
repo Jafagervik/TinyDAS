@@ -34,28 +34,28 @@ class Trainer:
 
     @TinyJit
     def _run_epoch(self):  # -> Tensor:
-        # samples = Tensor.randint(
-        #    self.dataloader.batch_size, high=self.dataloader.num_samples
-        # )
         Tensor.training = True
-        running_loss = 0.0
-        for x in self.dataloader:
-            # x = self.dataloader.data[samples]
-            x = x.reshape(-1, 625 * 2137)
+        samples = Tensor.randint(
+            self.dataloader.batch_size, high=self.dataloader.num_samples
+        )
+        x = self.dataloader.data[samples]
+        # running_loss = 0.0
+        # for x in self.dataloader:
+        x = x.reshape(-1, 625 * 2137)
 
-            self.optim.zero_grad()
+        self.optim.zero_grad()
 
-            loss_dict = self.model.criterion(x)
-            loss = loss_dict["loss"]
+        loss_dict = self.model.criterion(x)
+        loss = loss_dict["loss"]
 
-            loss.backward()
-            self.optim.step()
+        loss.backward()
+        self.optim.step()
 
-            running_loss += loss.item()
+        return loss
+        # running_loss += loss.item()
 
-        running_loss /= self.dataloader.num_samples / self.dataloader.batch_size
-        return Tensor(running_loss)
-        # return loss
+        # running_loss /= self.dataloader.num_samples / self.dataloader.batch_size
+        # return Tensor(running_loss)
 
     def train(self):
         print("Starting training...")
