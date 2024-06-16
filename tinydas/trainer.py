@@ -57,24 +57,42 @@ class Trainer:
         # running_loss /= self.dataloader.num_samples / self.dataloader.batch_size
         # return Tensor(running_loss)
 
+    @TinyJit
+    def step(self, x: Tensor) -> Tensor:
+        x = x.reshape(-1, 625 * 2137)
+
+        loss_dict = self.model.criterion(x)
+        loss = loss_dict["loss"]
+
+        self.optim.zero_grad()
+        loss.backward()
+        self.optim.step()
+
+        return loss
+
     def train(self):
         print("Starting training...")
-        for epoch in (t := trange(self.epochs)):
-            GlobalCounters.reset()
-            loss = self._run_epoch()
-            self.losses[epoch] = loss.item()
+        with Tensor.train():
+            for epoch in (t := trange(self.epochs)):
+                GlobalCounters.reset()
+                # loss = self._run_epoch()
+                rl = 0.0
+                for data in self.dataloader:
+                    loss = self.step(data)
+                    rl += loss.item()
+                self.losses[epoch] = rl / 10.0
 
-            t.set_description(f"Epoch: {epoch + 1} | Loss: {loss.item():.4f}")
+                t.set_description(f"Epoch: {epoch + 1} | Loss: {rl:.4f}")
 
-            if loss.item() < self.best_loss:
-                self.best_loss = loss.item()
-                save_model(self.model)
+                if rl < self.best_loss:
+                    self.best_loss = rl
+                    save_model(self.model)
 
-            self.early_stopping(loss.item())
-            if self.early_stopping.early_stop:
-                print(f"Early stopping at epoch {epoch}")
-                save_model(self.model, final=True)
-                plot_loss(self.losses, self.model)
+                self.early_stopping(rl)
+                if self.early_stopping.early_stop:
+                    print(f"Early stopping at epoch {epoch}")
+                    save_model(self.model, final=True)
+                    plot_loss(self.losses, self.model)
 
-                break
-        save_model(self.model, final=True)
+                    break
+            save_model(self.model, final=True)

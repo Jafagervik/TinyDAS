@@ -2,7 +2,7 @@ epochs: 50
 gpus: 1
 load: False
 data:
-  batch_size: 5
+  batch_size: 10
   dataset: "data/"
   seed: 69420
   nfiles: 100
