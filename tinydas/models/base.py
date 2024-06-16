@@ -38,15 +38,17 @@ class BaseAE(ABC):
         Tensor.no_grad = True
         x = x.reshape(1, 625 * 2137)
         x = minmax(x)
+        print(f"Model: {self.__class__.__name__.lower()}")
         match self.__class__.__name__.lower():
+            case Models.VAE:
+                print("VAE")
+                (out, _, _) = self(x)
             case Models.AE:
                 (out,) = self(x)
             case Models.CNNAE:
                 (out,) = self(x)
-            case Models.VAE:
-                (out, _, _) = self(x)
             case _:
-                (out,) = self(x)
+                raise NotImplementedError
 
         out = out.reshape(625, 2137)
         Tensor.no_grad = False
