@@ -15,7 +15,7 @@ class CNNAE(BaseAE):
         self.N = kwargs["mod"]["N"] or 2137
         self.inp = self.M * self.N
 
-        sizes = [1, 16, 32, 64, 128]
+        sizes = [1, 16, 32, 64]
 
         self.encoder = [
             ConvBlock(sizes[i], sizes[i + 1], stride=1, padding=1)
