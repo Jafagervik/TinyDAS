@@ -27,6 +27,8 @@ def train_mode(args):
     if debug:
         print(dataset)
         get_size_in_gb(dataset.data["data"])
+    d = dataset.data["data"]
+    print(d.min().item(), d.max().item())
 
     dl = DataLoader(dataset, batch_size=config["data"]["batch_size"], devices=devices)
 
