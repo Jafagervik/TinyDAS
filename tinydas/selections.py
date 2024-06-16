@@ -5,7 +5,7 @@ from tinygrad import Tensor, nn
 from tinygrad.nn.optim import Optimizer
 
 from tinydas.models.ae import AE
-from tinydas.models.cnn_ae import CNNAE
+from tinydas.models.cnnae import CNNAE
 from tinydas.models.vae import VAE
 
 

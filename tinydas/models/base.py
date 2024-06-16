@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
+from typing import Dict, Tuple
 
 from tinygrad.nn import Tensor
-
-from typing import Tuple, Dict
 
 
 class BaseAE(ABC):
@@ -37,5 +36,5 @@ class BaseAE(ABC):
         x = x.reshape(-1, 625 * 2137)
         out = self(x)
         out = out.reshape(625, 2137)
-        Tensor.no_grad = False 
+        Tensor.no_grad = False
         return out.realize()
