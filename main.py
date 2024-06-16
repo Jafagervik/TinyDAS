@@ -52,21 +52,21 @@ def show_imgs(args):
     import h5py
 
     config = get_config(args.model)
-    model = select_model("cnnae", **config)
+    model = select_model(args.model, **config)
 
     filename = "./data/20200301_001650.hdf5"
 
     with h5py.File(filename, "r") as f:
         data = Tensor(f["raw"][:], dtype=dtypes.float16).T
-        plot_das_as_heatmap(data.numpy(), show=False, path="figs/cnnae/before.png")
+        plot_das_as_heatmap(
+            data.numpy(), show=False, path=f"figs/{args.model}/before.png"
+        )
         data = minmax(data)
-        print(data.shape)
 
         reconstructed = model.predict(data)
-        print(reconstructed.shape)
 
         plot_das_as_heatmap(
-            reconstructed.numpy(), show=False, path="figs/cnnae/after.png"
+            reconstructed.numpy(), show=False, path=f"figs/{args.model}/after.png"
         )
 
 
