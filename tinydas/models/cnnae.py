@@ -1,6 +1,5 @@
 from typing import Dict, Tuple
 
-from tinygrad import dtypes, nn
 from tinygrad.nn import Tensor
 
 from tinydas.convblocks import ConvBlock, DeconvBlock
@@ -15,18 +14,20 @@ class CNNAE(BaseAE):
         self.N = kwargs["mod"]["N"] or 2137
         self.inp = self.M * self.N
 
-        sizes = [1, 16, 32, 64]
+        self.sizes = kwargs["mod"]["hidden"] or [1, 4, 8, 16]
 
         self.encoder = [
-            ConvBlock(sizes[i], sizes[i + 1], stride=1, padding=1)
-            for i in range(len(sizes) - 1)
+            ConvBlock(self.sizes[i], self.sizes[i + 1], stride=1, padding=1)
+            for i in range(len(self.sizes) - 1)
         ]
 
-        sizes = sizes[::-1]
+        self.sizes = self.sizes[::-1]
 
         self.decoder = [
-            DeconvBlock(sizes[i], sizes[i + 1], stride=1, padding=1, output_padding=0)
-            for i in range(len(sizes) - 1)
+            DeconvBlock(
+                self.sizes[i], self.sizes[i + 1], stride=1, padding=1, output_padding=0
+            )
+            for i in range(len(self.sizes) - 1)
         ]
 
     def __call__(self, x: Tensor) -> Tuple[Tensor, ...]:

@@ -1,4 +1,4 @@
-epochs: 250
+epochs: 30
 gpus: 1
 load: False
 data:
@@ -16,7 +16,7 @@ opt:
 mod:
   M: 625
   N: 2137
-  hidden_layers: [32, 16]
+  hidden: [1, 4, 8, 16]
   latent: 2
   kld_weight: 0.00025
   p: 0.0 # dropout
