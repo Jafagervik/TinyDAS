@@ -48,20 +48,26 @@ def train_mode(args):
     plot_loss(trainer.losses, trainer.model, save=True)
 
 
-def show_imgs():
+def show_imgs(args):
     import h5py
 
-    with h5py.File("./data/20200301_001650.hdf5", "r") as f:
-        data = np.array(f["raw"][:], dtype=np.float32).T
-        print(data[0, 0])
-        print(data[100, 100])
-        print(data[200, 200])
-        print(data[600, 2100])
+    config = get_config(args.model)
+    model = select_model("cnnae", **config)
 
-        t = Tensor(data)
-        t = minmax(t)
+    filename = "./data/20200301_001650.hdf5"
 
-        plot_das_as_heatmap(t.numpy())
+    with h5py.File(filename, "r") as f:
+        data = Tensor(f["raw"][:], dtype=dtypes.float16).T
+        plot_das_as_heatmap(data.numpy(), show=False, path="figs/cnnae/before.png")
+        data = minmax(data)
+        print(data.shape)
+
+        reconstructed = model.predict(data)
+        print(reconstructed.shape)
+
+        plot_das_as_heatmap(
+            reconstructed.numpy(), show=False, path="figs/cnnae/after.png"
+        )
 
 
 def anomaly_mode(args):
@@ -93,6 +99,8 @@ def main():
             train_mode(args)
         case "detect":
             anomaly_mode(args)
+        case "show":
+            show_imgs(args)
         case _:
             print("Invalid mode, please select train or detect.")
             exit(1)
