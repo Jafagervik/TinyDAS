@@ -1,18 +1,12 @@
-from enum import Enum
 from typing import List
 
 from tinygrad import Tensor, nn
 from tinygrad.nn.optim import Optimizer
 
+from tinydas.enums import Opti
 from tinydas.models.ae import AE
 from tinydas.models.cnnae import CNNAE
 from tinydas.models.vae import VAE
-
-
-class Opti(Enum):
-    ADAM = "adam"
-    ADAMW = "adamw"
-    SGD = "sgd"
 
 
 def select_optimizer(optimizer: Opti, parameters: List[Tensor], **config) -> Optimizer:

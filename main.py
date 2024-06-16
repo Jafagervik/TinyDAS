@@ -61,7 +61,6 @@ def show_imgs(args):
         plot_das_as_heatmap(
             data.numpy(), show=False, path=f"figs/{args.model}/before.png"
         )
-        data = minmax(data)
 
         reconstructed = model.predict(data)
 

@@ -3,6 +3,9 @@ from typing import Dict, Tuple
 
 from tinygrad.nn import Tensor
 
+from tinydas.enums import Models
+from tinydas.utils import minmax
+
 
 class BaseAE(ABC):
     """
@@ -34,7 +37,17 @@ class BaseAE(ABC):
         """
         Tensor.no_grad = True
         x = x.reshape(1, 625 * 2137)
-        (out,) = self(x)
+        x = minmax(x)
+        match self.__class__.__name__.lower():
+            case Models.AE:
+                (out,) = self(x)
+            case Models.CNNAE:
+                (out,) = self(x)
+            case Models.VAE:
+                (out, _, _) = self(x)
+            case _:
+                (out,) = self(x)
+
         out = out.reshape(625, 2137)
         Tensor.no_grad = False
         return out.realize()
