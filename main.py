@@ -13,37 +13,21 @@ from tinydas.utils import *
 def train_mode(args):
     """Train the model on the dataset."""
 
-    debug = False
     config = get_config(args.model)
     seed_all(config["data"]["seed"])
 
     # devices = get_gpus(config["gpus"])
     devices = ["CLANG"]
 
-    if debug:
-        print(devices)
-
     dataset = Dataset(n=config["data"]["nfiles"], normalize=True)
 
-    if debug:
-        print(dataset)
-        get_size_in_gb(dataset.data["data"])
-        d = dataset.data["data"]
-        print(d.min().item(), d.max().item())
-
     dl = DataLoader(dataset, batch_size=config["data"]["batch_size"], devices=devices)
-
-    if debug:
-        print(dl.num_samples)
 
     model = select_model(args.model, **config)
 
     if args.load == True:
         config["load"] = True
         load_model(model)
-
-    if debug:
-        print(model)
 
     if config["data"]["half_prec"]:
         for x in nn.state.get_state_dict(model).values():
@@ -56,13 +40,8 @@ def train_mode(args):
     params = nn.state.get_parameters(model)
 
     optim = select_optimizer(Opti.ADAM, params, **config["opt"])
-    if debug:
-        print(optim)
 
     trainer = Trainer(model, dl, optim, **config)
-
-    if debug:
-        print(trainer.best_loss)
 
     trainer.train()
 
