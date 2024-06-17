@@ -18,13 +18,13 @@ class Trainer:
         model: BaseAE,
         dataloader: DataLoader,
         optimizer: Optimizer,
-        # devices: List[str],
+        devices: List[str],
         **kwargs,
     ) -> None:
         self.model = model
         self.dataloader = dataloader
         self.optim = optimizer
-        # self.devices = devices
+        self.devices = devices
         self.best_loss = float("inf")
         self.epochs = kwargs["epochs"] if kwargs["epochs"] else 10
         self.losses = [float(0)] * self.epochs
@@ -38,17 +38,17 @@ class Trainer:
         samples = Tensor.randint(
             self.dataloader.batch_size, high=self.dataloader.num_samples
         )
-        x = self.dataloader.data[samples]
+        x = self.dataloader.data[samples].shard_(self.devices, axis=0).reshape(-1, 625 * 2137)
         # running_loss = 0.0
         # for x in self.dataloader:
-        # x = x.reshape(-1, 625 * 2137)
+        #x = x
 
         self.optim.zero_grad()
 
         loss_dict = self.model.criterion(x)
-        loss = loss_dict["loss"]
+        loss_dict["loss"].backward()
 
-        loss.backward()
+        #loss.backward()
         self.optim.step()
 
         return loss
@@ -59,12 +59,15 @@ class Trainer:
 
     def train(self):
         print("Starting training...")
-        for epoch in (t := trange(self.epochs)):
+        for epoch in range(self.epochs):
+        #for epoch in (t := trange(self.epochs)):
             GlobalCounters.reset()
+            print(f"Epoch: {epoch + 1}:{self.epochs}", end="\t\t")
             loss = self._run_epoch()
             self.losses[epoch] = loss.item()
 
-            t.set_description(f"Epoch: {epoch + 1} | Loss: {loss.item():.4f}")
+            #t.set_description(f"Epoch: {epoch + 1} | Loss: {loss.item():.4f}")
+            print(f"Loss: {loss.item():.4f}")
 
             if loss.item() < self.best_loss:
                 self.best_loss = loss.item()
@@ -77,4 +80,5 @@ class Trainer:
                 plot_loss(self.losses, self.model)
 
                 break
+        print(f"Max loss: {min(self.losses)}, Min loss: {max(self.losses)}")
         save_model(self.model, final=True)

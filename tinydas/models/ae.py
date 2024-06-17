@@ -49,11 +49,13 @@ class Decoder:
 class AE(BaseAE):
     def __init__(self, **kwargs):
         super().__init__()
+        self.M = kwargs["mod"]["M"]
+        self.N = kwargs["mod"]["N"]
 
         hidden_layers = kwargs["mod"]["hidden_layers"]
 
         self.encoder = Encoder(
-            kwargs["mod"]["M"] * kwargs["mod"]["N"],
+            self.M * self.N,
             hidden_layers,
             kwargs["mod"]["latent"],
             kwargs["mod"]["p"],
@@ -62,7 +64,7 @@ class AE(BaseAE):
         hidden_layers = hidden_layers[::-1]
 
         self.decoder = Decoder(
-            kwargs["mod"]["M"] * kwargs["mod"]["N"],
+            self.M * self.N,
             hidden_layers,
             kwargs["mod"]["latent"],
             kwargs["mod"]["p"],

@@ -5,8 +5,8 @@
 #SBATCH --account=ie-idi
 #SBATCH -t 02:00:00
 #SBATCH -N 1 # One node
-#SBATCH --mem=80G
-#SBATCH --gres=gpu:2
+#SBATCH --mem=160G
+#SBATCH --gres=gpu:4
 #SBATCH --constraint="gpu40g|gpu80g"
 #SBATCH --output=log.txt # Log file
 
@@ -16,4 +16,4 @@ source /cluster/home/jorgenaf/master/bin/activate
 
 # WORKDIR = ${SLURM_SUBMIT_DIR}
 # cd ${WORKDIR}
-GPUS=2 python main.py -t train -m vae 
+python main.py -t train -m ae 

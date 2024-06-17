@@ -10,14 +10,16 @@ from tinydas.trainer import Trainer
 from tinydas.utils import *
 
 
+
 def train_mode(args):
     """Train the model on the dataset."""
 
     config = get_config(args.model)
     seed_all(config["data"]["seed"])
 
-    # devices = get_gpus(config["gpus"])
-    devices = ["CLANG"]
+    devices = get_gpus(config["gpus"])
+    print(devices)
+    #devices = ["CLANG"]
 
     dataset = Dataset(n=config["data"]["nfiles"], normalize=True)
 
@@ -41,11 +43,11 @@ def train_mode(args):
 
     optim = select_optimizer(Opti.ADAM, params, **config["opt"])
 
-    trainer = Trainer(model, dl, optim, **config)
+    trainer = Trainer(model, dl, optim, devices, **config)
 
     trainer.train()
 
-    plot_loss(trainer.losses, trainer.model, save=True)
+    #plot_loss(trainer.losses, trainer.model, save=True)
 
 
 def show_imgs(args):

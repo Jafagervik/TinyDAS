@@ -85,8 +85,8 @@ def save_model(model, final: bool = False, show: bool = False):
     model_name = model.__class__.__name__.lower()
     final_or_best = "final.safetensors" if final else "best.safetensors"
     path_to_checkpoints = os.path.join(
-        # "/cluster/home/jorgenaf/TinyDAS/checkpoints",
-        "/home/jaf/prog/ntnu/TinyDAS/checkpoints",
+        "/cluster/home/jorgenaf/TinyDAS/checkpoints",
+        # "/home/jaf/prog/ntnu/TinyDAS/checkpoints",
         model_name,
         final_or_best,
     )
@@ -97,8 +97,8 @@ def save_model(model, final: bool = False, show: bool = False):
 
 def load_model(model):
     path = os.path.join(
-        # "/cluster/home/jorgenaf/TinyDAS/checkpoints",
-        "/home/jaf/prog/ntnu/TinyDAS/checkpoints",
+        "/cluster/home/jorgenaf/TinyDAS/checkpoints",
+        #"/home/jaf/prog/ntnu/TinyDAS/checkpoints",
         model.__class__.__name__.lower(),
         "best.safetensors",
     )
@@ -125,3 +125,6 @@ def load_das_file(filename: str, transpose: bool = False, dtype=dtypes.float16):
 
 def minmax(data: Tensor) -> Tensor:
     return (data - data.min()) / (data.max() - data.min())
+
+def zscore(data: Tensor) -> Tensor:
+    return data.sub(data.mean()).div(data.std())
