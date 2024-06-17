@@ -84,5 +84,5 @@ class Trainer:
                 plot_loss(self.losses, self.model)
                 break
 
-        print(f"Max loss: {min(self.losses)}, Min loss: {max(self.losses)}")
+        print(f"Max loss: {max(self.losses):.4f}, Min loss: {min(self.losses):.4f}")
         save_model(self.model, final=True)

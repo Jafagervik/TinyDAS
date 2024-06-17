@@ -64,6 +64,15 @@ def parse_args():
     )
 
     parser.add_argument(
+        "--debug",
+        "-d",
+        dest="load",
+        action="store_true",
+        help="Debug",
+        default=False,
+    )
+
+    parser.add_argument(
         "--gpus",
         "-g",
         dest="gpus",

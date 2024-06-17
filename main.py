@@ -22,11 +22,13 @@ def train_mode(args):
 
     devices = get_gpus(args.gpus)
     #devices = ["CLANG"]
-    print(devices)
+    if args.debug:
+        print(devices)
 
     dl = get_data(devices, **config)
 
-    print("Got data")
+    if args.debug:
+        print("Got data")
 
     model = select_model(args.model, **config)
 
@@ -38,15 +40,27 @@ def train_mode(args):
         for x in nn.state.get_state_dict(model).values():
             x = x.float().half()
 
+    if args.debug:
+        print("Half prec")
+
     if len(devices) > 1:
         for x in nn.state.get_state_dict(model).values():
             x.to_(devices)
+
+    if args.debug:
+        print("Copy model")
 
     params = nn.state.get_parameters(model)
 
     optim = select_optimizer(Opti.ADAM, params, **config["opt"])
 
+    if args.debug:
+        print("Optim")
+
     trainer = Trainer(model, dl, optim, devices, **config)
+
+    if args.debug:
+        print("Created model")
 
     trainer.train()
 
