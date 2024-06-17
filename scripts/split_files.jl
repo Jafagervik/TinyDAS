@@ -43,6 +43,7 @@ function split_hdf5_file(file_path::String, segment_duration::Int=5, total_durat
     println("Done with $original_filename")
 end
 
+
 function process_directory(directory::String, segment_duration::Int, total_duration::Int)
    # files = filter(x -> endswith(x, ".hdf5"), readdir(directory, join=true))
    # @sync for file in files
@@ -53,7 +54,7 @@ end
 
 
 #directory = "/clusters/home/jorgenaf/TinyDAS\\/clusters/home/jorgenaf/TinyDAS\\DAS\\2023"
-#directory = "/clusters/home/jorgenaf/TinyDAS/data/"
+directory = "/clusters/home/jorgenaf/TinyDAS/data/"
 #segment_duration = 5
 #total_duration = 600
 
