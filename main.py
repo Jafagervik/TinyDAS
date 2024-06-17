@@ -17,14 +17,16 @@ def get_data(devices: List[str], **config) -> DataLoader:
 
 def train_mode(args):
     """Train the model on the dataset."""
-
     config = get_config(args.model)
     seed_all(config["data"]["seed"])
 
     devices = get_gpus(args.gpus)
     #devices = ["CLANG"]
+    print(devices)
 
     dl = get_data(devices, **config)
+
+    print("Got data")
 
     model = select_model(args.model, **config)
 

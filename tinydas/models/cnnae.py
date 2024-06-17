@@ -30,6 +30,10 @@ class CNNAE(BaseAE):
             for i in range(len(self.sizes) - 1)
         ]
 
+    @property
+    def convolutional(self) -> bool:
+        return True
+
     def __call__(self, x: Tensor) -> Tuple[Tensor, ...]:
         # Reshape the input tensor to include a channel dimension
         y = x.reshape(-1, 1, self.M, self.N)  # (batch_size, 1, 625, 2137)

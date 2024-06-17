@@ -5,7 +5,7 @@ from tinydas.utils import load_das_file, minmax, zscore
 from tinydas.enums import Normalization
 from tinygrad import Tensor
 
-from typing import Option
+from typing import Optional
 
 
 class Dataset:
@@ -14,7 +14,7 @@ class Dataset:
         path: str = "./data",
         transpose: bool = False,
         n: int = -1,
-        normalize: Option[Normalization]= None,
+        normalize: Optional[Normalization]= None,
     ):
         self.path = path
         self.transpose = transpose

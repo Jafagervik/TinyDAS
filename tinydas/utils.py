@@ -67,8 +67,9 @@ def parse_args():
         "--gpus",
         "-g",
         dest="gpus",
-        metavar="int",
-        help="Amount of gpus",
+        metavar="GPUS",
+        type=int,
+        help="Amount of GPUs",
         default=1,
     )
 

@@ -2,7 +2,7 @@ import os
 from typing import List, Optional
 
 #import matplotlib
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import numpy as np
 
 #matplotlib.use("QT5Agg")
@@ -11,7 +11,7 @@ from tinydas.models.base import BaseAE
 
 
 def plot_loss(
-    losses: List[float], model: BaseAE, show: bool = False, save: bool = False
+    losses: List[float], model: BaseAE, show: bool = False, save: bool = True  
 ) -> None:
     plt.figure(figsize=(10, 5))
     plt.plot(np.arange(start=1, stop=len(losses) + 1), losses)
@@ -44,11 +44,11 @@ if __name__ == "__main__":
 
     import h5py
 
-    # from tinygrad import Tensor
+    from tinygrad import Tensor, dtypes
 
     with h5py.File("../data/20200301_001650.hdf5", "r") as f:
-        data = np.array(f["raw"][:], dtype=np.float32).T
-        plot_das_as_heatmap(data)
+        data = Tensor(f["raw"][:], dtype=dtypes.float16).T
+        plot_das_as_heatmap(data.numpy())
 
         # times = Tensor(np.array(f["timestamp"][:]))
         # print(data.shape)

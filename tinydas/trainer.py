@@ -21,6 +21,7 @@ class Trainer:
         devices: List[str],
         **kwargs,
     ) -> None:
+        self.shape = (kwargs["mod"]["M"], kwargs["mod"]["N"])
         self.model = model
         self.dataloader = dataloader
         self.optim = optimizer
@@ -35,15 +36,18 @@ class Trainer:
     @TinyJit
     def _run_epoch(self):  # -> Tensor:
         Tensor.training = True
+        self.optim.zero_grad()
         samples = Tensor.randint(
             self.dataloader.batch_size, high=self.dataloader.num_samples
         )
-        x = self.dataloader.data[samples].shard_(self.devices, axis=0).reshape(-1, 625 * 2137)
-        # running_loss = 0.0
-        # for x in self.dataloader:
-        #x = x
+        x = self.dataloader.data[samples].shard_(self.devices, axis=0)
 
-        self.optim.zero_grad()
+        if self.model.convolutional:
+            # [BS, C, M, N]
+            x = x.reshape(-1, 1, self.shape[0], self.shape[1])  
+        else:
+            # [BS, M, N]
+            x = x.reshape(-1, self.shape[0] * self.shape[1])
 
         loss_dict = self.model.criterion(x)
         loss = loss_dict["loss"]
@@ -78,7 +82,7 @@ class Trainer:
                 print(f"Early stopping at epoch {epoch}")
                 save_model(self.model, final=True)
                 plot_loss(self.losses, self.model)
-
                 break
+
         print(f"Max loss: {min(self.losses)}, Min loss: {max(self.losses)}")
         save_model(self.model, final=True)

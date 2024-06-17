@@ -78,6 +78,10 @@ class BETAVAE(BaseAE):
             kwargs["mod"]["p"],
         )
 
+    @property
+    def convolutional(self) -> bool:
+        return False
+
     def __call__(self, x: Tensor) -> Tuple[Tensor, ...]:
         mu, logvar = self.encoder(x)
         z = reparameterize(mu, logvar)
