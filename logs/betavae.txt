@@ -1,0 +1,14 @@
+['CUDA:0', 'CUDA:1', 'CUDA:2', 'CUDA:3']
+Got data
+betavae
+Traceback (most recent call last):
+  File "/cluster/home/jorgenaf/TinyDAS/main.py", line 129, in <module>
+    main()
+  File "/cluster/home/jorgenaf/TinyDAS/main.py", line 118, in main
+    train_mode(args)
+  File "/cluster/home/jorgenaf/TinyDAS/main.py", line 34, in train_mode
+    model = select_model(args.model, **config)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/cluster/home/jorgenaf/TinyDAS/tinydas/selections.py", line 51, in select_model
+    raise NotImplementedError
+NotImplementedError

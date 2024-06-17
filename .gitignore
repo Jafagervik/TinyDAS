@@ -10,6 +10,7 @@ __pycache__/
 *.safetensors
 
 log.txt
+logs/
 data/
 2023/
 # Distribution / packaging

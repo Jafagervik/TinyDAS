@@ -29,6 +29,7 @@ def train_mode(args):
 
     if args.debug:
         print("Got data")
+        print(args.model)
 
     model = select_model(args.model, **config)
 

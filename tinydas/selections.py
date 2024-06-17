@@ -45,7 +45,7 @@ def select_model(model: str, **config):
             return VAE(**config)
         case "cnnae":
             return CNNAE(**config)
-        case "betavaae":
+        case "betavae":
             return BETAVAE(**config)
         case _:
-            return AE(**config)
+            raise NotImplementedError
