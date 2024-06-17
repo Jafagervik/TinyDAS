@@ -46,7 +46,7 @@ class DataLoader:
 
         #return batch_data
         return (
-            batch_data.shard(self.devices, axis=0)
+            batch_data.shard(self.devices, axis=0).realize()
             if len(self.devices) > 1
-            else batch_data
+            else batch_data.realize()
         )

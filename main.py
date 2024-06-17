@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from tinygrad import nn
+from tinygrad import nn, Device
 
 from tinydas.anomalies import predict_file
 from tinydas.dataloader import DataLoader
@@ -9,16 +9,24 @@ from tinydas.selections import Opti, select_model, select_optimizer
 from tinydas.trainer import Trainer
 from tinydas.utils import *
 from tinydas.enums import Normalization
-
+import time
 
 def get_data(devices: List[str], **config) -> DataLoader:
+
+    s = time.time()
     dataset = Dataset(n=config["data"]["nfiles"])
-    return DataLoader(
+    e = time.time()
+    print(f"Loading data took: {(e-s):.3f} seconds")
+    s = time.time()
+    dl = DataLoader(
         dataset, 
         batch_size=config["data"]["batch_size"], 
         devices=devices, 
         shuffle=False,
         normalize=Normalization.MINMAX)
+    e = time.time()
+    print(f"DL took: {(e-s):.3f} seconds")
+    return dl
 
 def train_mode(args):
     """Train the model on the dataset."""
@@ -26,11 +34,15 @@ def train_mode(args):
     seed_all(config["data"]["seed"])
 
     devices = get_gpus(args.gpus)
+    for x in devices: Device[x]
     #devices = ["CLANG"]
     if args.debug:
         print(devices)
 
+    s = time.time()
     dl = get_data(devices, **config)
+    e = time.time()
+    print(f"Loading data took: {(e-s):.3f} seconds")
 
     if args.debug:
         print("Got data")
@@ -51,7 +63,7 @@ def train_mode(args):
 
     if len(devices) > 1:
         for x in nn.state.get_state_dict(model).values():
-            x.to_(devices)
+            x.realize().to_(devices)
 
     if args.debug:
         print("Copy model")

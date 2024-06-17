@@ -62,7 +62,6 @@ def parse_args():
         help="Load a model",
         default=False,
     )
-
     parser.add_argument(
         "--debug",
         "-d",
@@ -71,7 +70,6 @@ def parse_args():
         help="Debug",
         default=False,
     )
-
     parser.add_argument(
         "--gpus",
         "-g",
@@ -142,6 +140,7 @@ def load_das_file(filename: str, transpose: bool = False, dtype=dtypes.float16):
 
 
 def minmax(data: Tensor) -> Tensor:
+    #return data.sub(data.min()).div(data.max().sub(data.min()))
     return (data - data.min()) / (data.max() - data.min())
 
 def zscore(data: Tensor) -> Tensor:

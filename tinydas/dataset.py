@@ -1,7 +1,7 @@
 import os
 from concurrent.futures import ThreadPoolExecutor
 
-from tinydas.utils import load_das_file, minmax, zscore
+from tinydas.utils import load_das_file
 from tinydas.enums import Normalization
 from tinygrad import Tensor
 
@@ -32,7 +32,6 @@ class Dataset:
 
     def _init_data(self, n: int):
         filenames = [entry.path for entry in os.scandir(self.path)]
-        # if entry.is_file() and entry.name.endswith('.h5')]
         if n != -1:
             filenames = filenames[:n]
 
@@ -43,9 +42,12 @@ class Dataset:
 
         print(len(results))
 
-        all_data, all_times = zip(*results)
+        all_data, _ = zip(*results)
         # all_times_tensor = all_times[0].stack(*all_times[1:], dim=0)
         #all_data_tensor = all_data[0].stack(*all_data[1:], dim=0)
         all_data_tensor = Tensor.stack(*all_data, dim=0)
 
-        return {"data": all_data_tensor}  # , "times": all_times_tensor}
+        return {"data": all_data_tensor}  
+
+# , "times": all_times_tensor}
+# if entry.is_file() and entry.name.endswith('.h5')]

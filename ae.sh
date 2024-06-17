@@ -16,4 +16,4 @@ source /cluster/home/jorgenaf/master/bin/activate
 
 # WORKDIR = ${SLURM_SUBMIT_DIR}
 # cd ${WORKDIR}
-python main.py -t train -m ae -g 4 -d 
+python main.py -t train -m ae -g 4
