@@ -66,7 +66,7 @@ def parse_args():
     parser.add_argument(
         "--debug",
         "-d",
-        dest="load",
+        dest="debug",
         action="store_true",
         help="Debug",
         default=False,
@@ -101,12 +101,11 @@ def get_config(model: str):
 
 def save_model(model, final: bool = False, show: bool = False):
     state_dict = get_state_dict(model)
-    model_name = model.__class__.__name__.lower()
     final_or_best = "final.safetensors" if final else "best.safetensors"
     path_to_checkpoints = os.path.join(
         "/cluster/home/jorgenaf/TinyDAS/checkpoints",
         # "/home/jaf/prog/ntnu/TinyDAS/checkpoints",
-        model_name,
+        model.__class__.__name__.lower(),
         final_or_best,
     )
     safe_save(state_dict, path_to_checkpoints)

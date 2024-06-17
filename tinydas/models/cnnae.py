@@ -36,8 +36,8 @@ class CNNAE(BaseAE):
 
     def __call__(self, x: Tensor) -> Tuple[Tensor, ...]:
         # Reshape the input tensor to include a channel dimension
-        y = x.reshape(-1, 1, self.M, self.N)  # (batch_size, 1, 625, 2137)
-        y = y.sequential(self.encoder)
+        #y = x.reshape(-1, 1, self.M, self.N)  # (batch_size, 1, 625, 2137)
+        y = x.sequential(self.encoder)
         y = y.sequential(self.decoder)
         y = y.reshape(x.shape[0], self.M, self.N)  # (batch_size, 625, 2137)
         return (y,)

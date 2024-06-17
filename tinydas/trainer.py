@@ -62,7 +62,8 @@ class Trainer:
         # return Tensor(running_loss)
 
     def train(self):
-        print("Starting training...")
+        print(f"Starting training {self.model.__class__.__name__} with {self.epochs} epochs")
+
         for epoch in range(self.epochs):
         #for epoch in (t := trange(self.epochs)):
             GlobalCounters.reset()
@@ -75,7 +76,7 @@ class Trainer:
 
             if loss.item() < self.best_loss:
                 self.best_loss = loss.item()
-                save_model(self.model)
+                save_model(self.model, show=True)
 
             self.early_stopping(loss.item())
             if self.early_stopping.early_stop:

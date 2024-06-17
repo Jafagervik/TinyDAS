@@ -2,10 +2,10 @@ epochs: 250
 gpus: 1
 load: False
 data:
-  batch_size: 5
+  batch_size: 64
   dataset: "data/"
   seed: 42069
-  nfiles: 100
+  nfiles: 512
   half_prec: True
 
 opt:

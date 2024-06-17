@@ -1,11 +1,11 @@
-epochs: 1
+epochs: 5
 gpus: 1
 load: False
 data:
-  batch_size: 5
+  batch_size: 64
   dataset: "data/"
   seed: 42069
-  nfiles: 100
+  nfiles: 512
   half_prec: True
 
 opt:
@@ -16,8 +16,8 @@ opt:
 mod:
   M: 625
   N: 2137
-  hidden_layers: [32, 16]
-  latent: 2
+  hidden_layers: [512, 64]
+  latent: 32
   kld_weight: 0.00025
   p: 0.0 # dropout
 
