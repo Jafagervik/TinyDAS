@@ -1,0 +1,51 @@
+['CUDA:0', 'CUDA:1', 'CUDA:2', 'CUDA:3']
+Got data
+Half prec
+Copy model
+Optim
+Created model
+Starting training CNNAE with 5 epochs
+Epoch 1/5		Traceback (most recent call last):
+  File "/cluster/home/jorgenaf/TinyDAS/main.py", line 128, in <module>
+    main()
+  File "/cluster/home/jorgenaf/TinyDAS/main.py", line 117, in main
+    train_mode(args)
+  File "/cluster/home/jorgenaf/TinyDAS/main.py", line 65, in train_mode
+    trainer.train()
+  File "/cluster/home/jorgenaf/TinyDAS/tinydas/trainer.py", line 71, in train
+    loss = self._run_epoch()
+           ^^^^^^^^^^^^^^^^^
+  File "/cluster/home/jorgenaf/master/lib/python3.11/site-packages/tinygrad/engine/jit.py", line 150, in __call__
+    self.ret = self.fxn(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/cluster/home/jorgenaf/TinyDAS/tinydas/trainer.py", line 52, in _run_epoch
+    loss_dict = self.model.criterion(x)
+                ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/cluster/home/jorgenaf/TinyDAS/tinydas/models/cnnae.py", line 46, in criterion
+    (y,) = self(x)
+           ^^^^^^^
+  File "/cluster/home/jorgenaf/TinyDAS/tinydas/models/cnnae.py", line 40, in __call__
+    y = x.sequential(self.encoder)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/cluster/home/jorgenaf/master/lib/python3.11/site-packages/tinygrad/tensor.py", line 2561, in sequential
+    return functools.reduce(lambda x,f: f(x), ll, self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/cluster/home/jorgenaf/master/lib/python3.11/site-packages/tinygrad/tensor.py", line 2561, in <lambda>
+    return functools.reduce(lambda x,f: f(x), ll, self)
+                                        ^^^^
+  File "/cluster/home/jorgenaf/TinyDAS/tinydas/convblocks.py", line 27, in __call__
+    return x.sequential(self.net)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/cluster/home/jorgenaf/master/lib/python3.11/site-packages/tinygrad/tensor.py", line 2561, in sequential
+    return functools.reduce(lambda x,f: f(x), ll, self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/cluster/home/jorgenaf/master/lib/python3.11/site-packages/tinygrad/tensor.py", line 2561, in <lambda>
+    return functools.reduce(lambda x,f: f(x), ll, self)
+                                        ^^^^
+  File "/cluster/home/jorgenaf/master/lib/python3.11/site-packages/tinygrad/nn/__init__.py", line 106, in __call__
+    return x.conv2d(self.weight, self.bias, padding=self.padding, stride=self.stride, dilation=self.dilation, groups=self.groups)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/cluster/home/jorgenaf/master/lib/python3.11/site-packages/tinygrad/tensor.py", line 1608, in conv2d
+    assert groups*cin == cin_ and len(self.shape) == len(weight.shape), f"Input Tensor shape {self.shape} does not match the shape of the weights {weight.shape}. ({groups*cin} vs. {cin_})"  # noqa: E501
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Input Tensor shape (64, 1, 625, 2137) does not match the shape of the weights (32, 16, 3, 3). (16 vs. 1)

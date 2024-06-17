@@ -7,6 +7,7 @@ from tinydas.enums import Opti
 from tinydas.models.ae import AE
 from tinydas.models.cnnae import CNNAE
 from tinydas.models.vae import VAE
+from tinydas.models.betavae import BETAVAE
 
 
 def select_optimizer(optimizer: Opti, parameters: List[Tensor], **config) -> Optimizer:
@@ -44,5 +45,7 @@ def select_model(model: str, **config):
             return VAE(**config)
         case "cnnae":
             return CNNAE(**config)
+        case "betavaae":
+            return BETAVAE(**config)
         case _:
             return AE(**config)
