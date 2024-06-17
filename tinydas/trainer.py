@@ -46,9 +46,9 @@ class Trainer:
         self.optim.zero_grad()
 
         loss_dict = self.model.criterion(x)
-        loss_dict["loss"].backward()
+        loss = loss_dict["loss"]
 
-        #loss.backward()
+        loss.backward()
         self.optim.step()
 
         return loss
@@ -62,7 +62,7 @@ class Trainer:
         for epoch in range(self.epochs):
         #for epoch in (t := trange(self.epochs)):
             GlobalCounters.reset()
-            print(f"Epoch: {epoch + 1}:{self.epochs}", end="\t\t")
+            print(f"Epoch {epoch + 1}/{self.epochs}", end="\t\t")
             loss = self._run_epoch()
             self.losses[epoch] = loss.item()
 

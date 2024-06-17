@@ -1,7 +1,11 @@
 import os
 from concurrent.futures import ThreadPoolExecutor
 
-from tinydas.utils import load_das_file, minmax
+from tinydas.utils import load_das_file, minmax, zscore
+from tinydas.enums import Normalization
+from tinygrad import Tensor
+
+from typing import Option
 
 
 class Dataset:
@@ -10,7 +14,7 @@ class Dataset:
         path: str = "./data",
         transpose: bool = False,
         n: int = -1,
-        normalize: bool = True,
+        normalize: Option[Normalization]= None,
     ):
         self.path = path
         self.transpose = transpose
@@ -32,16 +36,16 @@ class Dataset:
         if n != -1:
             filenames = filenames[:n]
 
-        with ThreadPoolExecutor() as executor:
-            results = list(map(load_das_file, filenames))
-        # results = [load_das_file(fs) for fs in filenames]
+        #with ThreadPoolExecutor() as executor:
+        #    results = list(map(load_das_file, filenames))
+        results = [load_das_file(fs) for fs in filenames]
         results = [tup for tup in results if tup[0].shape == (625, 2137)]
 
         all_data, all_times = zip(*results)
-        # all_data_tensor = Tensor(np.stack(all_data), requires_grad=False)
         # all_times_tensor = all_times[0].stack(*all_times[1:], dim=0)
-        all_data_tensor = all_data[0].stack(*all_data[1:], dim=0)
-        if self.normalize:
-            all_data_tensor = minmax(all_data_tensor)
+        #all_data_tensor = all_data[0].stack(*all_data[1:], dim=0)
+        all_data_tensor = Tensor.stack(*all_data, dim=0)
+        if self.normalize is not None:
+            all_data_tensor = minmax(all_data_tensor) if self.normalize == Normalization.MINMAX else zscore(all_data_tensor)
 
         return {"data": all_data_tensor}  # , "times": all_times_tensor}

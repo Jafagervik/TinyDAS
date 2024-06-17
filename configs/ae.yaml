@@ -16,8 +16,8 @@ opt:
 mod:
   M: 625
   N: 2137
-  hidden_layers: [1024, 256, 32]
-  latent: 2
+  hidden_layers: [1024, 256]
+  latent: 32
   p: 0.0 # dropout
 
 es:

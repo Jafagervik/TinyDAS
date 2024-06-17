@@ -8,8 +8,12 @@ from tinydas.plots import plot_das_as_heatmap, plot_loss
 from tinydas.selections import Opti, select_model, select_optimizer
 from tinydas.trainer import Trainer
 from tinydas.utils import *
+from tinydas.enums import Normalization
 
 
+def get_data(devices: List[str], **config) -> DataLoader:
+    dataset = Dataset(n=config["data"]["nfiles"], normalize=Normalization.MINMAX)
+    return DataLoader(dataset, batch_size=config["data"]["batch_size"], devices=devices)
 
 def train_mode(args):
     """Train the model on the dataset."""
@@ -17,13 +21,10 @@ def train_mode(args):
     config = get_config(args.model)
     seed_all(config["data"]["seed"])
 
-    devices = get_gpus(config["gpus"])
-    print(devices)
+    devices = get_gpus(args.gpus)
     #devices = ["CLANG"]
 
-    dataset = Dataset(n=config["data"]["nfiles"], normalize=True)
-
-    dl = DataLoader(dataset, batch_size=config["data"]["batch_size"], devices=devices)
+    dl = get_data(devices, **config)
 
     model = select_model(args.model, **config)
 
