@@ -14,6 +14,4 @@ module purge
 module load Python/3.11.5-GCCcore-13.2.0
 source /cluster/home/jorgenaf/master/bin/activate
 
-# WORKDIR = ${SLURM_SUBMIT_DIR}
-# cd ${WORKDIR}
 python main.py -t train -m ae -g 4

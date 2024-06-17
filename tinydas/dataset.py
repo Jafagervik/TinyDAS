@@ -36,11 +36,8 @@ class Dataset:
             filenames = filenames[:n]
 
         #with ThreadPoolExecutor() as executor:
-        #    results = list(map(load_das_file, filenames))
+            #results = list(executor.map(load_das_file, filenames))
         results = [load_das_file(fs) for fs in filenames]
-        results = [tup for tup in results if tup[0].shape == (625, 2137)]
-
-        print(len(results))
 
         all_data, _ = zip(*results)
         # all_times_tensor = all_times[0].stack(*all_times[1:], dim=0)

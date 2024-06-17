@@ -10,7 +10,7 @@ from tinydas.dataloader import DataLoader
 from tinydas.early_stopping import EarlyStopping
 from tinydas.models.base import BaseAE
 from tinydas.plots import plot_loss
-from tinydas.utils import save_model
+from tinydas.utils import save_model, minmax
 
 
 class Trainer:
@@ -88,10 +88,12 @@ class Trainer:
             GlobalCounters.reset()
         #for epoch in (t := trange(self.epochs)):
             Tensor.training = True
-            print(colored(f"Epoch {epoch + 1}/{self.epochs}", "green"), end="\t\t")
+            print(colored(f"Epoch {epoch + 1}/{self.epochs}", "green"), end="\t")
             #loss = self._run_epoch(epoch)
 
             for data in self.dataloader:
+                data = minmax(data)
+                print(data.min())
                 loss = self.train_step(data)
             self.losses[epoch] = loss.numpy().item()
 
