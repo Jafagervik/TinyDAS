@@ -93,7 +93,6 @@ class Trainer:
 
             for data in self.dataloader:
                 data = minmax(data)
-                print(data.min())
                 loss = self.train_step(data)
             self.losses[epoch] = loss.numpy().item()
 
