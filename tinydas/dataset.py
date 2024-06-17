@@ -41,11 +41,11 @@ class Dataset:
         results = [load_das_file(fs) for fs in filenames]
         results = [tup for tup in results if tup[0].shape == (625, 2137)]
 
+        print(len(results))
+
         all_data, all_times = zip(*results)
         # all_times_tensor = all_times[0].stack(*all_times[1:], dim=0)
         #all_data_tensor = all_data[0].stack(*all_data[1:], dim=0)
         all_data_tensor = Tensor.stack(*all_data, dim=0)
-        if self.normalize is not None:
-            all_data_tensor = minmax(all_data_tensor) if self.normalize == Normalization.MINMAX else zscore(all_data_tensor)
 
         return {"data": all_data_tensor}  # , "times": all_times_tensor}

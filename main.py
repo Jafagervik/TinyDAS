@@ -12,8 +12,13 @@ from tinydas.enums import Normalization
 
 
 def get_data(devices: List[str], **config) -> DataLoader:
-    dataset = Dataset(n=config["data"]["nfiles"], normalize=Normalization.MINMAX)
-    return DataLoader(dataset, batch_size=config["data"]["batch_size"], devices=devices)
+    dataset = Dataset(n=config["data"]["nfiles"])
+    return DataLoader(
+        dataset, 
+        batch_size=config["data"]["batch_size"], 
+        devices=devices, 
+        shuffle=False,
+        normalize=Normalization.MINMAX)
 
 def train_mode(args):
     """Train the model on the dataset."""

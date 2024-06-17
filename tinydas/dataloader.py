@@ -1,8 +1,10 @@
 import random as rnd
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 from tinygrad import Tensor
+from tinydas.enums import Normalization
+from tinydas.utils import zscore, minmax
 
 from .dataset import Dataset
 
@@ -14,6 +16,7 @@ class DataLoader:
         batch_size: int,
         devices: List[str],
         shuffle: bool = False,
+        normalize: Optional[Normalization] = None
     ):
         if shuffle:
             rnd.shuffle(dataset.data["data"])
@@ -23,12 +26,13 @@ class DataLoader:
         self.num_samples = dataset.shape[0]
         self.current_index = 0
         self.devices = devices
+        self.normalize = normalize
 
     def __iter__(self):
         self.current_index = 0
         return self
 
-    def __next__(self):
+    def __next__(self) -> Tensor:
         if self.current_index >= self.num_samples:
             raise StopIteration
 
@@ -37,6 +41,10 @@ class DataLoader:
         # batch_times = self.times[self.current_index : end_index]
         self.current_index = end_index
 
+        #if self.normalize is not None:
+        #    batch_data = minmax(batch_data) if self.normalize == Normalization.MINMAX else zscore(batch_data)
+
+        #return batch_data
         return (
             batch_data.shard(self.devices, axis=0)
             if len(self.devices) > 1

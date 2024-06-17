@@ -12,6 +12,7 @@ opt:
   lr: 0.001
   b1: 0.9
   b2: 0.99
+  loss_scaler: 1.0
 
 mod:
   M: 625

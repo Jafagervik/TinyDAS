@@ -3,6 +3,7 @@ from typing import List
 from tinygrad import GlobalCounters, TinyJit, dtypes
 from tinygrad.nn import Tensor
 from tinygrad.nn.optim import Optimizer
+from tinygrad.helpers import colored
 from tqdm import trange
 
 from tinydas.dataloader import DataLoader
@@ -33,11 +34,9 @@ class Trainer:
             kwargs["es"]["patience"], kwargs["es"]["min_delta"]
         )
 
-    @TinyJit
-    def _run_epoch(self, i: int) -> Tensor:
+    def _run_epoch(self) -> Tensor:
         Tensor.training = True
         self.optim.zero_grad()
-        Tensor.manual_seed(i)
         samples = Tensor.randint(
             self.dataloader.batch_size, high=self.dataloader.num_samples
         )
@@ -63,14 +62,39 @@ class Trainer:
         # running_loss /= self.dataloader.num_samples / self.dataloader.batch_size
         # return Tensor(running_loss)
 
+    @TinyJit
+    def train_step(self, x: Tensor) -> Tensor:
+        Tensor.training = True
+        self.optim.zero_grad()
+        print("inside")
+
+        if self.model.convolutional:
+            # [BS, C, M, N]
+            x = x.reshape(-1, 1, self.shape[0], self.shape[1])  
+        else:
+            # [BS, M, N]
+            x = x.reshape(-1, self.shape[0] * self.shape[1])
+
+        loss_dict = self.model.criterion(x)
+        loss = loss_dict["loss"]
+
+        loss.backward()
+        self.optim.step()
+
+        return loss.realize()
+
     def train(self):
-        print(f"Starting training {self.model.__class__.__name__} with {self.epochs} epochs")
+        print(colored(f"Starting training {self.model.__class__.__name__} with {self.epochs} epochs", 'red'))
 
         for epoch in range(self.epochs):
         #for epoch in (t := trange(self.epochs)):
-            GlobalCounters.reset()
-            print(f"Epoch {epoch + 1}/{self.epochs}", end="\t\t")
-            loss = self._run_epoch(epoch)
+            Tensor.training = True
+            print(colored(f"Epoch {epoch + 1}/{self.epochs}", "green"))
+            #loss = self._run_epoch(epoch)
+
+            for data in self.dataloader:
+                GlobalCounters.reset()
+                loss = self.train_step(data)
             self.losses[epoch] = loss.item()
 
             #t.set_description(f"Epoch: {epoch + 1} | Loss: {loss.item():.4f}")
@@ -85,7 +109,7 @@ class Trainer:
                 print(f"Early stopping at epoch {epoch}")
                 save_model(self.model, final=True)
                 plot_loss(self.losses, self.model)
-                break
+                return
 
         print(f"Max loss: {max(self.losses):.4f}, Min loss: {min(self.losses):.4f}")
         save_model(self.model, final=True)
