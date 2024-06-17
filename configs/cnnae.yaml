@@ -1,9 +1,8 @@
-epochs: 5
-gpus: 1
+epochs: 200
+gpus: 4
 load: False
 data:
   batch_size: 64
-  dataset: "data/"
   seed: 42069
   nfiles: 512
   half_prec: True

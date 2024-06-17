@@ -34,12 +34,14 @@ class Trainer:
         )
 
     @TinyJit
-    def _run_epoch(self):  # -> Tensor:
+    def _run_epoch(self, i: int) -> Tensor:
         Tensor.training = True
         self.optim.zero_grad()
+        Tensor.manual_seed(i)
         samples = Tensor.randint(
             self.dataloader.batch_size, high=self.dataloader.num_samples
         )
+        print(samples.numpy())
         x = self.dataloader.data[samples].shard_(self.devices, axis=0)
 
         if self.model.convolutional:
@@ -68,7 +70,7 @@ class Trainer:
         #for epoch in (t := trange(self.epochs)):
             GlobalCounters.reset()
             print(f"Epoch {epoch + 1}/{self.epochs}", end="\t\t")
-            loss = self._run_epoch()
+            loss = self._run_epoch(epoch)
             self.losses[epoch] = loss.item()
 
             #t.set_description(f"Epoch: {epoch + 1} | Loss: {loss.item():.4f}")
@@ -76,7 +78,7 @@ class Trainer:
 
             if loss.item() < self.best_loss:
                 self.best_loss = loss.item()
-                save_model(self.model, show=True)
+                save_model(self.model)
 
             self.early_stopping(loss.item())
             if self.early_stopping.early_stop:

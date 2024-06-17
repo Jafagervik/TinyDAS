@@ -10,11 +10,11 @@ from tinydas.models.base import BaseAE
 class CNNAE(BaseAE):
     def __init__(self, **kwargs):
         super().__init__()
-        self.M = kwargs["mod"]["M"] or 625
-        self.N = kwargs["mod"]["N"] or 2137
+        self.M = kwargs["mod"]["M"] 
+        self.N = kwargs["mod"]["N"] 
         self.inp = self.M * self.N
 
-        self.sizes = kwargs["mod"]["hidden"] or [1, 4, 8, 16]
+        self.sizes = kwargs["mod"]["hidden"] 
 
         self.encoder = [
             ConvBlock(self.sizes[i], self.sizes[i + 1], stride=1, padding=1)
@@ -35,8 +35,6 @@ class CNNAE(BaseAE):
         return True
 
     def __call__(self, x: Tensor) -> Tuple[Tensor, ...]:
-        # Reshape the input tensor to include a channel dimension
-        #y = x.reshape(-1, 1, self.M, self.N)  # (batch_size, 1, 625, 2137)
         y = x.sequential(self.encoder)
         y = y.sequential(self.decoder)
         y = y.reshape(x.shape[0], self.M, self.N)  # (batch_size, 625, 2137)

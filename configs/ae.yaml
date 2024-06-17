@@ -4,7 +4,7 @@ load: False
 data:
   batch_size: 64
   dataset: "data/"
-  seed: 69420
+  seed: 2531
   nfiles: 512
   half_prec: True
 
