@@ -15,21 +15,23 @@ Generates an iterator for the dataset of a certain batchsize
 ### Models
 
 ```python
+class MyAwesomeModel(ABC):
+    def __init__(self, kwargs**):
+        self.M = kwargs["data"]["M"]
+        self.N = kwargs["data"]["N"]
 
-class BaseAE(ABC):
-    def __init__(self):
-        pass
+        self.net = [Linear(M*N, 1)]
+
+    def __call__(self, x: Tensor) -> Tuple[Tensor, ...]:
+        y = x.sequential(self.net)
+        return y,
 
     @abstractmethod
-    def __call__(self, X: Tensor) -> Tensor:
-        pass
+    def criterion(self, x: Tensor) -> Dict[str, Tensor]:
+        (y, ) = self(x)
+        loss = mse(y, x)
+        return {"loss": loss}
 
-    @abstractmethod
-    def criterion(self, X: Tensor) -> Tensor:
-        pass
-
-    def predict(self, X: Tensor) -> Tensor:
-        return self(X)[0]
 ```
 
 Most models are based on this abstractclass
@@ -58,7 +60,3 @@ or alternatively
 `python main.py -t detect -m ae`
 
 # NOTES:
-
-- Dataset gets name of all files sorted
-- Dataloader gets bs of n items, loads them and stacks them for learning
-- dataloader performs transforms?
