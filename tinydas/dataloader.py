@@ -1,5 +1,5 @@
 import random as rnd
-from typing import List, Optional
+from typing import List
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tinygrad import Tensor
@@ -38,7 +38,6 @@ class DataLoader:
         batch_indices = self.indices[self.current_index:end_index]
 
         batch_data = self._load_batch_data(batch_indices)
-        #batch_data = [self.dataset[i].realize() for i in batch_indices]
         self.current_index = end_index
 
         batch_tensor = Tensor.stack(*batch_data, dim=0)

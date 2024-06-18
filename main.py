@@ -24,7 +24,6 @@ def get_data(devices: List[str], **config) -> DataLoader:
     return dl
 
 def train_mode(args):
-    """Train the model on the dataset."""
     config = get_config(args.model)
     seed_all(config["data"]["seed"])
 
