@@ -18,6 +18,7 @@ class Dataset:
         self.path = path
         self.transpose = transpose
         self.normalize = normalize
+        self.dtype = dtype
         self.filenames = self._get_filenames(n)
 
     def __repr__(self) -> str:
@@ -39,7 +40,7 @@ class Dataset:
         if self.normalize:
             data = self._apply_normalization(data)
 
-        data = data.cast(self.dtypes)
+        data = data.cast(self.dtype)
         
         return data
 

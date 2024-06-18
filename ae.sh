@@ -5,8 +5,8 @@
 #SBATCH --account=ie-idi
 #SBATCH -t 01:00:00
 #SBATCH -N 1 # One node
-#SBATCH --mem=160G
-#SBATCH --gres=gpu:4
+#SBATCH --mem=80G
+#SBATCH --gres=gpu:2
 #SBATCH --constraint="gpu40g|gpu80g"
 #SBATCH --mail-type=begin
 #SBATCH --mail-type=end
