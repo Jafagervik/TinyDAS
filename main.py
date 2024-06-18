@@ -28,58 +28,31 @@ def train_mode(args):
     config = get_config(args.model)
     seed_all(config["data"]["seed"])
 
-    if args.debug:
-        num_workers = os.cpu_count() // 2
-        # Example: Using a fraction of available CPUs
-        print(f"Suggested number of workers: {num_workers}")
-
-    devices = get_gpus(args.gpus)
+    devices = get_gpus(args.gpus) #devices = ["CLANG"]
     for x in devices: Device[x]
-    #devices = ["CLANG"]
-    if args.debug:
-        print(devices)
 
     dl = get_data(devices, **config)
 
-    if args.debug:
-        print("Got data")
-        print(args.model)
-
     model = select_model(args.model, **config)
 
-    if args.load == True:
-        config["load"] = True
-        load_model(model)
+    if args.load: load_model(model)
 
     if config["data"]["half_prec"]:
+        print("F16")
         for x in nn.state.get_state_dict(model).values():
             x = x.float().half()
-
-    if args.debug:
-        print("Half prec")
 
     if len(devices) > 1:
         for x in nn.state.get_state_dict(model).values():
             x.realize().to_(devices)
 
-    if args.debug:
-        print("Copy model")
-
     params = nn.state.get_parameters(model)
-
     optim = select_optimizer(Opti.ADAM, params, **config["opt"])
 
-    if args.debug:
-        print("Optim")
-
     trainer = Trainer(model, dl, optim, devices, **config)
-
-    if args.debug:
-        print("Created model")
-
     trainer.train()
 
-    #plot_loss(trainer.losses, trainer.model, save=True)
+    plot_loss(trainer.losses, trainer.model, save=True)
 
 
 def show_imgs(args):

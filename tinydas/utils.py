@@ -10,6 +10,8 @@ import yaml
 from tinygrad import Device, dtypes
 from tinygrad.nn import Tensor
 from tinygrad.nn.state import get_state_dict, load_state_dict, safe_load, safe_save
+from tinygrad.helpers import colored
+from tinydas.timer import Timer
 
 
 def get_size_in_gb(t: Tensor) -> float:
@@ -143,3 +145,10 @@ def minmax(data: Tensor) -> Tensor:
 
 def zscore(data: Tensor) -> Tensor:
     return data.sub(data.mean()).div(data.std())
+
+def printing(epoch: int, epochs: int, loss: float, dur: float):
+    print(colored(f"Epoch {epoch + 1}/{epochs}", "green"), end="\t")
+    print(colored(f"Loss: {loss:.4f}", "red"), end="\t")
+    print(f"Time: {(dur):.2f}s \t {((epoch+1)/epochs)*100:.2f}%")
+
+    

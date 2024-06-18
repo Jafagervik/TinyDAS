@@ -37,7 +37,6 @@ class DataLoader:
         end_index = min(self.current_index + self.batch_size, len(self.indices))
         batch_indices = self.indices[self.current_index:end_index]
 
-        # TODO: Parallel loading
         batch_data = self._load_batch_data(batch_indices)
         #batch_data = [self.dataset[i].realize() for i in batch_indices]
         self.current_index = end_index

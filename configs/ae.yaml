@@ -1,16 +1,15 @@
 epochs: 50
 gpus: 4
-load: False
 data:
-  batch_size: 64
+  batch_size: 1280
   dataset: "data/"
   seed: 2531
-  nfiles: 5120
+  nfiles: 20480
   half_prec: True
   num_workers: 8
 
 opt:
-  lr: 0.001
+  lr: 0.0025
   b1: 0.9
   b2: 0.99
   loss_scaler: 1.0
