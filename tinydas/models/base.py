@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, Tuple
 
 from tinygrad.nn import Tensor
+from tinygrad import TinyJit
 
 from tinydas.enums import Models
 from tinydas.utils import minmax
@@ -36,6 +37,8 @@ class BaseAE(ABC):
     def criterion(self, x: Tensor) -> Dict[str, Tensor]:
         pass
 
+    
+    @TinyJit
     def predict(self, x: Tensor) -> Tensor:
         """
         Input tensor is being processed to fit encoder
@@ -46,15 +49,12 @@ class BaseAE(ABC):
         x = minmax(x)
         print(f"Model: {self.__class__.__name__.lower()}")
         match self.__class__.__name__.lower():
-            case Models.VAE:
-                print("VAE")
+            case Models.VAE | Models.BETAVAE:
                 (out, _, _) = self(x)
-            case Models.AE:
-                (out,) = self(x)
-            case Models.CNNAE:
+            case Models.AE | Models.CNNAE:
                 (out,) = self(x)
             case _:
-                raise NotImplementedError
+                return Tensor.empty().realize()
 
         out = out.reshape(625, 2137)
         Tensor.no_grad = False

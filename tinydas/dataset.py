@@ -2,7 +2,7 @@ import os
 
 from tinydas.utils import load_das_file, zscore, minmax
 from tinydas.enums import Normalization
-from tinygrad import Tensor
+from tinygrad import Tensor, dtypes
 
 from typing import Optional, List
 
@@ -12,6 +12,7 @@ class Dataset:
         path: str = "./data",
         transpose: bool = False,
         n: Optional[int] = None,
+        dtype = dtypes.float16,
         normalize: Optional[Normalization] = None,
     ):
         self.path = path
@@ -26,6 +27,9 @@ class Dataset:
         return len(self.filenames)
 
     def __getitem__(self, idx: int) -> Tensor:
+        """
+        Normalize the data before converting datatype 
+        """
         filename = self.filenames[idx]
         data, _ = load_das_file(filename)
         
@@ -34,6 +38,8 @@ class Dataset:
         
         if self.normalize:
             data = self._apply_normalization(data)
+
+        data = data.cast(self.dtypes)
         
         return data
 

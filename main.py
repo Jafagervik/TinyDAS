@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from tinygrad import nn, Device
+from tinygrad import nn, Device, dtypes
 
 from tinydas.anomalies import predict_file
 from tinydas.dataloader import DataLoader
@@ -13,7 +13,8 @@ from tinydas.enums import Normalization
 def get_data(devices: List[str], **config) -> DataLoader:
     dataset = Dataset(
         n=config["data"]["nfiles"],
-        normalize=Normalization.MINMAX    
+        normalize=Normalization.MINMAX,
+        dtype=dtypes.float16 if config["data"]["half_prec"] else dtypes.float32  
     )
     dl = DataLoader(
         dataset, 
