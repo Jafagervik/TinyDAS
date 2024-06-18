@@ -12,16 +12,15 @@ from tinydas.enums import Normalization
 import time
 
 def get_data(devices: List[str], **config) -> DataLoader:
-    s = time.time()
-    dataset = Dataset(n=config["data"]["nfiles"])
-    e = time.time()
-    print(f"Loading data took: {(e-s):.3f} seconds")
+    dataset = Dataset(
+        n=config["data"]["nfiles"],
+        normalize=Normalization.MINMAX    
+    )
     dl = DataLoader(
         dataset, 
         batch_size=config["data"]["batch_size"], 
         devices=devices, 
-        shuffle=False,
-        normalize=Normalization.MINMAX)
+    )
     return dl
 
 def train_mode(args):

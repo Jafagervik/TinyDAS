@@ -1,19 +1,61 @@
 import os
-from concurrent.futures import ThreadPoolExecutor
 
-from tinydas.utils import load_das_file
+from tinydas.utils import load_das_file, zscore, minmax
 from tinydas.enums import Normalization
 from tinygrad import Tensor
 
-from typing import Optional
-
+from typing import Optional, List
 
 class Dataset:
     def __init__(
         self,
         path: str = "./data",
         transpose: bool = False,
-        n: int = -1,
+        n: Optional[int] = None,
+        normalize: Optional[Normalization] = None,
+    ):
+        self.path = path
+        self.transpose = transpose
+        self.normalize = normalize
+        self.filenames = self._get_filenames(n)
+
+    def __repr__(self) -> str:
+        return f"Dataset with {len(self.filenames)} files"
+
+    def __len__(self) -> int:
+        return len(self.filenames)
+
+    def __getitem__(self, idx: int) -> Tensor:
+        filename = self.filenames[idx]
+        data, _ = load_das_file(filename)
+        
+        if self.transpose:
+            data = data.T
+        
+        if self.normalize:
+            data = self._apply_normalization(data)
+        
+        return data
+
+    def _get_filenames(self, n: Optional[int]) -> List[str]:
+        filenames = [entry.path for entry in os.scandir(self.path)]
+        if n is not None:
+            filenames = filenames[:n]
+        return filenames
+
+    def _apply_normalization(self, data: Tensor) -> Tensor:
+        if self.normalize == Normalization.MINMAX:
+            return minmax(data)
+        elif self.normalize == Normalization.ZSCORE:
+            return zscore(data)
+
+"""
+class Dataset:
+    def __init__(
+        self,
+        path: str = "./data",
+        transpose: bool = False,
+        n: Optional[int] = None,
         normalize: Optional[Normalization]= None,
     ):
         self.path = path
@@ -30,21 +72,19 @@ class Dataset:
     def __len__(self) -> int:
         return self.data["data"].shape[0]
 
+    def __getitem__(self, idx: int):
+        pass
+
     def _init_data(self, n: int):
         filenames = [entry.path for entry in os.scandir(self.path)]
-        if n != -1:
+        if n is not None:
             filenames = filenames[:n]
 
-        #with ThreadPoolExecutor() as executor:
-            #results = list(executor.map(load_das_file, filenames))
-        results = [load_das_file(fs) for fs in filenames]
+        with ThreadPoolExecutor() as executor:
+            results = list(executor.map(load_das_file, filenames))
 
         all_data, _ = zip(*results)
-        # all_times_tensor = all_times[0].stack(*all_times[1:], dim=0)
-        #all_data_tensor = all_data[0].stack(*all_data[1:], dim=0)
         all_data_tensor = Tensor.stack(*all_data, dim=0)
 
         return {"data": all_data_tensor}  
-
-# , "times": all_times_tensor}
-# if entry.is_file() and entry.name.endswith('.h5')]
+"""

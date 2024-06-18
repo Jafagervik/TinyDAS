@@ -128,14 +128,12 @@ def reparameterize(mu: Tensor, logvar: Tensor) -> Tensor:
     eps = Tensor.randn(*std.shape)
     return eps.mul(std).add(mu)
 
-
-def load_das_file(filename: str, transpose: bool = False, dtype=dtypes.float16):
+        
+def load_das_file(filename: str, dtype=dtypes.float16):
     """Loads a single das file in to a tuple of the data and the timestamps."""
     with h5py.File(filename, "r") as f:
         data = Tensor(f["raw"][:], dtype=dtype, requires_grad=False).T
         times = Tensor(f["timestamp"][:], requires_grad=False)
-    if transpose:
-        data = data.T
     return data, times
 
 

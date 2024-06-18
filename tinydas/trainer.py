@@ -65,6 +65,7 @@ class Trainer:
     @TinyJit
     def train_step(self, x: Tensor) -> Tensor:
         self.optim.zero_grad()
+        x = minmax(x)
 
         if self.model.convolutional:
             # [BS, C, M, N]
@@ -91,19 +92,20 @@ class Trainer:
             print(colored(f"Epoch {epoch + 1}/{self.epochs}", "green"), end="\t")
             #loss = self._run_epoch(epoch)
 
+            running_loss = 0.0
             for data in self.dataloader:
-                data = minmax(data)
                 loss = self.train_step(data)
-            self.losses[epoch] = loss.numpy().item()
+                running_loss += loss.numpy().item()
+            self.losses[epoch] = running_loss
 
             #t.set_description(f"Epoch: {epoch + 1} | Loss: {loss.item():.4f}")
-            print(colored(f"Loss: {loss.numpy().item():.4f}", "red"))
+            print(colored(f"Loss: {running_loss:.4f}", "red"))
 
             if loss.item() < self.best_loss:
-                self.best_loss = loss.numpy().item()
+                self.best_loss = running_loss
                 save_model(self.model)
 
-            self.early_stopping(loss.numpy().item())
+            self.early_stopping(running_loss)
             if self.early_stopping.early_stop:
                 print(f"Early stopping at epoch {epoch}")
                 save_model(self.model, final=True)
