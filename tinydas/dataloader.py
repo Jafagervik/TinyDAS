@@ -1,9 +1,11 @@
 import random as rnd
 from typing import List, Optional
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from tinygrad import Tensor
 
 from tinydas.dataset import Dataset
+from tinydas.utils import load_das_file
 
 class DataLoader:
     def __init__(
@@ -11,12 +13,14 @@ class DataLoader:
         dataset: Dataset,
         batch_size: int,
         devices: List[str],
+        num_workers: int,
         shuffle: bool = False,
     ):
         self.dataset = dataset
         self.batch_size = batch_size
         self.devices = devices
         self.indices = list(range(len(dataset)))
+        self.num_workers = num_workers
         self.shuffle = shuffle
         if self.shuffle: rnd.shuffle(self.indices)
         self.current_index = 0
@@ -32,7 +36,10 @@ class DataLoader:
 
         end_index = min(self.current_index + self.batch_size, len(self.indices))
         batch_indices = self.indices[self.current_index:end_index]
-        batch_data = [self.dataset[i].realize() for i in batch_indices]
+
+        # TODO: Parallel loading
+        batch_data = self._load_batch_data(batch_indices)
+        #batch_data = [self.dataset[i].realize() for i in batch_indices]
         self.current_index = end_index
 
         batch_tensor = Tensor.stack(*batch_data, dim=0)
@@ -42,41 +49,18 @@ class DataLoader:
             else batch_tensor.realize()
         )
 
-"""
-class DataLoader:
-    def __init__(
-        self,
-        dataset: Dataset,
-        batch_size: int,
-        devices: List[str],
-        shuffle: bool = False,
-        normalize: Optional[Normalization] = None
-    ):
-        if shuffle:
-            rnd.shuffle(dataset.data["data"])
-        self.data = dataset.data["data"]
-        self.batch_size = batch_size
-        self.num_samples = dataset.shape[0]
-        self.current_index = 0
-        self.devices = devices
-        self.normalize = normalize
+    def _load_batch_data(self, batch_indices: List[int]) -> List[Tensor]:
+        with ThreadPoolExecutor(max_workers=self.num_workers) as executor:
+            futures = [executor.submit(self._load_single_data, idx) for idx in batch_indices]
+                
+            #batch_data = []
+            #for future in as_completed(futures):
+            #    data = future.result()
+            #    batch_data.append(data.realize())
 
-    def __iter__(self):
-        self.current_index = 0
-        return self
+            batch_data = [future.result().realize() for future in as_completed(futures)]
+        
+        return batch_data
 
-    def __next__(self) -> Tensor:
-        if self.current_index >= self.num_samples:
-            raise StopIteration
-
-        end_index = min(self.current_index + self.batch_size, self.num_samples)
-        batch_data = self.data[self.current_index : end_index]
-        self.current_index = end_index
-
-        return (
-            batch_data.shard(self.devices, axis=0).realize()
-            if len(self.devices) > 1
-            else batch_data.realize()
-        )
-
-"""
+    def _load_single_data(self, idx: int) -> Tensor:
+        return self.dataset[idx]

@@ -1,12 +1,13 @@
-epochs: 3
+epochs: 50
 gpus: 4
 load: False
 data:
-  batch_size: 16
+  batch_size: 64
   dataset: "data/"
   seed: 2531
-  nfiles: 2560
+  nfiles: 5120
   half_prec: True
+  num_workers: 8
 
 opt:
   lr: 0.001

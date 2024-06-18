@@ -48,43 +48,6 @@ class Dataset:
             return minmax(data)
         elif self.normalize == Normalization.ZSCORE:
             return zscore(data)
+        else:
+            return data
 
-"""
-class Dataset:
-    def __init__(
-        self,
-        path: str = "./data",
-        transpose: bool = False,
-        n: Optional[int] = None,
-        normalize: Optional[Normalization]= None,
-    ):
-        self.path = path
-        self.transpose = transpose
-        self.normalize = normalize
-        self.data = self._init_data(n)
-        self.rows = self.data["data"].shape[1]
-        self.cols = self.data["data"].shape[2]
-        self.shape = self.data["data"].shape
-
-    def __repr__(self) -> str:
-        return f"{self.data['data'].shape}"
-
-    def __len__(self) -> int:
-        return self.data["data"].shape[0]
-
-    def __getitem__(self, idx: int):
-        pass
-
-    def _init_data(self, n: int):
-        filenames = [entry.path for entry in os.scandir(self.path)]
-        if n is not None:
-            filenames = filenames[:n]
-
-        with ThreadPoolExecutor() as executor:
-            results = list(executor.map(load_das_file, filenames))
-
-        all_data, _ = zip(*results)
-        all_data_tensor = Tensor.stack(*all_data, dim=0)
-
-        return {"data": all_data_tensor}  
-"""

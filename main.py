@@ -9,7 +9,6 @@ from tinydas.selections import Opti, select_model, select_optimizer
 from tinydas.trainer import Trainer
 from tinydas.utils import *
 from tinydas.enums import Normalization
-import time
 
 def get_data(devices: List[str], **config) -> DataLoader:
     dataset = Dataset(
@@ -20,6 +19,7 @@ def get_data(devices: List[str], **config) -> DataLoader:
         dataset, 
         batch_size=config["data"]["batch_size"], 
         devices=devices, 
+        num_workers=config["data"]["num_workers"]
     )
     return dl
 
@@ -28,16 +28,18 @@ def train_mode(args):
     config = get_config(args.model)
     seed_all(config["data"]["seed"])
 
+    if args.debug:
+        num_workers = os.cpu_count() // 2
+        # Example: Using a fraction of available CPUs
+        print(f"Suggested number of workers: {num_workers}")
+
     devices = get_gpus(args.gpus)
     for x in devices: Device[x]
     #devices = ["CLANG"]
     if args.debug:
         print(devices)
 
-    s = time.time()
     dl = get_data(devices, **config)
-    e = time.time()
-    print(f"Loading data took: {(e-s):.3f} seconds")
 
     if args.debug:
         print("Got data")
