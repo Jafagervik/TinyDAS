@@ -18,9 +18,34 @@ def huber_loss(y_hat: Tensor, y: Tensor, delta: float) -> Tensor:
 def hinge_loss(y_hat: Tensor, y: Tensor) -> Tensor:
     return Tensor.maximum(0, 1-y_hat*y).mean().realize()
 
+def ssim_loss(y: Tensor, y_hat: Tensor) -> Tensor :
+    mu_y = y.mean()
+    mu_y_hat = y_hat.mean()
+    sigma_y = ((y - mu_y) ** 2).mean()
+    sigma_y_hat = ((y_hat - mu_y_hat) ** 2).mean()
+    sigma_y_y_hat = ((y - mu_y) * (y_hat - mu_y_hat)).mean()
+    
+    c1 = 0.01 ** 2
+    c2 = 0.03 ** 2
+    
+    ssim = ((2 * mu_y * mu_y_hat + c1) * (2 * sigma_y_y_hat + c2)) / ((mu_y ** 2 + mu_y_hat ** 2 + c1) * (sigma_y + sigma_y_hat + c2))
+    return (1 - ssim.mean()).realize()
+
+def log_likelihood_loss(y: Tensor, y_hat: Tensor) -> Tensor:
+    return -(y * y_hat.log() + (1 - y) * (1 - y_hat).log()).sum().realize()
+
+def total_correlation_loss(z: Tensor, q_z: Tensor) -> Tensor:
+    log_q_z_product = (q_z.log()).sum(axis=-1)
+    log_q_z = q_z.mean(axis=0).log()
+    return (log_q_z - log_q_z_product).mean().realize()
+
 
 def kl_divergence(mu: Tensor, logvar: Tensor):
     """
     Compute the KL divergence between a normal distribution with mean mu and logvar and a standard normal distribution.
     """
     return -0.5 * (1 + logvar - mu.square() - logvar.exp()).sum(axis=1).mean()
+
+
+if __name__ == "__main__": 
+    pass
