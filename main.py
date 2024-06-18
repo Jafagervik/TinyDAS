@@ -38,7 +38,6 @@ def train_mode(args):
     if args.load: load_model(model)
 
     if config["data"]["half_prec"]:
-        print("F16")
         for x in nn.state.get_state_dict(model).values():
             x = x.float().half()
 

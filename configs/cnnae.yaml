@@ -1,14 +1,14 @@
-epochs: 200
+epochs: 50
 gpus: 4
 load: False
 data:
-  batch_size: 64
+  batch_size: 128
   seed: 42069
-  nfiles: 512
+  nfiles: 25600
   half_prec: True
 
 opt:
-  lr: 0.001
+  lr: 0.003
   b1: 0.9
   b2: 0.99
 
@@ -22,5 +22,5 @@ mod:
   loss_type: "H"
 
 es:
-  patience: 50
+  patience: 10
   min_delta: 0.005

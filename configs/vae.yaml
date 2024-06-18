@@ -1,11 +1,11 @@
-epochs: 5
+epochs: 50
 gpus: 1
 load: False
 data:
-  batch_size: 64
+  batch_size: 128
   dataset: "data/"
   seed: 42069
-  nfiles: 512
+  nfiles: 25600
   half_prec: True
 
 opt:
@@ -22,5 +22,5 @@ mod:
   p: 0.0 # dropout
 
 es:
-  patience: 50
+  patience: 10
   min_delta: 0.005

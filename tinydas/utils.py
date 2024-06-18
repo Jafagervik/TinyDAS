@@ -134,7 +134,7 @@ def reparameterize(mu: Tensor, logvar: Tensor) -> Tensor:
 def load_das_file(filename: str):
     """Loads a single das file in to a tuple of the data and the timestamps."""
     with h5py.File(filename, "r") as f:
-        data = Tensor(f["raw"][:], requires_grad=False).T
+        data = Tensor(f["raw"][:], dtype=dtypes.float32, requires_grad=False).T
         times = Tensor(f["timestamp"][:], requires_grad=False)
     return data, times
 
