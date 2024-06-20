@@ -9,7 +9,7 @@ data:
   num_workers: 4
 
 opt:
-  lr: 0.003
+  lr: 0.001
   b1: 0.9
   b2: 0.99
 

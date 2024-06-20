@@ -55,7 +55,7 @@ class Decoder:
 class VAE(BaseAE):
     def __init__(self, devices: List[str], **kwargs):
         super().__init__()
-        self.devices = devices
+        self.devices = tuple(devices)
 
         hidden_layers = kwargs["mod"]["hidden_layers"]
 

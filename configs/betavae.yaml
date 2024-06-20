@@ -1,5 +1,5 @@
 epochs: 50
-gpus: 1
+gpus: 4
 load: False
 data:
   batch_size: 128
@@ -17,7 +17,7 @@ opt:
 mod:
   M: 625
   N: 2137
-  hidden_layers: [512, 128]
+  hidden_layers: [1024, 512, 128]
   latent: 32
   kld_weight: 0.00025
   p: 0.0 # dropout

@@ -2,7 +2,7 @@ import argparse
 import os
 import random as rnd
 from sys import getsizeof
-from typing import List
+from typing import List, Tuple
 
 import h5py
 import numpy as np
@@ -125,7 +125,7 @@ def load_model(model):
 
 
 @TinyJit
-def reparameterize(mu: Tensor, logvar: Tensor, devices: List[str]) -> Tensor:
+def reparameterize(mu: Tensor, logvar: Tensor, devices: Tuple[str]) -> Tensor:
     std = (0.5 * logvar).exp()
     eps = Tensor.randn(*std.shape, device=devices)
     return eps.mul(std).add(mu).realize()

@@ -53,7 +53,7 @@ class Decoder:
 
 
 class BETAVAE(BaseAE):
-    def __init__(self, **kwargs):
+    def __init__(self, devices: List[str], **kwargs):
         super().__init__()
 
         hidden_layers = kwargs["mod"]["hidden_layers"]
@@ -64,6 +64,8 @@ class BETAVAE(BaseAE):
             kwargs["mod"]["latent"],
             kwargs["mod"]["p"],
         )
+
+        self.devices = devices
 
         self.kld_weight = kwargs["mod"]["kld_weight"]
         self.beta = kwargs["mod"]["beta"]
@@ -84,7 +86,7 @@ class BETAVAE(BaseAE):
 
     def __call__(self, x: Tensor) -> Tuple[Tensor, ...]:
         mu, logvar = self.encoder(x)
-        z = reparameterize(mu, logvar)
+        z = reparameterize(mu, logvar, self.devices)
         return self.decoder(z), mu, logvar
 
     def criterion(self, x: Tensor) -> Dict[str, Tensor]:

@@ -1,7 +1,7 @@
 epochs: 50
 gpus: 4
 data:
-  batch_size: 512
+  batch_size: 256
   dataset: "data/"
   seed: 2531
   nfiles: 25600
@@ -10,7 +10,7 @@ data:
   #normalize: "minmax"
 
 opt:
-  lr: 0.003
+  lr: 0.001
   b1: 0.9
   b2: 0.99
   loss_scaler: 1.0
@@ -18,7 +18,7 @@ opt:
 mod:
   M: 625
   N: 2137
-  hidden_layers: [512, 256]
+  hidden_layers: [1024, 512, 128]
   latent: 32
   p: 0.0 # dropout
 

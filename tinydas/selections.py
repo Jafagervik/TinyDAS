@@ -46,6 +46,6 @@ def select_model(model: str, devices: List[str], **config):
         case "cnnae":
             return CNNAE(**config)
         case "betavae":
-            return BETAVAE(**config)
+            return BETAVAE(devices, **config)
         case _:
             raise NotImplementedError
