@@ -19,17 +19,15 @@ class Trainer:
         model: BaseAE,
         dataloader: DataLoader,
         optimizer: Optimizer,
-        devices: List[str],
         **kwargs,
     ) -> None:
         self.shape = (kwargs["mod"]["M"], kwargs["mod"]["N"])
         self.model = model
         self.dataloader = dataloader
         self.optim = optimizer
-        self.devices = devices
         self.best_loss = float("inf")
         self.epochs = kwargs["epochs"] if kwargs["epochs"] else 10
-        self.losses = []
+        self.losses = [float(0)] * self.epochs
         self.early_stopping = EarlyStopping(
             kwargs["es"]["patience"], kwargs["es"]["min_delta"]
         )
@@ -59,7 +57,7 @@ class Trainer:
             with Timer() as t:
                 for data in self.dataloader:
                     running_loss += self.train_step(data, reshape_fn).numpy().item()
-            self.losses.append(running_loss)
+            self.losses[epoch] = running_loss
 
             printing(epoch, self.epochs, running_loss, t.interval)
 
@@ -70,6 +68,7 @@ class Trainer:
             self.early_stopping(running_loss)
             if self.early_stopping.early_stop:
                 print(f"Early stopping at epoch {epoch}")
+                self.losses = self.losses[:epoch + 1]
                 save_model(self.model, final=True)
                 plot_loss(self.losses, self.model)
                 return

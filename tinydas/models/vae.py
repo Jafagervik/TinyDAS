@@ -53,8 +53,9 @@ class Decoder:
 
 
 class VAE(BaseAE):
-    def __init__(self, **kwargs):
+    def __init__(self, devices: List[str], **kwargs):
         super().__init__()
+        self.devices = devices
 
         hidden_layers = kwargs["mod"]["hidden_layers"]
 
@@ -82,7 +83,7 @@ class VAE(BaseAE):
 
     def __call__(self, x: Tensor) -> Tuple[Tensor, ...]:
         mu, logvar = self.encoder(x)
-        z = reparameterize(mu, logvar)
+        z = reparameterize(mu, logvar, self.devices)
         return self.decoder(z), mu, logvar
 
     def criterion(self, x: Tensor) -> Dict[str, Tensor]:

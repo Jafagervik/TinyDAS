@@ -34,8 +34,6 @@ class Dataset:
         filename = self.filenames[idx]
         data, _ = load_das_file(filename)
         
-        if self.transpose: data = data.T
-        
         if self.normalize:
             data = self._apply_normalization(data)
 

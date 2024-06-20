@@ -37,12 +37,12 @@ def select_optimizer(optimizer: Opti, parameters: List[Tensor], **config) -> Opt
             )
 
 
-def select_model(model: str, **config):
+def select_model(model: str, devices: List[str], **config):
     match model.lower():
         case "ae":
             return AE(**config)
         case "vae":
-            return VAE(**config)
+            return VAE(devices, **config)
         case "cnnae":
             return CNNAE(**config)
         case "betavae":

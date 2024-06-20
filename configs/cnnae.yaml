@@ -6,6 +6,7 @@ data:
   seed: 42069
   nfiles: 25600
   half_prec: True
+  num_workers: 4
 
 opt:
   lr: 0.003

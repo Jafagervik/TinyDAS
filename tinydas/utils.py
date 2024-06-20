@@ -7,11 +7,10 @@ from typing import List
 import h5py
 import numpy as np
 import yaml
-from tinygrad import Device, dtypes
+from tinygrad import Device, dtypes, TinyJit
 from tinygrad.nn import Tensor
 from tinygrad.nn.state import get_state_dict, load_state_dict, safe_load, safe_save
 from tinygrad.helpers import colored
-from tinydas.timer import Timer
 
 
 def get_size_in_gb(t: Tensor) -> float:
@@ -125,12 +124,13 @@ def load_model(model):
     print(f"Model loaded from {path}")
 
 
-def reparameterize(mu: Tensor, logvar: Tensor) -> Tensor:
+@TinyJit
+def reparameterize(mu: Tensor, logvar: Tensor, devices: List[str]) -> Tensor:
     std = (0.5 * logvar).exp()
-    eps = Tensor.randn(*std.shape)
-    return eps.mul(std).add(mu)
+    eps = Tensor.randn(*std.shape, device=devices)
+    return eps.mul(std).add(mu).realize()
 
-        
+
 def load_das_file(filename: str):
     """Loads a single das file in to a tuple of the data and the timestamps."""
     with h5py.File(filename, "r") as f:
@@ -138,10 +138,8 @@ def load_das_file(filename: str):
         times = Tensor(f["timestamp"][:], requires_grad=False)
     return data, times
 
-
 def minmax(data: Tensor) -> Tensor:
-    #return data.sub(data.min()).div(data.max().sub(data.min()))
-    return (data - data.min()) / (data.max() - data.min())
+    return data.sub(data.min()).div(data.max().sub(data.min()))
 
 def zscore(data: Tensor) -> Tensor:
     return data.sub(data.mean()).div(data.std())

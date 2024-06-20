@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH -p GPUQ
-#SBATCH -J tinydas_debug
+#SBATCH -J tinydas_debug_vae
 #SBATCH --account=ie-idi
 #SBATCH -t 01:00:00
 #SBATCH -N 1 # One node
@@ -19,4 +19,4 @@ module load Python/3.11.5-GCCcore-13.2.0
 source /cluster/home/jorgenaf/master/bin/activate
 
 export PYTHONUNBUFFERED=1
-srun python main.py -t train -m ae -g 2
+srun python main.py -t train -m vae -g 2

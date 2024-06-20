@@ -33,7 +33,7 @@ def train_mode(args):
 
     dl = get_data(devices, **config)
 
-    model = select_model(args.model, **config)
+    model = select_model(args.model, devices, **config)
 
     if args.load: load_model(model)
 
@@ -48,7 +48,7 @@ def train_mode(args):
     params = nn.state.get_parameters(model)
     optim = select_optimizer(Opti.ADAM, params, **config["opt"])
 
-    trainer = Trainer(model, dl, optim, devices, **config)
+    trainer = Trainer(model, dl, optim, **config)
     trainer.train()
 
     plot_loss(trainer.losses, trainer.model, save=True)
