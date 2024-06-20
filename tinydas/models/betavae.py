@@ -1,12 +1,12 @@
 from typing import Dict, List, Tuple
 
-from tinygrad import nn
+from tinygrad import nn, TinyJit
 from tinygrad.nn import Tensor
 
 from tinydas.linearblock import LinearBlockLayer
 from tinydas.losses import kl_divergence, mse
 from tinydas.models.base import BaseAE
-from tinydas.utils import reparameterize
+from tinydas.utils import reparameterize, minmax
 
 
 class Encoder:
@@ -102,3 +102,18 @@ class BETAVAE(BaseAE):
 
         loss = rec_loss + kl_loss * self.kld_weight
         return {"loss": loss, "klloss": kl_loss, "recloss": rec_loss}
+
+
+    @TinyJit
+    def predict(self, x: Tensor) -> Tensor:
+        """
+        Input tensor is being processed to fit encoder
+        after decoder is done, it is reshaped back
+        """
+        Tensor.no_grad = True
+        x = x.reshape(1, 625 * 2137)
+        x = minmax(x)
+        (out, _, _) = self(x)
+
+        out = out.reshape(625, 2137)
+        return out.realize()

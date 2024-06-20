@@ -1,11 +1,12 @@
 from typing import Dict, List, Optional, Tuple
 
 from tinygrad.nn import Linear, Tensor
+from tinygrad import TinyJit
 
 from tinydas.linearblock import LinearBlockLayer
 from tinydas.losses import mse
 from tinydas.models.base import BaseAE
-
+from tinydas.utils import minmax
 
 class Encoder:
     def __init__(
@@ -80,3 +81,18 @@ class AE(BaseAE):
     def criterion(self, x: Tensor) -> Dict[str, Tensor]:
         (x_hat,) = self(x)
         return {"loss": mse(x, x_hat)}
+
+
+    @TinyJit
+    def predict(self, x: Tensor) -> Tensor:
+        """
+        Input tensor is being processed to fit encoder
+        after decoder is done, it is reshaped back
+        """
+        Tensor.no_grad = True
+        x = x.reshape(1, 625 * 2137)
+        x = minmax(x)
+        (out,) = self(x)
+
+        out = out.reshape(625, 2137)
+        return out.realize()

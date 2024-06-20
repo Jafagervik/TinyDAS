@@ -1,10 +1,12 @@
 from typing import Dict, Tuple
 
+from tinygrad import TinyJit
 from tinygrad.nn import Tensor
 
 from tinydas.convblocks import ConvBlock, DeconvBlock
 from tinydas.losses import mse
 from tinydas.models.base import BaseAE
+from tinydas.utils import minmax
 
 
 class CNNAE(BaseAE):
@@ -44,3 +46,18 @@ class CNNAE(BaseAE):
         (y,) = self(x)
         loss = mse(x, y)
         return {"loss": loss}
+
+
+    @TinyJit
+    def predict(self, x: Tensor) -> Tensor:
+        """
+        Input tensor is being processed to fit encoder
+        after decoder is done, it is reshaped back
+        """
+        Tensor.no_grad = True
+        x = x.reshape(1, 625 * 2137)
+        x = minmax(x)
+        (out,) = self(x)
+
+        out = out.reshape(625, 2137)
+        return out.realize()

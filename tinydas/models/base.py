@@ -40,22 +40,4 @@ class BaseAE(ABC):
     
     @TinyJit
     def predict(self, x: Tensor) -> Tensor:
-        """
-        Input tensor is being processed to fit encoder
-        after decoder is done, it is reshaped back
-        """
-        Tensor.no_grad = True
-        x = x.reshape(1, 625 * 2137)
-        x = minmax(x)
-        print(f"Model: {self.__class__.__name__.lower()}")
-        match self.__class__.__name__.lower():
-            case Models.VAE | Models.BETAVAE:
-                (out, _, _) = self(x)
-            case Models.AE | Models.CNNAE:
-                (out,) = self(x)
-            case _:
-                return Tensor.empty().realize()
-
-        out = out.reshape(625, 2137)
-        Tensor.no_grad = False
-        return out.realize()
+        pass

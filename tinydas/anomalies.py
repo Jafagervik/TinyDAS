@@ -67,14 +67,18 @@ def alert_anomaly(dt: datetime):
     print(f"Anomaly found at {dt}")
 
 
-def predict_file(filename: str, **config):
+def predict_file(filename: str, model, devices: List[str] = None, **config):
     data, times = load_das_file(filename)
-    data, times = Tensor(data), np.array(times)
 
-    model = select_model("ae", **config)
+    devices = [""] or devices
+    print(devices)
+    model = select_model(model, devices, **config)
 
     reconstructed = model.predict(data)
+    
+    print(reconstructed.shape)
 
+    return
     # reconstruction_loss = mse(data, reconstructed)
 
     anomalies = find_anomalies(data, reconstructed)

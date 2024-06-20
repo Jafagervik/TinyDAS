@@ -1,10 +1,10 @@
-epochs: 50
-gpus: 4
+epochs: 5
+gpus: 2
 data:
-  batch_size: 256
+  batch_size: 32 #256
   dataset: "data/"
   seed: 2531
-  nfiles: 25600
+  nfiles: 512 #25600
   half_prec: True
   num_workers: 4
   #normalize: "minmax"

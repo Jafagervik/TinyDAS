@@ -124,11 +124,10 @@ def load_model(model):
     print(f"Model loaded from {path}")
 
 
-@TinyJit
 def reparameterize(mu: Tensor, logvar: Tensor, devices: Tuple[str]) -> Tensor:
     std = (0.5 * logvar).exp()
     eps = Tensor.randn(*std.shape, device=devices)
-    return eps.mul(std).add(mu).realize()
+    return eps.mul(std).add(mu)
 
 
 def load_das_file(filename: str):

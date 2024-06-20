@@ -79,9 +79,9 @@ def anomaly_mode(args):
     # stream or img mode
 
     config = get_config(args.model)
-    filename = "./data/20200301_000015.hdf5"
+    filename = "/cluster/home/jorgenaf/TinyDAS/data/20200302_081015.hdf5"
 
-    predict_file(filename, **config)
+    predict_file(filename, args.model, **config)
 
     # img mode
 
