@@ -15,8 +15,8 @@ logs/
 data/
 infer/
 2023/
-figs/*/before/
-figs/*/after/
+figs/
+*.ipynb
 # Distribution / packaging
 .Python
 build/
