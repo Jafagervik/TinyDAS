@@ -1,0 +1,27 @@
+epochs: 30
+gpus: 4
+data:
+  batch_size: 512
+  dataset: "data/"
+  seed: 2531
+  nfiles: 25600 # 512
+  half_prec: True
+  num_workers: 5
+  #normalize: "minmax"
+
+opt:
+  lr: 0.00042
+  b1: 0.9
+  b2: 0.99
+  loss_scaler: 1.0
+
+mod:
+  M: 625
+  N: 2137
+  hidden_layers: [1024, 512, 128, 64]
+  latent: 32
+  p: 0.0 # dropout
+
+es:
+  patience: 5
+  min_delta: 0.005
