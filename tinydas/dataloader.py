@@ -30,6 +30,9 @@ class DataLoader:
         if self.shuffle: rnd.shuffle(self.indices)
         return self
 
+    def __len__(self) -> int:
+        return len(self.indices)
+
     def __next__(self) -> Tensor:
         if self.current_index >= len(self.indices):
             raise StopIteration

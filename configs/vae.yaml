@@ -2,10 +2,10 @@ epochs: 5
 gpus: 1
 load: False
 data:
-  batch_size: 2
+  batch_size: 4
   dataset: "data/"
   seed: 42069
-  nfiles: 4
+  nfiles: 16
   half_prec: True
   num_workers: 2
 

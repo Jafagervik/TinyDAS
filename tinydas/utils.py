@@ -128,8 +128,6 @@ def load_model(model):
     load_state_dict(model, state_dict)
     print(f"Model loaded from {path}")
 
-def clamp(t: Tensor, min_val: float=0.01, max_val: float=1.0) -> Tensor: 
-    return t.maximum(min_val).minimum(max_val)
 
 def reparameterize(
     mu: Tensor, 
@@ -139,7 +137,6 @@ def reparameterize(
     std = (0.5 * logvar).exp()
     eps = Tensor.randn(*std.shape, dtype=dtype, requires_grad=True)
     return (eps * std) + mu
-    #return eps.mul(std).add(mu).realize()
 
 
 def load_das_file(filename: str):

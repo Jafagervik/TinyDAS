@@ -78,6 +78,19 @@ def show_imgs(args, devices: List[str], filename: str = ""):
 
     return data, reconstructed
 
+def find_recons(args, devices: List[str], filename: str = ""):
+    config = get_config(args.model)
+    model = select_model(args.model, devices, **config)
+    load_model(model)
+
+    data = load_das_file_no_time(filename)
+    data = minmax(data).cast(dtypes.float16)
+
+    filename = format_filename(filename)
+
+    reconstructed = model.predict(data)
+
+    return data, reconstructed
 
 def anomaly_mode(args):
     # stream or img mode
