@@ -10,15 +10,53 @@ import numpy as np
 import h5py
 from tinydas.early_stopping import EarlyStopping
 from tinydas.timer import Timer
+#from tinydas.plots import plot_das_as_heatmap
 #from torch.optim.lr_scheduler import ReduceLROnPlateau
 import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
 
 # SAVING AND LOADING
 # https://pytorch.org/tutorials/recipes/recipes/save_load_across_devices.html
 
+def plot_das_as_heatmap(
+    das: np.ndarray, filename: str, show: bool = True, path: Optional[str] = None, num_ticks: int = 6
+) -> None:
+    ts = filename.split("/")[-1].split(".")[0]
+    name = ts[:8]
+    ts = "".join(ts.split("_"))
+    print(f"{name=}")
+    start_timestamp =  datetime.strptime(ts, '%Y%m%d%H%M%S')
+    
+    # Calculate the duration and generate time labels
+    total_duration = 5  # seconds
+    total_samples = das.shape[0]
+    time_per_sample = total_duration / total_samples
+    
+    # Generate time labels for the y-axis
+    time_labels = [start_timestamp + timedelta(seconds=i*time_per_sample) for i in range(total_samples)]
+    
+    tick_indices = np.linspace(0, total_samples - 1, num_ticks).astype(int)
+    tick_labels = [time_labels[i].strftime('%H:%M:%S.%f')[:-3] for i in tick_indices]
+    
+    # Plot the heatmap
+    plt.figure(figsize=(10, 5))
+    plt.imshow(das, aspect="auto", cmap="seismic")
+    plt.colorbar()
+    
+    # Set the x-axis and y-axis labels
+    plt.xlabel("Channel")
+    plt.ylabel("Time")
+    plt.title(f"DAS Data: {name}")
+    
+    # Set y-ticks with time labels
+    plt.yticks(tick_indices, tick_labels)
+    
+    if show: plt.show()
+    if path is not None: plt.savefig(path)
+
 # Hyperparameters
 batch_size = 16
-learning_rate = 1e-5
+learning_rate = 0.001
 num_epochs = 500
 N = 25600
 beta = 0.1
@@ -128,8 +166,8 @@ class VAE(nn.Module):
 
 
 def loss_function(recon_x, x, mu, logvar):
-    BCE = F.mse_loss(recon_x.float(), x.float())
-    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp().clamp(max=100))
+    BCE = F.mse_loss(recon_x.float(), x.float(), reduction="sum")
+    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp().clamp(max=10))
     return BCE, KLD
 
 def plot_losses(total_loss, mse_loss, kld_loss, model, show=False, save=True):
@@ -251,23 +289,53 @@ def main():
     print(f"Final loss: {tot_losses[-1]:.4f}")
     print("Complete")
 
+    
+
+def load_das_file_no_time(filename: str) -> np.ndarray:
+    with h5py.File(filename, "r") as f:
+        data = np.array(f["raw"][:]).T
+    return data
+
 def test(): 
-    dataset = DASDataset(img_dir='/cluster/home/jorgenaf/TinyDAS/infer', n=1)
-    dataloader = DataLoader(dataset, batch_size=1)
-    print('dataloader done')
+    # Directory containing the infer files
+    infer_dir = '/cluster/home/jorgenaf/TinyDAS/infer'
+
+    # Load the model
     model = VAE().to(device)
     name = "meme.pth"
     sd = torch.load(name)
     model.load_state_dict(sd)
+    model.eval()
+
     with torch.no_grad():
         with torch.amp.autocast(device_type='cuda', dtype=torch.float16):
-            for d in dataloader:
-                d = d.to(device)
-                out = model(d)
+            for filename in os.listdir(infer_dir)[:2]:
+                file_path = os.path.join(infer_dir, filename)
+                
+                data = load_das_file_no_time(file_path)
+                
+                data = (data - np.mean(data)) / np.std(data)
+                
+                d = torch.from_numpy(data).to(torch.float16).unsqueeze(0).to(device)  # Add batch dimension
 
-                print(f"MSE: {F.mse_loss(d, out):.6f}")
+                out = model(d)[0]
+
+                # Plot output
+                plot_das_as_heatmap(
+                    out.cpu().numpy().squeeze(),  # Remove batch dimension
+                    filename,
+                    show=False,
+                    path=f"/cluster/home/jorgenaf/TinyDAS/figs/vae/after/{filename[:-5]}.png"
+                )
+
+                mse = F.mse_loss(d, out).item()  # Assuming the first element of out is the reconstruction
+                print(f"File: {filename}, MSE: {mse}")
+
+    print("Processing complete.")
 
 
 
 if __name__ == '__main__':
-    test()
+    #test()
+    plot_latent()
+    #main()
