@@ -9,6 +9,7 @@ import os
 import numpy as np
 import h5py
 from tinydas.early_stopping import EarlyStopping
+from tinydas.timer import Timer
 #from torch.optim.lr_scheduler import ReduceLROnPlateau
 import matplotlib.pyplot as plt
 
@@ -16,12 +17,12 @@ import matplotlib.pyplot as plt
 # https://pytorch.org/tutorials/recipes/recipes/save_load_across_devices.html
 
 # Hyperparameters
-batch_size = 2
-learning_rate = 1e-4
-num_epochs = 200
-N = 16
+batch_size = 16
+learning_rate = 1e-5
+num_epochs = 500
+N = 25600
 beta = 0.1
-kl_scale = 1e-4
+kl_scale = 1e-3
 
 torch.backends.cuda.enable_mem_efficient_sdp(True)
 torch.backends.cuda.enable_flash_sdp(True)
@@ -163,7 +164,7 @@ def main():
         print(torch.cuda.get_device_name(i))
 
     model = VAE()
-    model = torch.compile(model)
+    #model = torch.compile(model)
 
     print("Model compiled")
     if num_gpus > 1:
@@ -180,7 +181,7 @@ def main():
     ps = paramsize(model)
     print(f'Model size: {ps:.3f}MB')
     
-    #es = EarlyStopping(patience=5, min_delta=0.05)
+    es = EarlyStopping(patience=5, min_delta=0.0002)
 
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     scaler = torch.amp.GradScaler("cuda")
@@ -199,24 +200,25 @@ def main():
         total_bce = 0
         total_kld = 0
         
-        for batch in dataloader:
-            images = batch.to(device)
-            with torch.amp.autocast(device_type="cuda"):
-                recon_images, mu, logvar = model(images)
+        with Timer() as t:
+            for batch in dataloader:
+                images = batch.to(device)
+                with torch.amp.autocast(device_type="cuda"):
+                    recon_images, mu, logvar = model(images)
+                    
+                    bce, kld = loss_function(recon_images, images, mu, logvar)
+                    loss = bce + kld * kl_scale
+                    
+                optimizer.zero_grad()
+                scaler.scale(loss).backward()
+                #scaler.unscale_(optimizer)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                scaler.step(optimizer)
+                scaler.update()
                 
-                bce, kld = loss_function(recon_images, images, mu, logvar)
-                loss = bce + kld * kl_scale
-                
-            optimizer.zero_grad()
-            scaler.scale(loss).backward()
-            #scaler.unscale_(optimizer)
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-            scaler.step(optimizer)
-            scaler.update()
-            
-            total_loss += loss.item()
-            total_bce += bce.item()
-            total_kld += kld.item()
+                total_loss += loss.item()
+                total_bce += bce.item()
+                total_kld += kld.item()
         
         avg_loss = total_loss / len(dataloader)
         avg_bce = total_bce / len(dataloader)
@@ -229,25 +231,43 @@ def main():
         #scheduler.step(avg_loss)
         
         print(f'Epoch [{epoch+1}/{num_epochs}]: '
+            f'Time: {t.interval:.2f}s, '
             f'Loss: {avg_loss:.4f}, '
             f'MSE: {avg_bce:.4f}, '
-            f'KLD: {avg_kld:.4f}')
+            f'KLD: {avg_kld:.4f} without weight')
         
         if (avg_loss < best_loss): 
             best_loss = avg_loss
-            torch.save(model.state_dict(), 'vae.pth')
+            torch.save(model.module.state_dict(), f'vae_{best_loss:.5f}.pth')
 
-        #es(avg_loss)
-        #if es.early_stop:
-        #    plot_losses(tot_losses, mse_losses, kld_losses, model)
-        #    print("Stopping training...")
-        #    return
+        es(avg_loss)
+        if es.early_stop:
+            plot_losses(tot_losses, mse_losses, kld_losses, model)
+            print("Stopping training...")
+            return
             
     
     plot_losses(tot_losses, mse_losses, kld_losses, model)
     print(f"Final loss: {tot_losses[-1]:.4f}")
     print("Complete")
 
+def test(): 
+    dataset = DASDataset(img_dir='/cluster/home/jorgenaf/TinyDAS/infer', n=1)
+    dataloader = DataLoader(dataset, batch_size=1)
+    print('dataloader done')
+    model = VAE().to(device)
+    name = "meme.pth"
+    sd = torch.load(name)
+    model.load_state_dict(sd)
+    with torch.no_grad():
+        with torch.amp.autocast(device_type='cuda', dtype=torch.float16):
+            for d in dataloader:
+                d = d.to(device)
+                out = model(d)
+
+                print(f"MSE: {F.mse_loss(d, out):.6f}")
+
+
 
 if __name__ == '__main__':
-    main()
+    test()

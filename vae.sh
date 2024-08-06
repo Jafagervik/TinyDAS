@@ -4,10 +4,10 @@
 #SBATCH -J tinydas_vae
 #SBATCH --account=ie-idi
 #SBATCH -t 01:00:00
-#SBATCH -N 1 # One node
+#SBATCH --nodes=1
 #SBATCH --mem=80G
-#SBATCH --constraint="gpu80g"
 #SBATCH --gres=gpu:1
+#SBATCH --constraint="gpu80g"
 #SBATCH --output=logs/vae.txt
 #SBATCH --error=logs/vae.err
 

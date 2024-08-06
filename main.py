@@ -26,13 +26,16 @@ def get_data(devices: List[str], **config) -> DataLoader:
     return dl
 
 def train_mode(args):
+    print("Train mode")
     config = get_config(args.model)
     seed_all(config["data"]["seed"])
+    print("Got config")
 
     devices = get_gpus(args.gpus) #devices = ["CLANG"]
     for x in devices: Device[x]
 
     dl = get_data(devices, **config)
+    print("Dataloader complete")
 
     model = select_model(args.model, devices, **config)
 
@@ -48,6 +51,7 @@ def train_mode(args):
 
     params = nn.state.get_parameters(model)
     optim = select_optimizer(Opti.ADAM, params, **config["opt"])
+    print("Optimizer set")
 
     trainer = Trainer(model, dl, optim, **config)
     trainer.train()
