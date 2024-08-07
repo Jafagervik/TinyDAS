@@ -71,13 +71,13 @@ def show_imgs(args, devices: List[str], filename: str = ""):
     filename = format_filename(filename)
 
     plot_das_as_heatmap(
-        data, filename, show=True, path=f"figs/{args.model}/before/{filename}.png"
+        data.numpy(), filename, show=True, path=f"figs/{args.model}/before/{filename}.png"
     )
 
     reconstructed = model.predict(data)
 
     plot_das_as_heatmap(
-        reconstructed, filename, show=True, path=f"figs/{args.model}/after/{filename}.png"
+        reconstructed.numpy(), filename, show=True, path=f"figs/{args.model}/after/{filename}.png"
     )
 
     return data, reconstructed

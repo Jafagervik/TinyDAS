@@ -135,8 +135,8 @@ def reparameterize(
     dtype = dtypes.float16
 ) -> Tensor:
     std = (0.5 * logvar).exp()
-    eps = Tensor.randn(*std.shape, dtype=dtype, requires_grad=True)
-    return (eps * std) + mu
+    eps = Tensor.randn(*std.shape)
+    return mu + eps * std 
 
 
 def load_das_file(filename: str):
@@ -163,4 +163,10 @@ def printing(epoch: int, epochs: int, loss: float, dur: float):
     print(colored(f"Loss: {loss:.7f}", "red"), end="\t")
     print(f"Time: {(dur):.2f}s \t {((epoch+1)/epochs)*100:.2f}%")
 
+def clip_grad_norm(parameters, max_norm = 1.0):
+    total_norm = Tensor.sqrt(sum((p.grad ** 2).sum() for p in parameters))
+    clip_coef = max_norm / (total_norm + 1e-6)
+    clip_coef = clip_coef.clip(max_=1.0)
+    for p in parameters:
+        p.grad *= clip_coef
     

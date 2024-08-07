@@ -26,7 +26,7 @@ def plot_loss(
 
 
 def plot_das_as_heatmap(
-    das: Tensor, filename: str, show: bool = True, path: Optional[str] = None, num_ticks: int = 6
+    das: np.ndarray, filename: str, show: bool = True, path: Optional[str] = None, num_ticks: int = 6
 ) -> None:
     ts = filename.split("/")[-1].split(".")[0]
     ts = "".join(ts.split("_"))
@@ -46,7 +46,7 @@ def plot_das_as_heatmap(
     
     # Plot the heatmap
     plt.figure(figsize=(10, 5))
-    plt.imshow(das.numpy(), aspect="auto", cmap="seismic")
+    plt.imshow(das, aspect="auto", cmap="seismic")
     plt.colorbar()
     
     # Set the x-axis and y-axis labels

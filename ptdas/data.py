@@ -17,7 +17,7 @@ class DASDataset(Dataset):
         filename = self.filenames[idx]
         data = self.load_das_file_no_time(filename)
         data = self._apply_normalization(data)
-        return torch.from_numpy(data).to(torch.float16).cpu()
+        return torch.from_numpy(data).to(torch.float32)
 
     def _get_filenames(self, n: Optional[int]) -> List[str]:
         filenames = [entry.path for entry in os.scandir(self.img_dir)]
@@ -32,5 +32,7 @@ class DASDataset(Dataset):
         return data
 
     @staticmethod
-    def _apply_normalization(data: np.ndarray) -> np.ndarray:
-        return (data - np.mean(data)) / np.std(data)
+    def _apply_normalization(data: np.ndarray, min_range=0.0, max_range=1.0) -> np.ndarray:
+        min_val = np.min(data)
+        max_val = np.max(data)
+        return min_range + (data - min_val) * (max_range - min_range) / (max_val - min_val)

@@ -7,9 +7,10 @@ import os
 from typing import Optional, List
 
 def weights_init(m):
-    if isinstance(m, nn.Linear):
-        torch.nn.init.xavier_uniform_(m.weight)
-        m.bias.data.fill_(0.01)
+    if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d, nn.Linear)):
+        nn.init.xavier_uniform_(m.weight) 
+        if m.bias is not None:
+            nn.init.zeros_(m.bias)
 
 def paramsize(model):
     param_size = 0
@@ -61,12 +62,12 @@ def plot_losses(total_loss, mse_loss, kld_loss, model_name, show=False, save=Tru
     epochs = np.arange(start=1, stop=len(total_loss) + 1)
 
     plt.plot(epochs, total_loss, label='Total Loss', color='blue')
-    plt.plot(epochs, mse_loss, label='MSE Loss', color='red')
-    plt.plot(epochs, kld_loss, label='KLD Loss', color='green')
+    #plt.plot(epochs, mse_loss, label='MSE Loss', color='red')
+    #plt.plot(epochs, kld_loss, label='KLD Loss', color='green')
 
     plt.xlabel("Epochs")
     plt.ylabel("Loss")
-    plt.title(f"{model_name} - Losses vs Epochs")
+    plt.title(f"{model_name} - Loss")
     plt.legend()
     plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 

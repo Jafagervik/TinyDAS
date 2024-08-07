@@ -1,3 +1,4 @@
+from ptdas.utils import weights_init
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -10,9 +11,7 @@ class VAE(nn.Module):
             nn.Flatten(),
             nn.Linear(2137 * 625, 1024),
             nn.ReLU(),
-            nn.Linear(1024, 512),
-            nn.ReLU(),
-            nn.Linear(512, 128),
+            nn.Linear(1024, 128),
             nn.ReLU(),
         )
         
@@ -23,14 +22,13 @@ class VAE(nn.Module):
         self.decoder = nn.Sequential(
             nn.Linear(32, 128),
             nn.ReLU(),
-            nn.Linear(128, 512),
-            nn.ReLU(),
-            nn.Linear(512, 1024),
+            nn.Linear(128, 1024),
             nn.ReLU(),
             nn.Linear(1024, 2137 * 625),
             nn.Sigmoid(),
             nn.Unflatten(1, (625, 2137))  # Reshape to original dimensions
         )
+
 
     def encode(self, x):
         h = self.encoder(x)
@@ -83,6 +81,7 @@ class CNNVAE(nn.Module):
             nn.ConvTranspose2d(16, 1, kernel_size=3, stride=2, padding=1, output_padding=1),
             nn.Sigmoid()
         )
+
     
     def _get_flat_size(self):
         x = torch.randn(1, 1, 625, 2137)

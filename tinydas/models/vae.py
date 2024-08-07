@@ -50,7 +50,7 @@ class Decoder:
 
     def __call__(self, x: Tensor) -> Tensor:
         x = x.sequential(self.net)
-        return self.last(x).sigmoid().clip(self.eps, 1-self.eps)
+        return self.last(x).sigmoid()#.clip(self.eps, 1-self.eps)
 
 
 
@@ -90,15 +90,15 @@ class VAE(BaseAE):
     def criterion(self, x: Tensor) -> Dict[str, Tensor]:
         x_hat, mu, logvar = self(x)
 
-        print(x_hat)
-        print(mu)
-        print(logvar)
-
         rec_loss = mse(x, x_hat)
 
+        print(f"{rec_loss.item()=}")
         kl_loss = kl_divergence(mu, logvar)
+        print(f"{kl_loss.item()=}")
+        tot_loss = rec_loss + kl_loss * self.kld_weight
+        print(f"{tot_loss.item()=}")
 
-        return {"loss": kl_loss, "klloss": rec_loss, "recloss": rec_loss}
+        return {"loss": tot_loss, "klloss": rec_loss, "recloss": rec_loss}
 
 
     @TinyJit

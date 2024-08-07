@@ -1,7 +1,7 @@
 from typing import List, Callable
 
 from tinygrad import GlobalCounters, TinyJit
-from tinygrad.nn import Tensor
+from tinygrad.nn import Tensor, state
 from tinygrad.nn.optim import Optimizer
 from tinygrad.helpers import colored
 
@@ -9,7 +9,7 @@ from tinydas.dataloader import DataLoader
 from tinydas.early_stopping import EarlyStopping
 from tinydas.models.base import BaseAE
 from tinydas.plots import plot_loss
-from tinydas.utils import save_model, printing
+from tinydas.utils import save_model, printing, clip_grad_norm
 from tinydas.timer import Timer
 
 
@@ -40,6 +40,8 @@ class Trainer:
 
         loss = self.model.criterion(x)["loss"]
 
+        clip_grad_norm(state.get_parameters(self.model))
+
         loss.backward()
         self.optim.step()
 
@@ -68,7 +70,7 @@ class Trainer:
 
             self.early_stopping(running_loss)
             if self.early_stopping.early_stop:
-                print(f"Early stopping at epoch {epoch}")
+                print(f"Early stopping at epoch {epoch+1}")
                 self.losses = self.losses[:epoch + 1]
                 print(f"Max loss: {max(self.losses):.4f}, Min loss: {min(self.losses):.4f}")
                 save_model(self.model, final=True)

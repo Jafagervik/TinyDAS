@@ -40,4 +40,4 @@ def total_correlation_loss(z: Tensor, q_z: Tensor) -> Tensor:
 
 
 def kl_divergence(mu: Tensor, logvar: Tensor) -> Tensor:
-    return (-0.5 * (1.0 + logvar - mu.pow(2) - logvar.exp()).sum(axis=0)).mean()
+    return (-0.5 * (1.0 + logvar - mu.pow(2) - logvar.exp().clip(min_=1e-6)).sum(axis=0)).mean()
