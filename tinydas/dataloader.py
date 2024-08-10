@@ -13,7 +13,7 @@ class DataLoader:
         dataset: Dataset,
         batch_size: int,
         devices: List[str],
-        num_workers: int,
+        num_workers: int = 1,
         shuffle: bool = False,
     ):
         self.dataset = dataset

@@ -40,7 +40,7 @@ class Trainer:
 
         loss = self.model.criterion(x)["loss"]
 
-        clip_grad_norm(state.get_parameters(self.model))
+        #clip_grad_norm(state.get_parameters(self.model))
 
         loss.backward()
         self.optim.step()
@@ -68,14 +68,12 @@ class Trainer:
                 self.best_loss = running_loss
                 save_model(self.model)
 
-            self.early_stopping(running_loss)
-            if self.early_stopping.early_stop:
-                print(f"Early stopping at epoch {epoch+1}")
-                self.losses = self.losses[:epoch + 1]
-                print(f"Max loss: {max(self.losses):.4f}, Min loss: {min(self.losses):.4f}")
-                save_model(self.model, final=True)
-                plot_loss(self.losses, self.model)
-                return
+            #self.early_stopping(running_loss)
+            #if self.early_stopping.early_stop:
+            #    print(f"Early stopping at epoch {epoch+1}")
+            #    self.losses = self.losses[:epoch + 1]
+            #    break
 
         print(f"Max loss: {max(self.losses):.4f}, Min loss: {min(self.losses):.4f}")
-        save_model(self.model, final=True)
+        #save_model(self.model, final=True)
+        plot_loss(self.losses, self.model)

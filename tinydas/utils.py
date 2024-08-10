@@ -116,13 +116,14 @@ def save_model(model, final: bool = False, show: bool = False):
         print(f"Model saved to {path_to_checkpoints}")
 
 
-def load_model(model):
+def load_model(model, final: bool = False):
+    name = "final" if final else "best"
     path = os.path.join(
         "./checkpoints",
         #"/cluster/home/jorgenaf/TinyDAS/checkpoints",
         #"/home/jaf/prog/ntnu/TinyDAS/checkpoints",
         model.__class__.__name__.lower(),
-        "best.safetensors",
+        f"{name}.safetensors",
     )
     state_dict = safe_load(path)
     load_state_dict(model, state_dict)
@@ -170,3 +171,15 @@ def clip_grad_norm(parameters, max_norm = 1.0):
     for p in parameters:
         p.grad *= clip_coef
     
+def get_anomalous_indices(filepath: str = "anomalous_indices.txt") -> List[str]:
+    with open(filepath, 'r') as file:
+        return [int(line.strip()) for line in file]
+
+def get_true_anomalies(filepath, total_files: int = 600):
+    anomalous_indices = get_anomalous_indices(filepath)
+    
+    true_anomalies = np.zeros(total_files, dtype=bool)
+
+    true_anomalies[anomalous_indices] = True
+
+    return true_anomalies

@@ -39,7 +39,7 @@ class Dataset:
         return data.cast(self.dtype)
 
     def _get_filenames(self, n: Optional[int]) -> List[str]:
-        filenames = [entry.path for entry in os.scandir(self.path)]
+        filenames = sorted(os.listdir(self.path))
         if n is not None:
             filenames = filenames[:n]
         return filenames

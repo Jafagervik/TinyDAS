@@ -24,7 +24,7 @@ class MyTrainDataset(Dataset):
         data = self.load_das_file_no_time(filename)
         data = self._apply_normalization(data)
         
-        data = torch.from_numpy(data).to(torch.float16)
+        data = torch.from_numpy(data).to(torch.float16).unsqueeze(0)
         return data
 
     def _get_filenames(self, n: Optional[int]) -> List[str]:
@@ -47,15 +47,14 @@ class VAE(nn.Module):
         
         # Encoder
         self.encoder = nn.Sequential(
-            nn.Conv2d(1, 64, kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(1, 64, kernel_size=4, stride=2, padding=1),  # Output: 312x1069
             nn.ReLU(),
-            nn.Conv2d(64, 32, kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(64, 32, kernel_size=4, stride=2, padding=1),  # Output: 156x535
             nn.ReLU(),
-            nn.Flatten(),
         )
         
         # Calculate the size of the flattened feature map
-        self.feature_size = self._get_conv_output((1, 625, 2137))
+        self.feature_size = 156 * 535 * 32
         
         self.fc_mu = nn.Linear(self.feature_size, latent_dim)
         self.fc_logvar = nn.Linear(self.feature_size, latent_dim)
@@ -63,27 +62,15 @@ class VAE(nn.Module):
         # Decoder
         self.decoder_input = nn.Linear(latent_dim, self.feature_size)
         self.decoder = nn.Sequential(
-            nn.ConvTranspose2d(32, 64, kernel_size=3, stride=2, padding=1, output_padding=1),
+            nn.ConvTranspose2d(32, 64, kernel_size=4, stride=2, padding=1),  # Output: 312x1069
             nn.ReLU(),
-            nn.ConvTranspose2d(64, 1, kernel_size=3, stride=2, padding=1, output_padding=1),
+            nn.ConvTranspose2d(64, 1, kernel_size=4, stride=2, padding=1),  # Output: 624x2137
             nn.Sigmoid(),
         )
 
-        # Calculate encoder output dimensions
-        self.encoder_output_shape = self._get_encoder_output_shape((1, 625, 2137))
-
-    def _get_conv_output(self, shape):
-        input = torch.autograd.Variable(torch.rand(1, *shape))
-        output = self.encoder(input)
-        return int(output.data.view(1, -1).size(1))
-
-    def _get_encoder_output_shape(self, shape):
-        input = torch.autograd.Variable(torch.rand(1, *shape))
-        output = self.encoder[:-1](input)  # All layers except Flatten
-        return output.shape[1:]  # (channels, height, width)
-
     def encode(self, x):
         x = self.encoder(x)
+        x = x.view(x.size(0), -1)
         mu = self.fc_mu(x)
         logvar = self.fc_logvar(x)
         return mu, logvar
@@ -95,7 +82,7 @@ class VAE(nn.Module):
 
     def decode(self, z):
         z = self.decoder_input(z)
-        z = z.view(-1, *self.encoder_output_shape)  # Reshape to match the encoder's output
+        z = z.view(-1, 32, 156, 535)
         return self.decoder(z)
 
     def forward(self, x):
@@ -104,9 +91,9 @@ class VAE(nn.Module):
         return self.decode(z), mu, logvar
 
 def loss_function(recon_x, x, mu, logvar, beta):
-    BCE = F.binary_cross_entropy(recon_x, x, reduction='sum')
+    MSE = F.mse_loss(recon_x, x, reduction='sum')
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-    return BCE + beta * KLD, BCE, KLD
+    return MSE + beta * KLD, MSE, KLD
 
 def main():
     # Initialize the process group
@@ -142,7 +129,7 @@ def main():
         model.train()
         sampler.set_epoch(epoch)
         total_loss = 0
-        total_bce = 0
+        total_mse = 0
         total_kld = 0
 
         beta = beta_schedule[epoch].item()
@@ -153,32 +140,32 @@ def main():
 
             with autocast():
                 recon_batch, mu, logvar = model(data)
-                loss, bce, kld = loss_function(recon_batch, data, mu, logvar, beta)
+                loss, mse, kld = loss_function(recon_batch, data, mu, logvar, beta)
 
             scaler.scale(loss).backward()
             scaler.step(optimizer)
             scaler.update()
 
             total_loss += loss.item()
-            total_bce += bce.item()
+            total_mse += mse.item()
             total_kld += kld.item()
 
         # Gather losses from all GPUs
         avg_loss = torch.tensor(total_loss / len(train_loader), device=device)
-        avg_bce = torch.tensor(total_bce / len(train_loader), device=device)
+        avg_mse = torch.tensor(total_mse / len(train_loader), device=device)
         avg_kld = torch.tensor(total_kld / len(train_loader), device=device)
 
         dist.all_reduce(avg_loss, op=dist.ReduceOp.SUM)
-        dist.all_reduce(avg_bce, op=dist.ReduceOp.SUM)
+        dist.all_reduce(avg_mse, op=dist.ReduceOp.SUM)
         dist.all_reduce(avg_kld, op=dist.ReduceOp.SUM)
 
         avg_loss /= world_size
-        avg_bce /= world_size
+        avg_mse /= world_size
         avg_kld /= world_size
 
         if rank == 0:
             print(f'Epoch {epoch}, Beta: {beta:.4f}, Avg Loss: {avg_loss.item():.4f}, '
-                  f'Avg BCE: {avg_bce.item():.4f}, Avg KLD: {avg_kld.item():.4f}')
+                  f'Avg BCE: {avg_mse.item():.4f}, Avg KLD: {avg_kld.item():.4f}')
 
             # Save the best model based on training loss
             if avg_loss < best_loss:

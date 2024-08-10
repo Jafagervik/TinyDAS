@@ -1,7 +1,7 @@
-epochs: 30
+epochs: 100
 gpus: 4
 data:
-  batch_size: 512
+  batch_size: 128
   dataset: "data/"
   seed: 2531
   nfiles: 25600 # 512
@@ -10,7 +10,7 @@ data:
   #normalize: "minmax"
 
 opt:
-  lr: 0.00042
+  lr: 0.0001 # 0.00042
   b1: 0.9
   b2: 0.99
   loss_scaler: 1.0
