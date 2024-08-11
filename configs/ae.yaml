@@ -25,3 +25,6 @@ mod:
 es:
   patience: 5
   min_delta: 0.005
+
+ad:
+  percentile: 95

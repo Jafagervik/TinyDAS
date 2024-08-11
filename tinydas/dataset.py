@@ -40,6 +40,8 @@ class Dataset:
 
     def _get_filenames(self, n: Optional[int]) -> List[str]:
         filenames = sorted(os.listdir(self.path))
+        filenames = [os.path.join(self.path, f) for f in filenames]
+
         if n is not None:
             filenames = filenames[:n]
         return filenames

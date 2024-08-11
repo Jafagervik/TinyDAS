@@ -75,7 +75,7 @@ def train(model, dataset, num_epochs, batch_size, learning_rate, device, kl_scal
         
         if avg_loss < best_loss:
             best_loss = avg_loss
-            torch.save(model.state_dict(), f'checkpoints/{model_name}/best.pth')
+            torch.save(model.module.state_dict(), f'checkpoints/{model_name}/best.pth')
         
         es(avg_loss)
         if es.early_stop:

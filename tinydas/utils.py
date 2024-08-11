@@ -101,6 +101,8 @@ def get_config(model: str):
             print(exc)
             exit(1)
 
+def model_name(model) -> str: return model.__class__.__name__.lower()
+
 
 def save_model(model, final: bool = False, show: bool = False):
     state_dict = get_state_dict(model)
@@ -175,7 +177,7 @@ def get_anomalous_indices(filepath: str = "anomalous_indices.txt") -> List[str]:
     with open(filepath, 'r') as file:
         return [int(line.strip()) for line in file]
 
-def get_true_anomalies(filepath, total_files: int = 600):
+def get_true_anomalies(filepath: str = "anomalous_indices.txt", total_files: int = 600):
     anomalous_indices = get_anomalous_indices(filepath)
     
     true_anomalies = np.zeros(total_files, dtype=bool)

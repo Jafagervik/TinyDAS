@@ -7,7 +7,7 @@ import torch
 
 class DASDataset(Dataset):
     def __init__(self, train: bool = True, n: int = 512):
-        self.img_dir = "/cluster/home/jorgenaf/TinyDAS/data" if train else  "/cluster/home/jorgenaf/TinyDAS/infer" 
+        self.path = "/cluster/home/jorgenaf/TinyDAS/data" if train else  "/cluster/home/jorgenaf/TinyDAS/infer" 
         self.n = n
         self.filenames = self._get_filenames(n)
 
@@ -20,7 +20,8 @@ class DASDataset(Dataset):
         return torch.from_numpy(data).to(torch.float32)
 
     def _get_filenames(self, n: Optional[int]) -> List[str]:
-        filenames = [entry.path for entry in os.scandir(self.img_dir)]
+        filenames = sorted(os.listdir(self.path))
+        filenames = [os.path.join(self.path, f) for f in filenames]
         if n is not None:
             filenames = filenames[:n]
         return filenames

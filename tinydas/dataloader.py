@@ -37,18 +37,27 @@ class DataLoader:
         if self.current_index >= len(self.indices):
             raise StopIteration
 
-        end_index = min(self.current_index + self.batch_size, len(self.indices))
-        batch_indices = self.indices[self.current_index:end_index]
+        if self.batch_size == 1:
+            curr = self.current_index 
+            self.current_index += 1
+            # Unsqueeze
+            return self._load_single_data(curr).unsqueeze(0).realize()
+            
+            
+            
+        else: 
+            end_index = min(self.current_index + self.batch_size, len(self.indices))
+            batch_indices = self.indices[self.current_index:end_index]
 
-        batch_data = self._load_batch_data(batch_indices)
-        self.current_index = end_index
+            batch_data = self._load_batch_data(batch_indices)
+            self.current_index = end_index
 
-        batch_tensor = Tensor.stack(*batch_data, dim=0)
-        return (
-            batch_tensor.shard(self.devices, axis=0).realize()
-            if len(self.devices) > 1
-            else batch_tensor.realize()
-        )
+            batch_tensor = Tensor.stack(*batch_data, dim=0)
+            return (
+                batch_tensor.shard(self.devices, axis=0).realize()
+                if len(self.devices) > 1
+                else batch_tensor.realize()
+            )
 
     def _load_batch_data(self, batch_indices: List[int]) -> List[Tensor]:
         with ThreadPoolExecutor(max_workers=self.num_workers) as executor:

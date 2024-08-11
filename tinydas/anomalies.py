@@ -7,16 +7,33 @@ from tinygrad import Tensor
 
 from tinydas.losses import mse
 from tinydas.selections import select_model
-from tinydas.utils import custom_flatten, get_config, load_das_file, reshape_back
+from tinydas.dataloader import DataLoader
+from tinydas.utils import (
+    custom_flatten, 
+    get_config, 
+    load_das_file, 
+    reshape_back, 
+    model_name, 
+    get_true_anomalies
+)
 
-from sklearn.metrics import precision_recall_curve, roc_curve, auc
+from sklearn.metrics import precision_recall_curve, roc_curve, auc, confusion_matrix
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 def compute_metrics(true_anomalies, reconstruction_errors):
     precisions, recalls, thresholds = precision_recall_curve(true_anomalies, reconstruction_errors)
     f1_scores = 2 * (precisions * recalls) / (precisions + recalls)
     return precisions, recalls, f1_scores, thresholds
 
+def plot_confmat(cm, model_name: str, show: bool = False, save_path: Optional[str] = None):
+    plt.figure(figsize=(10,7))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+    plt.title(f'{model_name} Confusion Matrix')
+    plt.ylabel('True Label')
+    plt.xlabel('Predicted Label')
+    if show: plt.show()
+    if save_path is not None: plt.savefig(save_path)
 
 def plot_pr_curve(recalls, precisions, model_name: str, show: bool = False, save_path: Optional[str] = None):
     plt.figure(figsize=(10,7))
@@ -113,3 +130,31 @@ def stream_predict():
 
 def send_email(user_mail: str):
     pass
+
+
+def get_anomaly_report(
+    model, 
+    dataloader: DataLoader, 
+    plot_conf: bool = False, 
+    plot_pr: bool = False,
+    plot_roc: bool = False,
+    **config
+):
+    """ Generate a report based on the following reports
+    
+    """
+    errors = []
+    for (i, data) in enumerate(dataloader):
+        out = model.predict(data)
+        rec = mse(data, out).item()
+        errors.append(rec)
+
+    errors = np.array(errors)
+    th = np.percentile(errors, config["ad"]["percentile"])
+    predicted_anomaliers = errors > th
+
+    true_anomalies = get_true_anomalies()
+
+    cm = confusion_matrix(true_anomalies, predicted_anomaliers)
+
+    if plot_pr: plot_pr_curve()

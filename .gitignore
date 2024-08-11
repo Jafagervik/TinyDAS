@@ -8,6 +8,7 @@ __pycache__/
 
 # models
 *.safetensors
+*.pth
 
 newtest.ipynb
 log.txt
