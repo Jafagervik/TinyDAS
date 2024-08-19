@@ -5,7 +5,6 @@ from tinygrad.nn.optim import Optimizer
 
 from tinydas.enums import Opti
 from tinydas.models.ae import AE
-from tinydas.models.cnnae import CNNAE
 from tinydas.models.cae import CAE
 from tinydas.models.vae import VAE
 from tinydas.models.betavae import BETAVAE
@@ -44,8 +43,6 @@ def select_model(model: str, devices: List[str], **config):
             return AE(**config)
         case "vae":
             return VAE(devices, **config)
-        case "cnnae":
-            return CNNAE(**config)
         case "cae":
             return CAE(**config)
         case "betavae":

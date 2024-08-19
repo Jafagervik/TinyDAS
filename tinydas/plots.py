@@ -13,16 +13,33 @@ from tinydas.models.base import BaseAE
 
 
 def plot_loss(
-    losses: List[float], model: BaseAE, show: bool = False, save: bool = True  
+    train_losses: List[float], 
+    val_losses: List[float], 
+    model: BaseAE, 
+    show: bool = False, 
+    save: bool = True
 ) -> None:
     plt.figure(figsize=(10, 5))
-    plt.plot(np.arange(start=1, stop=len(losses) + 1), losses)
+    epochs = np.arange(start=1, stop=len(train_losses) + 1)
+    
+    plt.plot(epochs, train_losses, label='Training Loss', color='red')
+    plt.plot(epochs, val_losses, label='Validation Loss', color='blue')
+    
     plt.xlabel("Epochs")
     plt.ylabel("Loss")
-    plt.title("Loss vs Epochs")
-    if show: plt.show()
+    plt.title(f"{model.__class__.__name__} - Training and Validation Loss")
+    plt.legend()
+
     if save:
-        plt.savefig(os.path.join("figs", model.__class__.__name__.lower(), "loss.png"))
+        save_dir = os.path.join("figs", model.__class__.__name__.lower())
+        os.makedirs(save_dir, exist_ok=True)
+        plt.savefig(os.path.join(save_dir, "loss.png"))
+    
+    if show:
+        plt.show()
+    
+    
+    plt.close()
 
 
 def plot_das_as_heatmap(

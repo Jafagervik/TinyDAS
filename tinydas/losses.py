@@ -2,10 +2,10 @@ from tinygrad.nn import Tensor
 
 
 def mse(X: Tensor, Y: Tensor) -> Tensor:
-    return Y.sub(X).square().mean()
+    return ((X -  Y)**2).mean()
 
 def mae(X: Tensor, Y: Tensor) -> Tensor:
-    return Y.sub(X).abs().mean()
+    return ((X -  Y).abs()).mean()
 
 def huber_loss(y_hat: Tensor, y: Tensor, delta: float) -> Tensor:
     abs_err = y_hat.sub(y).abs()

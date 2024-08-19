@@ -68,3 +68,12 @@ class DataLoader:
         return batch_data
 
     def _load_single_data(self, idx: int) -> Tensor: return self.dataset[idx]
+
+def create_data_loaders(dataset: Dataset, batch_size: int, devices: List[str], num_workers: int = 1, shuffle: bool = True):
+    train_dataset = dataset.get_train_dataset()
+    val_dataset = dataset.get_val_dataset()
+
+    train_loader = DataLoader(train_dataset, batch_size, devices, num_workers, shuffle)
+    val_loader = DataLoader(val_dataset, batch_size, devices, num_workers, shuffle=False)
+
+    return train_loader, val_loader

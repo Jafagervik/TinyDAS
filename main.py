@@ -2,7 +2,7 @@
 from tinygrad import nn, Device, dtypes
 
 from tinydas.anomalies import predict_file
-from tinydas.dataloader import DataLoader
+from tinydas.dataloader import DataLoader, create_data_loaders
 from tinydas.dataset import Dataset
 from tinydas.plots import plot_das_as_heatmap, plot_loss
 from tinydas.selections import Opti, select_model, select_optimizer
@@ -15,15 +15,18 @@ def get_data(devices: List[str], **config) -> DataLoader:
     dataset = Dataset(
         n=config["data"]["nfiles"],
         normalize=Normalization.MINMAX,
+        val_split=config["data"]["val_split"],
         dtype=dtypes.float16 if config["data"]["half_prec"] else dtypes.float32  
     )
-    dl = DataLoader(
+    tl, vl = create_data_loaders(
         dataset, 
         batch_size=config["data"]["batch_size"], 
         devices=devices, 
-        num_workers=config["data"]["num_workers"]
+        num_workers=config["data"]["num_workers"],
+        shuffle=True
     )
-    return dl
+
+    return tl, vl
 
 def train_mode(args):
     print("Train mode")
@@ -34,8 +37,11 @@ def train_mode(args):
     devices = get_gpus(args.gpus) #devices = ["CLANG"]
     for x in devices: Device[x]
 
-    dl = get_data(devices, **config)
+    tl, vl = get_data(devices, **config)
+
     print("Dataloader complete")
+    print(len(tl))
+    print(len(vl))
 
     model = select_model(args.model, devices, **config)
 
@@ -53,7 +59,7 @@ def train_mode(args):
     optim = select_optimizer(Opti.ADAM, params, **config["opt"])
     print("Optimizer set")
 
-    trainer = Trainer(model, dl, optim, **config)
+    trainer = Trainer(model, tl, vl, optim, **config)
     trainer.train()
 
     plot_loss(trainer.losses, trainer.model, save=True)

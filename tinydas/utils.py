@@ -161,10 +161,15 @@ def minmax(data: Tensor) -> Tensor:
 def zscore(data: Tensor) -> Tensor:
     return data.sub(data.mean()).div(data.std())
 
-def printing(epoch: int, epochs: int, loss: float, dur: float):
+
+def printing(epoch: int, epochs: int, train_loss: float, train_dur: float, val_loss: float, val_dur: float):
+    progress = ((epoch + 1) / epochs) * 100
     print(colored(f"Epoch {epoch + 1}/{epochs}", "green"), end="\t")
-    print(colored(f"Loss: {loss:.7f}", "red"), end="\t")
-    print(f"Time: {(dur):.2f}s \t {((epoch+1)/epochs)*100:.2f}%")
+    print(colored(f"Train: {train_loss:.7f}", "red"), end="\t")
+    print(colored(f"Val: {val_loss:.7f}", "blue"), end="\t")
+    print(f"Train Time: {train_dur:.2f}s", end="\t")
+    print(f"Val Time: {val_dur:.2f}s", end="\t")
+    print(f"{progress:.2f}%")
 
 def clip_grad_norm(parameters, max_norm = 1.0):
     total_norm = Tensor.sqrt(sum((p.grad ** 2).sum() for p in parameters))
