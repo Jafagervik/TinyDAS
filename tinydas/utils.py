@@ -7,7 +7,7 @@ from typing import List, Tuple
 import h5py
 import numpy as np
 import yaml
-from tinygrad import Device, dtypes, TinyJit
+from tinygrad import Device, dtypes, TinyJit, nn
 from tinygrad.nn import Tensor
 from tinygrad.nn.state import get_state_dict, load_state_dict, safe_load, safe_save
 from tinygrad.helpers import colored
@@ -32,10 +32,11 @@ def reshape_back(t: Tensor) -> Tensor:
     return t.reshape(625, 2137)
 
 
-def seed_all(seed: int = 1234) -> None:
+def seed_all(seed: int = 1337) -> None:
     Tensor.manual_seed(seed)
     np.random.seed(seed)
     rnd.seed(seed)
+    print("Seed set to", seed)
 
 
 def parse_args():
@@ -89,7 +90,10 @@ def parse_args():
 
 
 def get_gpus(amount: int = 1) -> List[str]:
-    return [f"{Device.DEFAULT}:{i}" for i in range(amount)]
+    devices = [f"{Device.DEFAULT}:{i}" for i in range(amount)]
+    for x in devices: Device[x]
+    print("Training on", len(devices), "devices")
+    return devices
 
 
 def get_config(model: str):
@@ -107,19 +111,17 @@ def model_name(model) -> str: return model.__class__.__name__.lower()
 def save_model(model, final: bool = False, show: bool = False):
     state_dict = get_state_dict(model)
     final_or_best = "final.safetensors" if final else "best.safetensors"
-    path_to_checkpoints = os.path.join(
-        "/cluster/home/jorgenaf/TinyDAS/checkpoints",
-        # "/home/jaf/prog/ntnu/TinyDAS/checkpoints",
-        model.__class__.__name__.lower(),
-        final_or_best,
-    )
+    path_to_checkpoints = f"/cluster/home/jorgenaf/TinyDAS/checkpoints/{model.__class__.__name__.lower()}/{final_or_best}"
     safe_save(state_dict, path_to_checkpoints)
     if show:
         print(f"Model saved to {path_to_checkpoints}")
 
+def check_overflow(model):
+    for p in model.parameters():
+        if p.grad is None: return True
+    return False
 
-def load_model(model, final: bool = False):
-    name = "final" if final else "best"
+def load_model(model, name: str = "best"):
     path = os.path.join(
         "./checkpoints",
         #"/cluster/home/jorgenaf/TinyDAS/checkpoints",
@@ -132,14 +134,22 @@ def load_model(model, final: bool = False):
     print(f"Model loaded from {path}")
 
 
-def reparameterize(
-    mu: Tensor, 
-    logvar: Tensor, 
-    dtype = dtypes.float16
-) -> Tensor:
-    std = (0.5 * logvar).exp()
-    eps = Tensor.randn(*std.shape)
-    return mu + eps * std 
+
+def reparameterize(mean: Tensor, logvar: Tensor):
+    std = (logvar * 0.5).exp().clip(1e-5, 1e5)
+    eps = Tensor.randn(mean.shape, device=mean.device)
+    return mean + eps * std
+
+def clip_and_grad(optimizer, loss_scaler):
+    global_norm = Tensor([0.0], dtype=dtypes.float32, device=optimizer.params[0].device).realize()
+    for param in optimizer.params: 
+        if param.grad is not None:
+            param.grad = param.grad / loss_scaler
+            global_norm += param.grad.float().square().sum()
+    global_norm = global_norm.sqrt()
+    for param in optimizer.params: 
+        if param.grad is not None:
+            param.grad = (param.grad / Tensor.where(global_norm > 1.0, global_norm, 1.0)).cast(param.grad.dtype)
 
 
 def load_das_file(filename: str):
@@ -153,28 +163,32 @@ def load_das_file_no_time(filename: str) -> Tensor:
     with h5py.File(filename, "r") as f:
         data = Tensor(f["raw"][:], dtype=dtypes.float32, requires_grad=False).T
     return data
-    
 
 def minmax(data: Tensor) -> Tensor:
-    return data.sub(data.min()).div(data.max().sub(data.min()))
+    return (data - data.min()) / (data.max() - data.min())
+    #return data.sub(data.min()).div(data.max().sub(data.min()))
 
 def zscore(data: Tensor) -> Tensor:
     return data.sub(data.mean()).div(data.std())
 
-
-def printing(epoch: int, epochs: int, train_loss: float, train_dur: float, val_loss: float, val_dur: float):
+def printing(epoch: int, epochs: int, train_loss: float, val_loss: float,
+             train_gflops: float, val_gflops: float, lr: float, train_time: float, val_time: float):
     progress = ((epoch + 1) / epochs) * 100
-    print(colored(f"Epoch {epoch + 1}/{epochs}", "green"), end="\t")
-    print(colored(f"Train: {train_loss:.7f}", "red"), end="\t")
-    print(colored(f"Val: {val_loss:.7f}", "blue"), end="\t")
-    print(f"Train Time: {train_dur:.2f}s", end="\t")
-    print(f"Val Time: {val_dur:.2f}s", end="\t")
-    print(f"{progress:.2f}%")
+    
+    print(colored(f"Epoch {epoch+1}/{epochs}", "green"), end=", ")
+    print(colored(f"Train Loss: {train_loss:.5f}", "red"), end=", ")
+    print(f"Train GFLOPS: {train_gflops:.2f}", end=", ")
+    print(colored(f"Val Loss: {val_loss:.5f}", "blue"), end=", ")
+    print(f"Val GFLOPS: {val_gflops:.2f}", end=", ")
+    print(f"LR: {lr:.9f}", end=", ")
+    print(f"Train Time: {train_time:.2f}s", end=", ")
+    print(f"Val Time: {val_time:.2f}s", end=", ")
+    print(f"Progress: {progress:.2f}%")
 
-def clip_grad_norm(parameters, max_norm = 1.0):
+def clip_grad_norm(parameters, max_norm=1.0, min_norm=1e-3):
     total_norm = Tensor.sqrt(sum((p.grad ** 2).sum() for p in parameters))
     clip_coef = max_norm / (total_norm + 1e-6)
-    clip_coef = clip_coef.clip(max_=1.0)
+    clip_coef = clip_coef.clip(min_=min_norm, max_=1.0)
     for p in parameters:
         p.grad *= clip_coef
     
@@ -190,3 +204,4 @@ def get_true_anomalies(filepath: str = "anomalous_indices.txt", total_files: int
     true_anomalies[anomalous_indices] = True
 
     return true_anomalies
+

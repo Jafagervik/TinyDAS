@@ -7,4 +7,4 @@ class LinearBlockLayer:
         self.dropout = do
 
     def __call__(self, x: Tensor) -> Tensor:
-        return self.l(x).relu().dropout(self.dropout)
+        return self.l.leakyrelu(0.2).dropout(self.dropout)

@@ -7,7 +7,7 @@ from tinydas.enums import Opti
 from tinydas.models.ae import AE
 from tinydas.models.cae import CAE
 from tinydas.models.vae import VAE
-from tinydas.models.betavae import BETAVAE
+from tinydas.models.cvae import CVAE
 
 
 def select_optimizer(optimizer: Opti, parameters: List[Tensor], **config) -> Optimizer:
@@ -37,15 +37,15 @@ def select_optimizer(optimizer: Opti, parameters: List[Tensor], **config) -> Opt
             )
 
 
-def select_model(model: str, devices: List[str], **config):
+def select_model(model: str, **config):
     match model.lower():
         case "ae":
             return AE(**config)
         case "vae":
-            return VAE(devices, **config)
+            return VAE(**config)
         case "cae":
             return CAE(**config)
-        case "betavae":
-            return BETAVAE(devices, **config)
+        case "cvae":
+            return CVAE(**config)
         case _:
             raise NotImplementedError

@@ -3,84 +3,50 @@ from typing import Dict, List, Optional, Tuple
 from tinygrad.nn import Linear, Tensor
 from tinygrad import TinyJit
 
-from tinydas.linearblock import LinearBlockLayer
 from tinydas.losses import mse
 from tinydas.models.base import BaseAE
-from tinydas.utils import minmax
-
-class Encoder:
-    def __init__(
-        self,
-        input_dim: int,
-        hidden_dims: List[int],
-        latent_dim: int,
-        do: float,
-    ):
-        self.net = [
-            LinearBlockLayer(input_dim, hidden_dims[0], do),
-        ]
-        for i in range(len(hidden_dims) - 1):
-            self.net.append(LinearBlockLayer(hidden_dims[i], hidden_dims[i + 1], do))
-        self.net.append(LinearBlockLayer(hidden_dims[-1], latent_dim, do))
-
-    def __call__(self, x: Tensor) -> Tensor:
-        return x.sequential(self.net)
-
-
-class Decoder:
-    def __init__(
-        self,
-        input_dim: int,
-        hidden_dims: List[int],
-        latent_dim: int,
-        do: float,
-    ):
-        self.net = [
-            LinearBlockLayer(latent_dim, hidden_dims[0], do),
-        ]
-        for i in range(len(hidden_dims) - 1):
-            self.net.append(LinearBlockLayer(hidden_dims[i], hidden_dims[i + 1]))
-        self.last = Linear(hidden_dims[-1], input_dim)
-
-    def __call__(self, x: Tensor) -> Tensor:
-        x = x.sequential(self.net)
-        return self.last(x).sigmoid()
-
 
 class AE(BaseAE):
     def __init__(self, **kwargs):
         super().__init__()
         self.M = kwargs["mod"]["M"]
         self.N = kwargs["mod"]["N"]
+        hidden_layers = kwargs["mod"]["hidden"]
+        latent  = kwargs["mod"]["latent"]
+        input_shape = (self.M, self.N)
 
-        hidden_layers = kwargs["mod"]["hidden_layers"]
+        self.input_shape = input_shape
+        self.flattened_dim = input_shape[0] * input_shape[1]
+        
+        self.encoder1 = Linear(self.flattened_dim, 512, bias=True)
+        self.encoder2 = Linear(512, latent, bias=True)
+        
+        self.decoder1 = Linear(latent, 512, bias=True)
+        self.decoder2 = Linear(512, self.flattened_dim, bias=True)
 
-        self.encoder = Encoder(
-            self.M * self.N,
-            hidden_layers,
-            kwargs["mod"]["latent"],
-            kwargs["mod"]["p"],
-        )
+    def encode(self, x):
+        x = x.reshape(shape=(-1, self.flattened_dim))
+        x = self.encoder1(x).relu()
+        x = self.encoder2(x)
+        return x
 
-        hidden_layers = hidden_layers[::-1]
-
-        self.decoder = Decoder(
-            self.M * self.N,
-            hidden_layers,
-            kwargs["mod"]["latent"],
-            kwargs["mod"]["p"],
-        )
-
-    @property
-    def convolutional(self) -> bool:
-        return False
+    def decode(self, x):
+        x = self.decoder1(x).relu()
+        x = self.decoder2(x).sigmoid() # NEW
+        x = x.reshape(shape=(-1, *self.input_shape))
+        return x
 
     def __call__(self, x: Tensor) -> Tuple[Tensor, ...]:
-        return (self.decoder(self.encoder(x)),)
+        return (self.decode(self.encode(x)),)
 
-    def criterion(self, x: Tensor) -> Dict[str, Tensor]:
+    @property
+    def convolutional(self) -> bool: return False
+
+    def criterion(self, x: Tensor) -> Tensor:
         (x_hat,) = self(x)
-        return {"loss": mse(x, x_hat)}
+        return mse(x, x_hat)
+
+    def reshape(self, x: Tensor) -> Tensor: return x.reshape(-1, *x.shape)
 
 
     @TinyJit
@@ -93,4 +59,4 @@ class AE(BaseAE):
         x = x.reshape(1, 625 * 2137) 
         (out,) = self(x)
 
-        return out.reshape(625, 2137).realize()
+        return out.squeeze()

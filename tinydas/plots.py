@@ -1,16 +1,12 @@
 import os
 from typing import List, Optional
 
-#import matplotlib
 import matplotlib.pyplot as plt
 from tinygrad import Tensor
 import numpy as np
 from datetime import timedelta, datetime
 
-#matplotlib.use("QT5Agg")
-
 from tinydas.models.base import BaseAE
-
 
 def plot_loss(
     train_losses: List[float], 
@@ -22,8 +18,8 @@ def plot_loss(
     plt.figure(figsize=(10, 5))
     epochs = np.arange(start=1, stop=len(train_losses) + 1)
     
-    plt.plot(epochs, train_losses, label='Training Loss', color='red')
-    plt.plot(epochs, val_losses, label='Validation Loss', color='blue')
+    plt.plot(epochs, train_losses, label='Training Loss', color='blue')
+    plt.plot(epochs, val_losses, label='Validation Loss', color='orange')
     
     plt.xlabel("Epochs")
     plt.ylabel("Loss")
@@ -37,7 +33,6 @@ def plot_loss(
     
     if show:
         plt.show()
-    
     
     plt.close()
 
@@ -63,13 +58,13 @@ def plot_das_as_heatmap(
     
     # Plot the heatmap
     plt.figure(figsize=(10, 5))
-    plt.imshow(das, aspect="auto", cmap="seismic")
+    plt.imshow(das, aspect="auto", cmap="seismic", vmin=0.0, vmax=1.0)
     plt.colorbar()
     
     # Set the x-axis and y-axis labels
     plt.xlabel("Channel")
     plt.ylabel("Time")
-    plt.title("Das Matrix as Heatmap")
+    plt.title(f"{ts}")
     
     # Set y-ticks with time labels
     plt.yticks(tick_indices, tick_labels)
@@ -77,22 +72,3 @@ def plot_das_as_heatmap(
     if show: plt.show()
     if path is not None: plt.savefig(path)
 
-
-if __name__ == "__main__":
-    # from datetime import datetime
-
-    import h5py
-
-    from tinygrad import Tensor, dtypes
-
-    with h5py.File("../data/20200301_001650.hdf5", "r") as f:
-        data = Tensor(f["raw"][:], dtype=dtypes.float16).T
-        plot_das_as_heatmap(data.numpy())
-
-        # times = Tensor(np.array(f["timestamp"][:]))
-        # print(data.shape)
-        # timestamp = times.numpy()[0]
-        # print(timestamp)
-        # dt_object = datetime.fromtimestamp(timestamp)
-
-        # print("Datetime object:", dt_object)

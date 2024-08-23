@@ -1,15 +1,17 @@
-epochs: 50
+epochs: 100
 gpus: 4
 load: False
 data:
-  batch_size: 32
-  seed: 42069
+  dataset: "data/"
+  batch_size: 64
+  val_split: 0.2
+  seed: 1337
   nfiles: 25600
   half_prec: True
   num_workers: 4
 
 opt:
-  lr: 0.001
+  lr: 0.0001
   b1: 0.9
   b2: 0.99
 
@@ -22,6 +24,6 @@ mod:
   loss_type: "H"
 
 es:
-  patience: 5
-  min_delta: 0.005
+  patience: 20
+  min_delta: 0.000001
 

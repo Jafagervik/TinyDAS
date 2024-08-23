@@ -57,22 +57,26 @@ def plot_das_as_heatmap(
     if show: plt.show()
     if path is not None: plt.savefig(path)
 
-def plot_losses(total_loss, mse_loss, kld_loss, model_name, show=False, save=True):
-    plt.figure(figsize=(12, 6))
-    epochs = np.arange(start=1, stop=len(total_loss) + 1)
+def plot_losses(train_total_loss, val_total_loss, model_name, show=False, save=True):
+    plt.figure(figsize=(10, 6))
+    epochs = np.arange(start=1, stop=len(train_total_loss) + 1)
 
-    plt.plot(epochs, total_loss, label='Total Loss', color='blue')
-    #plt.plot(epochs, mse_loss, label='MSE Loss', color='red')
-    #plt.plot(epochs, kld_loss, label='KLD Loss', color='green')
+    plt.plot(epochs, train_total_loss, label='Train Loss', color='blue')
+    plt.plot(epochs, val_total_loss, label='Validation Loss', color='orange', linestyle='--')
 
     plt.xlabel("Epochs")
     plt.ylabel("Loss")
-    plt.title(f"{model_name} - Loss")
+    plt.title(f"{model_name} - Total Loss")
     plt.legend()
     plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 
-    if show: plt.show()
+    plt.tight_layout()
+
+    if show:
+        plt.show()
     if save:
         save_dir = os.path.join("figs", model_name)
         os.makedirs(save_dir, exist_ok=True)
-        plt.savefig(os.path.join(save_dir, "losses.png"))
+        plt.savefig(os.path.join(save_dir, "total_loss.png"))
+    
+    plt.close()

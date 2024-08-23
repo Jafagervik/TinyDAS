@@ -1,11 +1,17 @@
+from typing import Optional
+from tinydas.kl import AdaptiveKLWeight
 from tinygrad.nn import Tensor
 
+def mse(X: Tensor, Y: Tensor, reduction: str = "mean") -> Tensor:
+    if reduction == 'mean': return ((X - Y)**2).mean()
+    if reduction == 'sum': return ((X - Y)**2).sum()
+    if reduction == 'none': return ((X - Y) ** 2)
 
-def mse(X: Tensor, Y: Tensor) -> Tensor:
-    return ((X -  Y)**2).mean()
-
-def mae(X: Tensor, Y: Tensor) -> Tensor:
-    return ((X -  Y).abs()).mean()
+def mae(X: Tensor, Y: Tensor, reduction: str = "mean") -> Tensor:
+    if reduction == 'mean': return ((X - Y).abs()).mean()
+    if reduction == 'sum': return ((X - Y).abs()).sum()
+    if reduction == 'none': return ((X - Y).abs())
+        
 
 def huber_loss(y_hat: Tensor, y: Tensor, delta: float) -> Tensor:
     abs_err = y_hat.sub(y).abs()
@@ -38,6 +44,30 @@ def total_correlation_loss(z: Tensor, q_z: Tensor) -> Tensor:
     log_q_z = q_z.mean(axis=0).log()
     return (log_q_z - log_q_z_product).mean().realize()
 
+def cross_entropy(x:Tensor, y:Tensor, reduction:str='mean', label_smoothing:float=0.0) -> Tensor:
+    divisor = y.shape[1]
+    assert isinstance(divisor, int), "only supported int divisor"
+    y = (1 - label_smoothing)*y + label_smoothing / divisor
+    ret = -x.log_softmax(axis=1).mul(y).sum(axis=1)
+    if reduction=='none': return ret
+    if reduction=='sum': return ret.sum()
+    if reduction=='mean': return ret.mean()
+    raise NotImplementedError(reduction)
+
 
 def kl_divergence(mu: Tensor, logvar: Tensor) -> Tensor:
-    return (-0.5 * (1.0 + logvar - mu.pow(2) - logvar.exp().clip(min_=1e-6)).sum(axis=0)).mean()
+    return (0.5 * (logvar.exp().clip(min_=1e-5, max_=1e3) + mu ** 2 - 1 - logvar).sum(axis=1)).sum(axis=0)
+    #return -0.5 * Tensor.sum(1 + logvar - mu.pow(2) - logvar.exp())
+    #return -0.5 * Tensor.sum(1 + logvar - mu.pow(2) - logvar.exp(), axis=1).mean()
+    #return -0.5 * Tensor.mean(1 + logvar - mu.pow(2) - logvar.exp())
+    #return -0.5 * (1 + logvar - mu.pow(2) - logvar.exp()).sum(axis=1).mean()
+    #var = logvar.softplus() ** 2
+    #kl_div = -0.5 * (mu ** 2 + var - 1 - logvar).sum(axis=1)
+    #return kl_div.mean(axis=0)
+
+
+def elbo(x: Tensor, y: Tensor, mu: Tensor, logvar: Tensor, kl_weight: float=0.0):
+    recon_loss = mse(x, y, reduction='mean')
+    kld_loss = kl_divergence(mu, logvar)
+    
+    return recon_loss + kl_weight * kld_loss, recon_loss, kld_loss

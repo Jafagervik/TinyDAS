@@ -8,19 +8,23 @@ from ptdas.utils import plot_losses, paramsize, weights_init
 import torch.nn.functional as F
 
 def train(model, dataset, num_epochs, batch_size, learning_rate, device, kl_scale):
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    train_dataset = dataset.get_train_dataset()
+    val_dataset = dataset.get_val_dataset()
+
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, pin_memory=True)
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, pin_memory=True)
+
     model_name = model.__class__.__name__.lower()
     
     num_gpus = torch.cuda.device_count()
-    for i in range(torch.cuda.device_count()):
+    for i in range(num_gpus):
         print(torch.cuda.get_device_name(i))
 
     if num_gpus > 1:
-        print(f"Using {torch.cuda.device_count()} GPUs")
+        print(f"Using {num_gpus} GPUs")
         model = nn.DataParallel(model)
 
     model = model.to(device)
-    #model.apply(weights_init)
 
     ps = paramsize(model)
     print(f'Model size: {ps:.3f}MB')
@@ -28,72 +32,99 @@ def train(model, dataset, num_epochs, batch_size, learning_rate, device, kl_scal
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.5, patience=5, verbose=True)
 
-    #scaler = torch.amp.GradScaler("cuda")
-    es = EarlyStopping(patience=3, min_delta=0.001)
+    es = EarlyStopping(patience=5, min_delta=0.001)
     
-    tot_losses, mse_losses, kld_losses = [], [], []
-    best_loss = float('inf')
+    train_losses, val_losses = [], []
+    train_mse_losses, val_mse_losses = [], []
+    train_kld_losses, val_kld_losses = [], []
+    best_val_loss = float('inf')
     
     print("Starting training")
     for epoch in range(num_epochs):
+        # Training
+        model.train()
         total_loss, total_bce, total_kld = 0, 0, 0
         
         with Timer() as t:
-            for batch in dataloader:
+            for batch in train_dataloader:
                 images = batch.to(device)
                 optimizer.zero_grad()
 
                 recon_images, mu, logvar = model(images)
-                #kl_scale = min(epoch / 100, 1.0) 
                 loss, bce, kld = loss_function(recon_images, images, mu, logvar, kl_scale)
                 
                 loss.backward()
-                #torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                 optimizer.step()
                 
                 total_loss += loss.item()
                 total_bce += bce.item()
                 total_kld += kld.item()
 
-        
-            avg_loss = total_loss / len(dataloader)
-            avg_bce = total_bce   / len(dataloader)
-            avg_kld = total_kld   / len(dataloader)
+            avg_train_loss = total_loss / len(train_dataloader)
+            avg_train_bce = total_bce / len(train_dataloader)
+            avg_train_kld = total_kld / len(train_dataloader)
 
-        scheduler.step(avg_loss)
+        # Validation
+        model.eval()
+        total_val_loss, total_val_bce, total_val_kld = 0, 0, 0
         
-        tot_losses.append(avg_loss)
-        mse_losses.append(avg_bce)
-        kld_losses.append(avg_kld)
+        with torch.no_grad():
+            for batch in val_dataloader:
+                images = batch.to(device)
+                recon_images, mu, logvar = model(images)
+                val_loss, val_bce, val_kld = loss_function(recon_images, images, mu, logvar, kl_scale)
+                
+                total_val_loss += val_loss.item()
+                total_val_bce += val_bce.item()
+                total_val_kld += val_kld.item()
+
+        avg_val_loss = total_val_loss / len(val_dataloader)
+        avg_val_bce = total_val_bce / len(val_dataloader)
+        avg_val_kld = total_val_kld / len(val_dataloader)
+
+        scheduler.step(avg_val_loss)
+        
+        train_losses.append(avg_train_loss)
+        val_losses.append(avg_val_loss)
+        train_mse_losses.append(avg_train_bce)
+        val_mse_losses.append(avg_val_bce)
+        train_kld_losses.append(avg_train_kld)
+        val_kld_losses.append(avg_val_kld)
         
         print(f'Epoch [{epoch+1}/{num_epochs}]: '
               f'Time: {t.interval:.2f}s, '
-              f'Avg Loss: {avg_loss:.4f}, '
-              f'Avg MSE: {avg_bce:.4f}, '
-              f'Kld Weight: {kl_scale:.4f}, '
-              f'Avg KLD: {avg_kld:.4f} weight')
+              f'Train Loss: {avg_train_loss:.4f}, '
+              f'Val Loss: {avg_val_loss:.4f}, '
+              f'Train MSE: {avg_train_bce:.4f}, '
+              f'Val MSE: {avg_val_bce:.4f}, '
+              f'KL Weight: {kl_scale:.4f}, '
+              f'Train KLD: {avg_train_kld:.4f}, '
+              f'Val KLD: {avg_val_kld:.4f}')
         
-        if avg_loss < best_loss:
-            best_loss = avg_loss
-            torch.save(model.module.state_dict(), f'checkpoints/{model_name}/best.pth')
+        if avg_val_loss < best_val_loss:
+            best_val_loss = avg_val_loss
+            torch.save(model.module.state_dict() if isinstance(model, nn.DataParallel) else model.state_dict(), 
+                       f'checkpoints/{model_name}/best.pth')
         
-        es(avg_loss)
+        es(avg_val_loss)
         if es.early_stop:
-            print("Stopping training...")
+            print("Early stopping triggered")
             break
     
-    plot_losses(tot_losses, mse_losses, kld_losses, model_name)
-    print(f"Final loss: {tot_losses[-1]:.4f}")
-    print(f"Best loss: {best_loss:.4f}")
+    plot_losses(train_losses, val_losses, model_name)
+    print(f"Final train loss: {train_losses[-1]:.4f}")
+    print(f"Final validation loss: {val_losses[-1]:.4f}")
+    print(f"Best validation loss: {best_val_loss:.4f}")
 
 
 def loss_function(recon_x, x, mu, logvar, kl_weight, eps=1e-8):
     reconstruction_loss = F.mse_loss(recon_x, x, reduction='mean') 
     
     # KL divergence loss
-    kl_loss = torch.sum(0.5 * torch.sum(torch.exp(logvar) + mu ** 2 - 1 - logvar, dim=1), dim=0) 
+    #kl_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp(),dim=1)
+    kl_loss = torch.sum(0.5 * torch.sum(torch.exp(logvar) + mu ** 2 - 1 - logvar, dim=1), dim=0) / x.size(0)
     
     # Total loss (ELBO)
-    total_loss = reconstruction_loss +  (kl_loss * kl_weight)
+    total_loss = reconstruction_loss +  (kl_loss * kl_weight) / x.size(0)
     
-    return total_loss, reconstruction_loss, kl_loss * kl_weight
+    return total_loss, reconstruction_loss, kl_loss * kl_weight / x.size(0)

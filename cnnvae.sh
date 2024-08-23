@@ -18,4 +18,4 @@ module load Python/3.11.5-GCCcore-13.2.0
 source /cluster/home/jorgenaf/pm/bin/activate
 
 export PYTHONUNBUFFERED=1
-python /cluster/home/jorgenaf/TinyDAS/run.py --model CNNVAE --mode train  
+python /cluster/home/jorgenaf/TinyDAS/run.py --model cvae --mode train --batch_size 32 

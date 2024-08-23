@@ -38,6 +38,7 @@ class CAE(BaseAE):
             lambda x: x.max_pool2d(kernel_size=2, stride=2),
         ]
 
+
         self.sizes = self.sizes[::-1]
 
         self.decoder: List[Callable[[Tensor], Tensor]] = [
@@ -57,11 +58,12 @@ class CAE(BaseAE):
         y = x.sequential(self.encoder).sequential(self.decoder)
         return (y,)
 
-    def criterion(self, x: Tensor) -> Dict[str, Tensor]:
+    def criterion(self, x: Tensor) -> Tensor:
         (y,) = self(x)
         loss = mse(y, x)
-        return {"loss": loss}
+        return loss
 
+    def reshape(self, x: Tensor) -> Tensor: return x.reshape(-1, 1, *x.shape)
 
     @TinyJit
     def predict(self, x: Tensor) -> Tensor:

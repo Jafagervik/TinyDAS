@@ -22,42 +22,52 @@ class DataLoader:
         self.indices = list(range(len(dataset)))
         self.num_workers = num_workers
         self.shuffle = shuffle
-        if self.shuffle: rnd.shuffle(self.indices)
+        #if self.shuffle: rnd.shuffle(self.indices)
         self.current_index = 0
 
     def __iter__(self):
         self.current_index = 0
-        if self.shuffle: rnd.shuffle(self.indices)
+        if self.shuffle:
+           rnd.shuffle(self.indices)
         return self
 
-    def __len__(self) -> int:
-        return len(self.indices)
+    def __len__(self) -> int: return self.batch_size
 
     def __next__(self) -> Tensor:
         if self.current_index >= len(self.indices):
             raise StopIteration
+        end_index = min(self.current_index + self.batch_size, len(self.indices))
 
-        if self.batch_size == 1:
-            curr = self.current_index 
-            self.current_index += 1
-            # Unsqueeze
-            return self._load_single_data(curr).unsqueeze(0).realize()
-            
-            
-            
-        else: 
-            end_index = min(self.current_index + self.batch_size, len(self.indices))
-            batch_indices = self.indices[self.current_index:end_index]
+        batch_indices = self.indices[self.current_index:self.current_index + self.batch_size]
+        batch_data = self._load_batch_data(batch_indices)
+        #batch_data = [self.dataset[i] for i in batch_indices]
+        
+        self.current_index = end_index
+        batch_tensor = Tensor.stack(*batch_data, dim=0)
+        return (
+            batch_tensor.shard(self.devices, axis=0)
+            if len(self.devices) > 1
+            else batch_tensor
+        )
 
-            batch_data = self._load_batch_data(batch_indices)
-            self.current_index = end_index
-
-            batch_tensor = Tensor.stack(*batch_data, dim=0)
-            return (
-                batch_tensor.shard(self.devices, axis=0).realize()
-                if len(self.devices) > 1
-                else batch_tensor.realize()
-            )
+#        if self.batch_size == 1:
+#            curr = self.current_index 
+#            self.current_index += 1
+#            return self.dataset[curr].unsqueeze(0).realize()
+#            #return self._load_single_data(curr).unsqueeze(0).realize()
+#        else: 
+#            end_index = min(self.current_index + self.batch_size, len(self.indices))
+#            batch_indices = self.indices[self.current_index:end_index]
+#
+#            batch_data = self._load_batch_data(batch_indices)
+#            self.current_index = end_index
+#
+#            batch_tensor = Tensor.stack(*batch_data, dim=0)
+#            return (
+#                batch_tensor.shard(self.devices, axis=0).realize()
+#                if len(self.devices) > 1
+#                else batch_tensor.realize()
+#            )
 
     def _load_batch_data(self, batch_indices: List[int]) -> List[Tensor]:
         with ThreadPoolExecutor(max_workers=self.num_workers) as executor:
