@@ -42,10 +42,14 @@ def select_model(model: str, **config):
         case "ae":
             return AE(**config)
         case "vae":
-            return VAE(**config)
+            model = VAE(**config)
+            model.xavier_init()
+            return model
         case "cae":
             return CAE(**config)
         case "cvae":
-            return CVAE(**config)
+            model = CVAE(**config)
+            model.xavier_init()
+            return model
         case _:
             raise NotImplementedError

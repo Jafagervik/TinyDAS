@@ -107,7 +107,6 @@ def get_config(model: str):
 
 def model_name(model) -> str: return model.__class__.__name__.lower()
 
-
 def save_model(model, final: bool = False, show: bool = False):
     state_dict = get_state_dict(model)
     final_or_best = "final.safetensors" if final else "best.safetensors"
@@ -124,9 +123,7 @@ def check_overflow(model):
 def load_model(model, name: str = "best"):
     path = os.path.join(
         "./checkpoints",
-        #"/cluster/home/jorgenaf/TinyDAS/checkpoints",
-        #"/home/jaf/prog/ntnu/TinyDAS/checkpoints",
-        model.__class__.__name__.lower(),
+        model_name(model),
         f"{name}.safetensors",
     )
     state_dict = safe_load(path)
@@ -134,9 +131,8 @@ def load_model(model, name: str = "best"):
     print(f"Model loaded from {path}")
 
 
-
 def reparameterize(mean: Tensor, logvar: Tensor):
-    std = (logvar * 0.5).exp().clip(1e-5, 1e5)
+    std = (logvar * 0.5).exp() + 1e-5  #.clip(-1e5, 1e5)
     eps = Tensor.randn(mean.shape, device=mean.device)
     return mean + eps * std
 
@@ -176,21 +172,15 @@ def printing(epoch: int, epochs: int, train_loss: float, val_loss: float,
     progress = ((epoch + 1) / epochs) * 100
     
     print(colored(f"Epoch {epoch+1}/{epochs}", "green"), end=", ")
-    print(colored(f"Train Loss: {train_loss:.5f}", "red"), end=", ")
+    print(colored(f"Train Loss: {train_loss:.9f}", "red"), end=", ")
     print(f"Train GFLOPS: {train_gflops:.2f}", end=", ")
-    print(colored(f"Val Loss: {val_loss:.5f}", "blue"), end=", ")
+    print(colored(f"Val Loss: {val_loss:.9f}", "blue"), end=", ")
     print(f"Val GFLOPS: {val_gflops:.2f}", end=", ")
     print(f"LR: {lr:.9f}", end=", ")
     print(f"Train Time: {train_time:.2f}s", end=", ")
     print(f"Val Time: {val_time:.2f}s", end=", ")
     print(f"Progress: {progress:.2f}%")
 
-def clip_grad_norm(parameters, max_norm=1.0, min_norm=1e-3):
-    total_norm = Tensor.sqrt(sum((p.grad ** 2).sum() for p in parameters))
-    clip_coef = max_norm / (total_norm + 1e-6)
-    clip_coef = clip_coef.clip(min_=min_norm, max_=1.0)
-    for p in parameters:
-        p.grad *= clip_coef
     
 def get_anomalous_indices(filepath: str = "anomalous_indices.txt") -> List[str]:
     with open(filepath, 'r') as file:

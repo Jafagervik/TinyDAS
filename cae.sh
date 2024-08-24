@@ -3,7 +3,7 @@
 #SBATCH -p GPUQ
 #SBATCH -J tinydas_cae
 #SBATCH --account=ie-idi
-#SBATCH -t 16:00:00
+#SBATCH -t 01:00:00
 #SBATCH -N 1 # One node
 #SBATCH --mem=320G
 #SBATCH --constraint="gpu80g"

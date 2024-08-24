@@ -2,106 +2,99 @@ from typing import Dict, Tuple, List, Callable
 
 from tinygrad import TinyJit
 from tinygrad.nn import Tensor, Conv2d, ConvTranspose2d, Linear
-from tinygrad import nn
-from itertools import chain
 
 from tinydas.losses import elbo, mse
 from tinydas.models.base import BaseAE
 from tinydas.utils import reparameterize
 
-
 class CVAE(BaseAE):
     def __init__(self, **kwargs):
         super().__init__()
 
-        self.input_shape = (kwargs["data"]["batch_size"], 1, kwargs["mod"]["M"], kwargs["mod"]["N"])
+        self.M = kwargs["mod"]["M"]
+        self.N = kwargs["mod"]["N"]
         self.latent_dim = kwargs["mod"]["latent"]
+        self.hidden_dims = kwargs["mod"]["hidden"]
         self.kld_weight = kwargs["mod"]["kld_weight"]
-        
-        hidden_dims = kwargs["mod"]["hidden"] #or [32, 64, 128, 256]
-        
+        self.input_shape = (self.M, self.N)
+
         # Encoder
         self.encoder = []
-        in_channels = self.input_shape[1]
-        for h_dim in hidden_dims:
+        in_channels = 1
+        for h_dim in self.hidden_dims:
             self.encoder.extend([
-                nn.Conv2d(in_channels, h_dim, kernel_size=3, stride=2, padding=1),
-                nn.BatchNorm2d(h_dim),
+                Conv2d(in_channels, h_dim, kernel_size=3, stride=2, padding=1),
                 Tensor.relu
             ])
             in_channels = h_dim
-        
-        Tensor.training, Tensor.no_grad = False, True
-        x = Tensor.zeros(self.input_shape)
-        x = x.sequential(self.encoder)
-        self.flatten_size = x.numel() // x.shape[0]
-        self.encoder_output_shape = x.shape[1:]
-        print(f"Flatten size: {self.flatten_size}")
-        print(f"Encoder output shape: {self.encoder_output_shape}")
-        Tensor.training, Tensor.no_grad = True, False
 
-        self.fc_mu = Linear(self.flatten_size, self.latent_dim)
-        self.fc_logvar = Linear(self.flatten_size, self.latent_dim)
-        
-        self.fc_decoder = Linear(self.latent_dim, self.flatten_size)
-        
+        Tensor.no_grad, Tensor.training = True, False
+        self.conv_out_shape = self.get_conv_output_shape()
+        self.conv_out_size = self.conv_out_shape[1] * self.conv_out_shape[2] * self.conv_out_shape[3]
+        Tensor.no_grad, Tensor.training = False, True
+
+        self.fc_mu = Linear(self.conv_out_size, self.latent_dim)
+        self.fc_logvar = Linear(self.conv_out_size, self.latent_dim)
+
+        self.decoder_input = Linear(self.latent_dim, self.conv_out_size)
+
         self.decoder = []
-        hidden_dims.reverse()
-        for i in range(len(hidden_dims) - 1):
+        hidden_dims_reversed = self.hidden_dims[::-1]
+        for i in range(len(hidden_dims_reversed) - 1):
             self.decoder.extend([
-                nn.ConvTranspose2d(hidden_dims[i], hidden_dims[i + 1], kernel_size=3, stride=2, padding=1, output_padding=1),
-                nn.BatchNorm2d(hidden_dims[i+1]), 
+                ConvTranspose2d(hidden_dims_reversed[i], hidden_dims_reversed[i + 1], kernel_size=3, stride=2, padding=1, output_padding=1),
                 Tensor.relu
             ])
-        
-        self.final_layer = [
-            nn.ConvTranspose2d(hidden_dims[-1], hidden_dims[-1], kernel_size=3, stride=2, padding=1, output_padding=1),
-            nn.BatchNorm2d(hidden_dims[-1]), 
-            Tensor.relu,
-            nn.Conv2d(hidden_dims[-1], self.input_shape[1], kernel_size=3, padding=1),
-            Tensor.sigmoid
-        ]
 
-    @property
-    def convolutional(self) -> bool:
-        return True
+        self.decoder.append(ConvTranspose2d(hidden_dims_reversed[-1], 1, kernel_size=3, stride=2, padding=1, output_padding=1))
 
-    def encode(self, x: Tensor) -> Tuple[Tensor, Tensor]:
+    def get_conv_output_shape(self):
+        x = Tensor.zeros(1, 1, *self.input_shape)
         x = x.sequential(self.encoder)
-        x = x.flatten(1)
-        return self.fc_mu(x), self.fc_logvar(x)
+        return x.shape
 
-    def decode(self, z: Tensor) -> Tensor:
-        x = self.fc_decoder(z)
-        x = x.reshape((-1,) + self.encoder_output_shape)
+    def encode(self, x):
+        x = x.reshape(shape=(-1, 1, *self.input_shape))
+        x = x.sequential(self.encoder)
+        x = x.reshape(shape=(x.shape[0], -1))
+        mean = self.fc_mu(x)
+        logvar = self.fc_logvar(x).clip(-10, 2)  # Clip logvar to a reasonable range
+        return mean, logvar
+
+    def decode(self, z):
+        x = self.decoder_input(z)
+        x = x.reshape(shape=(-1, self.conv_out_shape[1], self.conv_out_shape[2], self.conv_out_shape[3]))
         x = x.sequential(self.decoder)
-        x = x.sequential(self.final_layer)
+        x = x[:, :, :self.input_shape[0], :self.input_shape[1]]
         return x
 
-    def __call__(self, x: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
+    def __call__(self, x: Tensor) -> Tuple[Tensor, ...]:
         mu, logvar = self.encode(x)
         z = reparameterize(mu, logvar)
-        x_recon = self.decode(z)
-        # Crop the output to match the input size
-        x_recon = x_recon[:, :, :self.input_shape[2], :self.input_shape[3]]
-        return x_recon, mu, logvar
+        return self.decode(z), mu, logvar
 
-    def criterion(self, x: Tensor) -> Dict[str, Tensor]:
-        x_hat, mu, logvar = self(x)
-        tot_loss = elbo(x, x_hat, mu, logvar)
-        return {"loss": tot_loss}
+    def criterion(self, x: Tensor) -> Tensor:
+        x_recon, mu, logvar = self(x)
+        x_recon = x_recon.float()
+        x = x.float()
+        mu = mu.float()
+        logvar = logvar.float()
 
-    def reshape(self, x: Tensor) -> Tensor: return x.reshape(-1, 1, *x.shape)
+        print(mu.shape)
+        print(logvar.shape)
+
+        recon_loss = mse(x, x_recon)
+        kl_div = -0.5 * (1 + logvar - mu ** 2 - logvar.exp()).sum(axis=1).mean()
+
+        total_loss = recon_loss + kl_div * self.kld_weight
+        print(f"Recon Loss: {recon_loss.item()}, KL Div: {kl_div.item() * self.kld_weight}, Total Loss: {total_loss.item()}")
+        return total_loss
 
     @TinyJit
     def predict(self, x: Tensor) -> Tensor:
-        """
-        Input tensor is being processed to fit encoder
-        after decoder is done, it is reshaped back
-        """
         Tensor.no_grad = True
-        x = x.reshape(1, 1, 625, 2137)
+        x = x.reshape(1, 1, self.M, self.N)
         (out,) = self(x)
-
-        out = out.reshape(625, 2137)
+        out = out.squeeze()
+        Tensor.no_grad = False 
         return out.realize()

@@ -1,22 +1,17 @@
 from typing import List, Callable, Optional
 import time
 
-from tinydas.kl import kl_annealing
-from tinydas.losses import mse
 from tinygrad import GlobalCounters, TinyJit, dtypes
-from tinygrad.nn import Tensor, state
+from tinygrad.nn import Tensor
 from tinygrad.nn.optim import Optimizer
 from tinygrad.helpers import colored
-
-import numpy as np
 
 from tinydas.dataloader import DataLoader
 from tinydas.early_stopping import EarlyStopping
 from tinydas.models.base import BaseAE
 from tinydas.plots import plot_loss
-from tinydas.utils import check_overflow, save_model, printing, clip_and_grad
-from tinydas.timer import Timer
-from tinydas.lr_schedule import LR_Scheduler, WarmupScheduler
+from tinydas.utils import save_model, printing, clip_and_grad
+from tinydas.lr_schedule import LR_Scheduler
 
 
 class Trainer:
@@ -34,8 +29,7 @@ class Trainer:
         self.train_dataloader = train_dataloader
         self.val_dataloader = val_dataloader
         self.optim = optimizer
-
-        self.scheduler = scheduler #if self.model.__class__.__name__.lower() in ["vae", "cae"] else None
+        self.scheduler = scheduler 
 
         self.best_loss = float("inf")
         self.epochs = kwargs["epochs"] if kwargs["epochs"] else 10
@@ -56,15 +50,6 @@ class Trainer:
         (loss * self.loss_scaler).backward()
     
         clip_and_grad(self.optim, self.loss_scaler)
-       # global_norm = Tensor([0.0], dtype=dtypes.float32, device=self.optim.params[0].device).realize()
-       # for param in self.optim.params: 
-       #     if param.grad is not None:
-       #         param.grad = param.grad / self.loss_scaler
-       #         global_norm += param.grad.float().square().sum()
-       # global_norm = global_norm.sqrt()
-       # for param in self.optim.params: 
-       #     if param.grad is not None:
-       #         param.grad = (param.grad / Tensor.where(global_norm > 1.0, global_norm, 1.0)).cast(param.grad.dtype)
             
         self.optim.step()
         return loss
@@ -77,21 +62,25 @@ class Trainer:
         return loss
 
     def run_epoch(self, dataloader: DataLoader, step_fn):
-        epoch_loss = 0.0
+        total_loss = 0.0
+        num_batches = 0
         gflops = 0
         batch_time = time.perf_counter()
+
         for batch in dataloader:
             step_start_time = time.perf_counter()
             GlobalCounters.reset()
             loss = step_fn(batch)
             step_end_time = time.perf_counter() - step_start_time
             gflops += GlobalCounters.global_ops / (1e9 * step_end_time)
-            epoch_loss += loss.float().item()
+            total_loss += loss.float().item() 
+            num_batches += 1
+
         batch_end_time = time.perf_counter() - batch_time
-        gflops /= len(dataloader)
-        avg_loss = epoch_loss / len(dataloader)
+        gflops /= num_batches
+        avg_loss = total_loss / num_batches  
+        
         return avg_loss, gflops, batch_end_time
-                
 
     def train(self):
         print(colored(f"Starting training {self.model.__class__.__name__} with {self.epochs} epochs", 'yellow'))

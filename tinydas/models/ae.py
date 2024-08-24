@@ -18,6 +18,7 @@ class AE(BaseAE):
         self.input_shape = input_shape
         self.flattened_dim = input_shape[0] * input_shape[1]
         
+
         self.encoder1 = Linear(self.flattened_dim, 512, bias=True)
         self.encoder2 = Linear(512, latent, bias=True)
         
@@ -32,31 +33,23 @@ class AE(BaseAE):
 
     def decode(self, x):
         x = self.decoder1(x).relu()
-        x = self.decoder2(x).sigmoid() # NEW
-        x = x.reshape(shape=(-1, *self.input_shape))
+        x = self.decoder2(x)
+        #x = x.clip(0, 1)
+        x = x.reshape(shape=(-1, self.M, self.N))
         return x
 
     def __call__(self, x: Tensor) -> Tuple[Tensor, ...]:
         return (self.decode(self.encode(x)),)
 
-    @property
-    def convolutional(self) -> bool: return False
-
     def criterion(self, x: Tensor) -> Tensor:
-        (x_hat,) = self(x)
-        return mse(x, x_hat)
-
-    def reshape(self, x: Tensor) -> Tensor: return x.reshape(-1, *x.shape)
-
+        (y, ) = self(x)
+        return mse(x,y)
+        #return mse(x,y, reduction='none').mean(axis=(1,2)).mean()
+        #return ((x-y)**2).mean(axis=(1,2)).mean()
 
     @TinyJit
     def predict(self, x: Tensor) -> Tensor:
-        """
-        Input tensor is being processed to fit encoder
-        after decoder is done, it is reshaped back
-        """
         Tensor.no_grad = True
         x = x.reshape(1, 625 * 2137) 
         (out,) = self(x)
-
         return out.squeeze()

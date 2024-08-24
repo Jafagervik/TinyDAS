@@ -22,7 +22,6 @@ class DataLoader:
         self.indices = list(range(len(dataset)))
         self.num_workers = num_workers
         self.shuffle = shuffle
-        #if self.shuffle: rnd.shuffle(self.indices)
         self.current_index = 0
 
     def __iter__(self):
@@ -31,7 +30,7 @@ class DataLoader:
            rnd.shuffle(self.indices)
         return self
 
-    def __len__(self) -> int: return self.batch_size
+    def __len__(self) -> int: return len(self.dataset)
 
     def __next__(self) -> Tensor:
         if self.current_index >= len(self.indices):

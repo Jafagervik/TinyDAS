@@ -1,13 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List, Tuple
 
-import numpy as np
-
-import math
 from tinygrad import Tensor, nn, TinyJit, dtypes
-
-from tinydas.enums import Models
-from tinydas.utils import minmax
 
 
 class BaseAE(ABC):
@@ -22,14 +16,7 @@ class BaseAE(ABC):
     """
 
     @abstractmethod
-    def __init__(self):
-        pass
-
-    @property
-    @abstractmethod
-    def convolutional(self) -> bool:
-        """Helper property to help with how we should reshape before"""
-        pass
+    def __init__(self): pass
 
     @abstractmethod
     def __call__(self, x: Tensor) -> Tuple[Tensor, ...]: pass
@@ -41,9 +28,6 @@ class BaseAE(ABC):
     @abstractmethod
     def predict(self, x: Tensor) -> Tensor: pass
 
-    @abstractmethod
-    def reshape(self, x: Tensor) -> Tensor: pass
-
     def parameters(self): return nn.state.get_parameters(self)
     def state_dict(self): return nn.state.get_state_dict(self)
 
@@ -53,12 +37,10 @@ class BaseAE(ABC):
     def half(self):
         for param in self.state_dict().values():
             param.replace(param.cast(dtypes.default_float))
-        #for l in self.state_dict().values(): l.replace(l.half())
 
     def float(self):
         for param in self.state_dict().values():
             param.replace(param.cast(dtypes.float32))
-        #for l in self.state_dict().values(): l.replace(l.float())
 
     def xavier_init(self):
         for name, param in self.state_dict().items():

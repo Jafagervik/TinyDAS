@@ -31,14 +31,11 @@ def train_mode(args):
     config = get_config(args.model)
     seed_all(config["data"]["seed"])
 
-    # Set default dtype to float16
     dtypes.default_float = dtypes.half if config["data"]["half_prec"] else dtypes.float32
-    print(dtypes.default_float)
 
     devices = get_gpus(args.gpus) 
 
     tl, vl = get_data(devices, **config)
-    print(len(tl), len(vl))
 
     model = select_model(args.model, **config)
     # Load was here before
