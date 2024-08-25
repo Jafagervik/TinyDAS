@@ -103,7 +103,7 @@ class BaseAE(ABC):
         path_to_checkpoints = f"/cluster/home/jorgenaf/TinyDAS/checkpoints/{self.name}/{final_or_best}.safetensors"
         safe_save(state_dict, path_to_checkpoints)
         if show:
-            print(f"Model saved to {path_to_checkpoints}")
+            print(f"Model saved to {ae}/{final_or_best}.safetensors")
 
 
     def load(self): 

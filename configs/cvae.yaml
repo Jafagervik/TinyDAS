@@ -1,4 +1,4 @@
-epochs: 3
+epochs: 100
 gpus: 4
 data:
   batch_size: 20
@@ -6,12 +6,12 @@ data:
   val_split: 0.2
   seed: 1337 
   nfiles: 200
-  half_prec: True
+  half_prec: False
   num_workers: 4
   shuffle: True
 
 opt:
-  lr: 0.0000001 # 1e-8
+  lr: 0.001 
   b1: 0.9
   b2: 0.999
   patience: 5
@@ -23,9 +23,10 @@ opt:
 mod:
   M: 625
   N: 2137
-  hidden: [16, 32, 64]
+  hidden: [16, 32, 64, 128]
   latent: 128
   kld_weight: 0.01
+  beta: 4.0
   p: 0.0  # dropout
 
 es:
@@ -36,6 +37,6 @@ ad:
   percentile: 95
 
 es:
-  patience: 10
-  min_delta: 0.000001
+  patience: 100
+  min_delta: 0.01
 

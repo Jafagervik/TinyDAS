@@ -21,7 +21,7 @@ class CAE(BaseAE):
         for i in range(len(hidden_dim) - 1):
             self.encoder.extend([
                 Conv2d(hidden_dim[i], hidden_dim[i+1], kernel_size=3, stride=2, padding=1),
-                BatchNorm(hidden_dim[i+1]),
+                #BatchNorm(hidden_dim[i+1]),
                 Tensor.relu
             ])
         self.encoder.extend([
@@ -43,7 +43,7 @@ class CAE(BaseAE):
         for i in range(len(hidden_dim) - 1):
             self.decoder.extend([
                 ConvTranspose2d(hidden_dim[i], hidden_dim[i+1], kernel_size=3, stride=2, padding=1, output_padding=1),
-                BatchNorm(hidden_dim[i+1]),
+                #BatchNorm(hidden_dim[i+1]),
                 Tensor.relu
             ])
         self.decoder.append(ConvTranspose2d(hidden_dim[-1], 1, kernel_size=3, stride=2, padding=1, output_padding=1))
@@ -75,7 +75,6 @@ class CAE(BaseAE):
     def criterion(self, x: Tensor) -> Tensor:
         (y,) = self(x)
         return mse(x, y)
-
 
     @staticmethod
     def loss(out: Tensor, pred: Tensor) -> Tensor: return mse(out, pred)

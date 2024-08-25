@@ -66,18 +66,11 @@ class VAE(BaseAE):
 
     def criterion(self, x: Tensor) -> Tensor:
         x_recon, mu, logvar = self(x)
-        x_recon = x_recon.float()
-        x = x.float()
-        mu = mu.float()
-        logvar = logvar.float()
+        #x_recon, x, mu, logvar = x_recon.float()
 
-        #kl_weight = self.kld_weight()
+        recon_loss, kl_div, total_loss = elbo(x, x_recon, mu, logvar, self.beta)
 
-        recon_loss = BCE(x_recon, x, reduction="sum") / (x.shape[0] * x.shape[1] * x.shape[2])
-        kl_div = -0.5 * (1 + logvar - mu ** 2 - logvar.exp()).sum(axis=1).mean()
-
-        total_loss = recon_loss + kl_div * self.beta #kl_weight
-        print(f"Recon Loss: {recon_loss.item()}, KL Div: {kl_div.item() * self.beta}, Total Loss: {total_loss.item()}")
+        print(f"Recon Loss: {recon_loss.item():.8f}, KL Div: {kl_div.item() * self.beta:.3e}, Total Loss: {total_loss.item():.8f}")
         return total_loss
 
 
