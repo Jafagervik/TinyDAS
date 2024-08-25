@@ -11,3 +11,13 @@ class AdaptiveKLWeight:
 # 2. Implement a simple KL annealing schedule
 def kl_annealing(epoch, start_weight=0.0001, max_weight=0.01, num_epochs=100):
     return min(max_weight, start_weight + (max_weight - start_weight) * (epoch / num_epochs))
+
+class KLAnnealer:
+    def __init__(self, start=0, stop=1, n_steps=1000):
+        self.i = 0
+        self.start, self.stop = start, stop
+        self.n_steps = n_steps
+
+    def __call__(self):
+        self.i = min(self.i + 1, self.n_steps)
+        return self.start + (self.stop - self.start) * self.i / self.n_steps

@@ -1,5 +1,5 @@
 import random as rnd
-from typing import List
+from typing import List, Tuple
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tinygrad import Tensor
@@ -78,7 +78,7 @@ class DataLoader:
 
     def _load_single_data(self, idx: int) -> Tensor: return self.dataset[idx]
 
-def create_data_loaders(dataset: Dataset, batch_size: int, devices: List[str], num_workers: int = 1, shuffle: bool = True):
+def _create_data_loaders(dataset: Dataset, batch_size: int, devices: List[str], num_workers: int = 1, shuffle: bool = True):
     train_dataset = dataset.get_train_dataset()
     val_dataset = dataset.get_val_dataset()
 
@@ -86,3 +86,15 @@ def create_data_loaders(dataset: Dataset, batch_size: int, devices: List[str], n
     val_loader = DataLoader(val_dataset, batch_size, devices, num_workers, shuffle=False)
 
     return train_loader, val_loader
+
+def get_data(devices: List[str], **config) -> Tuple[DataLoader, DataLoader]:
+    dataset = Dataset(path=config["data"]["dataset"], n=config["data"]["nfiles"])
+    train_loader, val_loader = _create_data_loaders(
+        dataset, 
+        batch_size=config["data"]["batch_size"],
+        devices=devices, 
+        num_workers=config["data"]["num_workers"],
+        shuffle=config["data"]["shuffle"],
+    )
+    return train_loader, val_loader
+

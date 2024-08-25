@@ -11,7 +11,6 @@
 #SBATCH --output=logs/vae.txt
 #SBATCH --error=logs/vae.err
 
-
 module purge
 module load Python/3.11.5-GCCcore-13.2.0
 source /cluster/home/jorgenaf/master/bin/activate

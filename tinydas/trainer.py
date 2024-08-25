@@ -1,6 +1,9 @@
 from typing import List, Callable, Optional
 import time
 
+import numpy as np
+from tinydas.losses import mse
+from tinydas.scaler import LossScaler
 from tinygrad import GlobalCounters, TinyJit, dtypes
 from tinygrad.nn import Tensor
 from tinygrad.nn.optim import Optimizer
@@ -10,7 +13,7 @@ from tinydas.dataloader import DataLoader
 from tinydas.early_stopping import EarlyStopping
 from tinydas.models.base import BaseAE
 from tinydas.plots import plot_loss
-from tinydas.utils import save_model, printing, clip_and_grad
+from tinydas.utils import new_clip_and_grad, save_model, printing, clip_and_grad
 from tinydas.lr_schedule import LR_Scheduler
 
 
@@ -30,6 +33,7 @@ class Trainer:
         self.val_dataloader = val_dataloader
         self.optim = optimizer
         self.scheduler = scheduler 
+        self.scaler = LossScaler()
 
         self.best_loss = float("inf")
         self.epochs = kwargs["epochs"] if kwargs["epochs"] else 10
@@ -46,18 +50,22 @@ class Trainer:
     @Tensor.train()
     def train_step(self, input_batch: Tensor):
         self.optim.zero_grad()
-        loss = self.model.criterion(input_batch)
-        (loss * self.loss_scaler).backward()
-    
-        clip_and_grad(self.optim, self.loss_scaler)
-            
+        
+        #(output,) = self.model(input_batch)
+        
+        loss = self.model.criterion(input_batch).cast(dtypes.float32)
+        #(loss * self.loss_scaler).backward()
+        loss.backward()
+
+        #new_clip_and_grad(self.optim, self.loss_scaler)
+
         self.optim.step()
+        
         return loss
 
-    @TinyJit
     def validate_step(self, input_batch: Tensor):
         Tensor.no_grad = True
-        loss = self.model.criterion(input_batch)
+        loss = self.model.criterion(input_batch).cast(dtypes.float32)
         Tensor.no_grad = False
         return loss
 
@@ -98,7 +106,8 @@ class Trainer:
         
             if val_loss < self.best_loss:
                 self.best_loss = val_loss
-                save_model(self.model, False, True)
+                self.model.save()
+                #save_model(self.model, False, True)
 
             self.early_stopping(val_loss)
             if self.early_stopping.early_stop:
@@ -108,5 +117,6 @@ class Trainer:
         print(f"Best validation loss: {self.best_loss:.9f}")
         print(f"Train - Max loss: {max(self.train_losses):.9f}, Min loss: {min(self.train_losses):.9f}")
         print(f"Val - Max loss: {max(self.val_losses):.9f}, Min loss: {min(self.val_losses):.9f}")
-        save_model(self.model, final=True)
+        self.model.save(final=True)
+        #save_model(self.model, final=True)
         plot_loss(self.train_losses, self.val_losses, self.model)

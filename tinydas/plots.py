@@ -38,7 +38,13 @@ def plot_loss(
 
 
 def plot_das_as_heatmap(
-    das: np.ndarray, filename: str, show: bool = True, path: Optional[str] = None, num_ticks: int = 6
+    das: np.ndarray, 
+    filename: str, 
+    show: bool = True, 
+    path: Optional[str] = None, 
+    num_ticks: int = 6, 
+    vmin:Optional[int] = None, 
+    vmax: Optional[int] = None
 ) -> None:
     ts = filename.split("/")[-1].split(".")[0]
     ts = "".join(ts.split("_"))
@@ -58,7 +64,14 @@ def plot_das_as_heatmap(
     
     # Plot the heatmap
     plt.figure(figsize=(10, 5))
-    plt.imshow(das, aspect="auto", cmap="seismic", vmin=0.0, vmax=1.0)
+    if vmin is not None and vmax is not None: 
+        plt.imshow(das, aspect="auto", cmap="seismic", vmin=vmin, vmax=vmax)
+    elif vmin is not None:
+        plt.imshow(das, aspect="auto", cmap="seismic", vmin=vmin)
+    elif vmax is not None:
+        plt.imshow(das, aspect="auto", cmap="seismic", vmax=vmax)
+    else:
+        plt.imshow(das, aspect="auto", cmap="seismic")
     plt.colorbar()
     
     # Set the x-axis and y-axis labels
@@ -72,3 +85,18 @@ def plot_das_as_heatmap(
     if show: plt.show()
     if path is not None: plt.savefig(path)
 
+def visualize_latent_space(model, data, num_points=1000):
+    # Ensure the model is in evaluation mode
+    Tensor.no_grad = True
+    
+    # Get encodings
+    encodings = model.encoder(data[:num_points]).detach().numpy()
+    
+    plt.figure(figsize=(10, 8))
+    plt.scatter(encodings[:, 0], encodings[:, 1], alpha=0.5)
+    plt.title('Latent Space Visualization')
+    plt.xlabel('First Latent Dimension')
+    plt.ylabel('Second Latent Dimension')
+    plt.savefig(f'figs/{model.name}/latent_space.png')
+    plt.close()
+    Tensor.no_grad = False

@@ -1,4 +1,4 @@
-from tinygrad.nn import BatchNorm2d, Conv2d, ConvTranspose2d, Tensor
+from tinygrad.nn import BatchNorm, Conv2d, ConvTranspose2d, Tensor
 
 
 class ConvBlock:
@@ -9,22 +9,26 @@ class ConvBlock:
         kernel_size: int = 3,
         stride: int = 2,
         padding: int = 1,
-        act=Tensor.leakyrelu,
+        act=lambda x: x.relu(),
+        bn: bool = True
     ) -> None:
-        self.net = [
-            Conv2d(
+        self.c = Conv2d(
                 in_channels,
                 out_channels=out_channels,
                 kernel_size=kernel_size,
                 stride=stride,
                 padding=padding,
-            ),
-            BatchNorm2d(out_channels),
-            act,
-        ]
+            )
+        self.b = BatchNorm(out_channels)
+        #self.b.weight.requires_grad = False
+        self.bn = bn
+        self.act = act
 
     def __call__(self, x: Tensor) -> Tensor:
-        return x.sequential(self.net)
+        x = self.c(x)
+        if self.bn:
+            x = self.b(x)
+        return self.act(x)
 
 
 class DeconvBlock:
@@ -36,20 +40,22 @@ class DeconvBlock:
         stride: int = 2,
         padding: int = 1,
         output_padding: int = 1,
-        act=Tensor.leakyrelu,
+        act = lambda x: x.relu(),
+        bn: bool = True
     ) -> None:
-        self.net = [
-            ConvTranspose2d(
-                in_channels,
-                out_channels,
-                kernel_size=kernel_size,
-                stride=stride,
-                padding=padding,
-                output_padding=output_padding,
-            ),
-            BatchNorm2d(out_channels),
-            act,
-        ]
+        self.c = ConvTranspose2d(
+            in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            output_padding=output_padding
+        )
+        self.b = BatchNorm(out_channels)
+        #self.b.weight.requires_grad = False
+        self.act = act
 
     def __call__(self, x: Tensor) -> Tensor:
-        return x.sequential(self.net)
+        x = self.c(x)
+        x = self.b(x)
+        return self.act(x)

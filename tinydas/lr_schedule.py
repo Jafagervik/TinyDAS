@@ -13,7 +13,7 @@ class LR_Scheduler:
         self.optimizer.lr.assign(self.get_lr()).realize()
 
 class ReduceLROnPlateau(LR_Scheduler):
-    def __init__(self, optimizer: Optimizer, mode="min", factor=0.1, patience=10, threshold=1e-4, threshold_mode="rel"):
+    def __init__(self, optimizer: Optimizer, mode="min", factor=0.1, patience=5, threshold=1e-3, threshold_mode="rel"):
         assert mode in ["min", "max"] and threshold_mode in ["rel", "abs"]
         super().__init__(optimizer)
         self.mode, self.factor, self.patience, self.threshold, self.threshold_mode = mode, factor, patience, threshold, threshold_mode

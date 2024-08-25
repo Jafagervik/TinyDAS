@@ -71,3 +71,34 @@ def elbo(x: Tensor, y: Tensor, mu: Tensor, logvar: Tensor, kl_weight: float=0.0)
     kld_loss = kl_divergence(mu, logvar)
     
     return recon_loss + kl_weight * kld_loss, recon_loss, kld_loss
+
+    
+    
+def BCE(input: Tensor, target: Tensor, reduction: str = 'mean') -> Tensor:
+    """
+    Custom implementation of binary cross-entropy for tinygrad.
+    
+    Args:
+    - input (Tensor): The input tensor (predictions)
+    - target (Tensor): The target tensor
+    - reduction (str): The reduction method ('mean', 'sum', or 'none')
+    
+    Returns:
+    - Tensor: The computed loss
+    """
+    # Ensure numerical stability
+    eps = 1e-7
+    input = input.clip(eps, 1 - eps)
+    
+    # Compute binary cross-entropy
+    bce = -(target * input.log() + (1 - target) * (1 - input).log())
+    
+    # Apply reduction
+    if reduction == 'mean':
+        return bce.mean()
+    elif reduction == 'sum':
+        return bce.sum()
+    elif reduction == 'none':
+        return bce
+    else:
+        raise ValueError("Invalid reduction method. Choose 'mean', 'sum', or 'none'.")

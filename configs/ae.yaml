@@ -1,4 +1,4 @@
-epochs: 100 #100
+epochs: 200 #100
 gpus: 4 # 4
 data:
   batch_size: 256
@@ -6,30 +6,30 @@ data:
   val_split: 0.2
   seed: 1337 #2531
   nfiles: 25600
-  half_prec: True
+  half_prec: False
   num_workers: 4
   shuffle: True
   #normalize: "minmax"
 
 opt:
-  lr: 0.001 #0.0001 # 0.00042
+  lr: 0.05
   b1: 0.9
   b2: 0.99
-  loss_scaler: 1.0
-  patience: 5
-  factor: 0.5
+  lr_scheduler: 'reduce'
   threshold: 0.001
-  loss_scale: 128.0
+  patience: 3
+  factor: 0.1
+  loss_scale: 1.0
 
 mod:
   M: 625
   N: 2137
-  hidden: [512]
+  hidden: [1024, 512]
   latent: 128
   p: 0.0 # dropout
 
 es:
-  patience: 10
+  patience: 5
   min_delta: 0.01
 
 ad:

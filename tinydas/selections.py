@@ -1,9 +1,10 @@
 from typing import List
 
+from tinydas.lr_schedule import ReduceLROnPlateau
 from tinygrad import Tensor, nn
 from tinygrad.nn.optim import Optimizer
 
-from tinydas.enums import Opti
+from tinydas.enums import Opti, LRScheduler
 from tinydas.models.ae import AE
 from tinydas.models.cae import CAE
 from tinydas.models.vae import VAE
@@ -27,7 +28,8 @@ def select_optimizer(optimizer: Opti, parameters: List[Tensor], **config) -> Opt
                 b2=config["b2"],
             )
         case Opti.SGD:
-            return nn.optim.SGD(parameters, lr=config["lr"])
+            print(config["lr"])
+            return nn.optim.SGD(parameters, lr=config["lr"], momentum=0.9, nesterov=True, weight_decay=0.00001)
         case _:
             return nn.optim.Adam(
                 parameters,
@@ -36,14 +38,24 @@ def select_optimizer(optimizer: Opti, parameters: List[Tensor], **config) -> Opt
                 b2=config["b2"],
             )
 
+def select_lr_scheduler(lr_sched: LRScheduler, optimizer: Optimizer, **config):
+    match lr_sched:
+        case LRScheduler.REDUCE:
+            return ReduceLROnPlateau(
+                optimizer, patience=config["opt"]["patience"], threshold=config["opt"]["threshold"], factor=config["opt"]["factor"]
+            )
+        case _:
+            raise NotImplemented
 
 def select_model(model: str, **config):
     match model.lower():
         case "ae":
-            return AE(**config)
+            model = AE(**config)
+            model.xavier_init()
+            return model
         case "vae":
             model = VAE(**config)
-            model.xavier_init()
+            model.vae_init()
             return model
         case "cae":
             return CAE(**config)

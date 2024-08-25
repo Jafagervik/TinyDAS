@@ -26,9 +26,7 @@ def get_size_in_gb(t: Tensor) -> float:
 def custom_flatten(t: Tensor) -> Tensor:
     return t.reshape(1, t.shape[0] * t.shape[1])
 
-
 def reshape_back(t: Tensor) -> Tensor:
-    # TODO: Fix name and hardcoded values
     return t.reshape(625, 2137)
 
 
@@ -108,7 +106,7 @@ def get_config(model: str):
 def model_name(model) -> str: return model.__class__.__name__.lower()
 
 def save_model(model, final: bool = False, show: bool = False):
-    state_dict = get_state_dict(model)
+    state_dict = model.state_dict()
     final_or_best = "final.safetensors" if final else "best.safetensors"
     path_to_checkpoints = f"/cluster/home/jorgenaf/TinyDAS/checkpoints/{model.__class__.__name__.lower()}/{final_or_best}"
     safe_save(state_dict, path_to_checkpoints)
@@ -120,15 +118,15 @@ def check_overflow(model):
         if p.grad is None: return True
     return False
 
-def load_model(model, name: str = "best"):
+def load_model(model, name: str = "best", show = True):
     path = os.path.join(
         "./checkpoints",
         model_name(model),
         f"{name}.safetensors",
     )
-    state_dict = safe_load(path)
-    load_state_dict(model, state_dict)
-    print(f"Model loaded from {path}")
+    load_state_dict(model, safe_load(path))
+    if show:
+        print(f"Model loaded from {path}")
 
 
 def reparameterize(mean: Tensor, logvar: Tensor):
@@ -142,11 +140,30 @@ def clip_and_grad(optimizer, loss_scaler):
         if param.grad is not None:
             param.grad = param.grad / loss_scaler
             global_norm += param.grad.float().square().sum()
+
     global_norm = global_norm.sqrt()
     for param in optimizer.params: 
         if param.grad is not None:
             param.grad = (param.grad / Tensor.where(global_norm > 1.0, global_norm, 1.0)).cast(param.grad.dtype)
 
+def new_clip_and_grad(optimizer, loss_scaler, max_norm = 1.00):
+    # Compute global norm in float32
+    global_norm = Tensor([0.0], dtype=dtypes.float32, device=optimizer.params[0].device) # realize()
+    for param in optimizer.params:
+        if param.grad is not None:
+            # Unscale gradients
+            param.grad = param.grad / loss_scaler
+            # Accumulate squared sum in float32
+            global_norm += param.grad.float().square().sum()
+    
+    global_norm = global_norm.sqrt()
+    
+    # Clip gradients
+    clip_factor = Tensor.where(global_norm > max_norm, max_norm / global_norm, 1.0)
+    for param in optimizer.params:
+        if param.grad is not None:
+            # Apply clipping and cast back to original dtype
+            param.grad = (param.grad * clip_factor).cast(param.dtype)
 
 def load_das_file(filename: str):
     """Loads a single das file in to a tuple of the data and the timestamps."""
@@ -162,7 +179,6 @@ def load_das_file_no_time(filename: str) -> Tensor:
 
 def minmax(data: Tensor) -> Tensor:
     return (data - data.min()) / (data.max() - data.min())
-    #return data.sub(data.min()).div(data.max().sub(data.min()))
 
 def zscore(data: Tensor) -> Tensor:
     return data.sub(data.mean()).div(data.std())
@@ -176,7 +192,7 @@ def printing(epoch: int, epochs: int, train_loss: float, val_loss: float,
     print(f"Train GFLOPS: {train_gflops:.2f}", end=", ")
     print(colored(f"Val Loss: {val_loss:.9f}", "blue"), end=", ")
     print(f"Val GFLOPS: {val_gflops:.2f}", end=", ")
-    print(f"LR: {lr:.9f}", end=", ")
+    print(f"LR: {lr:.2e}", end=", ")
     print(f"Train Time: {train_time:.2f}s", end=", ")
     print(f"Val Time: {val_time:.2f}s", end=", ")
     print(f"Progress: {progress:.2f}%")

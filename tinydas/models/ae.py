@@ -17,24 +17,30 @@ class AE(BaseAE):
 
         self.input_shape = input_shape
         self.flattened_dim = input_shape[0] * input_shape[1]
-        
 
-        self.encoder1 = Linear(self.flattened_dim, 512, bias=True)
-        self.encoder2 = Linear(512, latent, bias=True)
-        
-        self.decoder1 = Linear(latent, 512, bias=True)
-        self.decoder2 = Linear(512, self.flattened_dim, bias=True)
+        self.encoder = []
+        in_features = self.flattened_dim
+        for h in hidden_layers:
+            self.encoder.append(Linear(in_features, h))
+            self.encoder.append(Tensor.relu)
+            in_features = h
+        self.encoder.append(Linear(in_features, latent))
 
+        self.decoder = []
+        in_features = latent
+        for h in reversed(hidden_layers):
+            self.decoder.append(Linear(in_features, h))
+            self.decoder.append(Tensor.relu)
+            in_features = h
+        self.decoder.append(Linear(in_features, self.flattened_dim))
+            
     def encode(self, x):
         x = x.reshape(shape=(-1, self.flattened_dim))
-        x = self.encoder1(x).relu()
-        x = self.encoder2(x)
+        x = x.sequential(self.encoder)
         return x
 
     def decode(self, x):
-        x = self.decoder1(x).relu()
-        x = self.decoder2(x)
-        #x = x.clip(0, 1)
+        x = x.sequential(self.decoder)
         x = x.reshape(shape=(-1, self.M, self.N))
         return x
 
@@ -44,12 +50,12 @@ class AE(BaseAE):
     def criterion(self, x: Tensor) -> Tensor:
         (y, ) = self(x)
         return mse(x,y)
-        #return mse(x,y, reduction='none').mean(axis=(1,2)).mean()
-        #return ((x-y)**2).mean(axis=(1,2)).mean()
 
-    @TinyJit
+    @staticmethod
+    def loss(out: Tensor, pred: Tensor) -> Tensor: return mse(out, pred)
+
     def predict(self, x: Tensor) -> Tensor:
-        Tensor.no_grad = True
         x = x.reshape(1, 625 * 2137) 
         (out,) = self(x)
-        return out.squeeze()
+        res = out.squeeze()
+        return res

@@ -1,58 +1,47 @@
-from tinygrad.tensor import Tensor
-from tinygrad.nn import Linear
-from tinygrad.nn.state import get_parameters, get_state_dict
-from tinygrad.nn.optim import LARS, Adam
-from tinygrad import dtypes, TinyJit, Device, GlobalCounters
-from tinygrad.helpers import getenv
+from tinydas.enums import LRScheduler
+from tinygrad import dtypes
+#from tinygrad.helpers import getenv
 from typing import List
-from tinydas.losses import mse
 from tinydas.utils import *
 from tinydas.dataset import Dataset
-from tinydas.dataloader import DataLoader, create_data_loaders
-from tinydas.lr_schedule import ReduceLROnPlateau
+from tinydas.dataloader import get_data
 from tinydas.anomalies import predict_file
-from tinydas.plots import plot_das_as_heatmap, plot_loss
-from tinydas.early_stopping import EarlyStopping
+from tinydas.plots import plot_das_as_heatmap
 from tinydas.trainer import Trainer
-from tinydas.selections import Opti, select_model, select_optimizer
-
-def get_data(devices: List[str], **config):
-    dataset = Dataset(path=config["data"]["dataset"], n=config["data"]["nfiles"])
-    train_loader, val_loader = create_data_loaders(
-        dataset, 
-        batch_size=config["data"]["batch_size"],
-        devices=devices, 
-        num_workers=config["data"]["num_workers"],
-        shuffle=config["data"]["shuffle"],
-    )
-    return train_loader, val_loader
+from tinydas.selections import Opti, select_lr_scheduler, select_model, select_optimizer
 
 def train_mode(args):
     config = get_config(args.model)
     seed_all(config["data"]["seed"])
 
-    dtypes.default_float = dtypes.half if config["data"]["half_prec"] else dtypes.float32
+    #dtypes.default_float = dtypes.half if config["data"]["half_prec"] else dtypes.float32
 
     devices = get_gpus(args.gpus) 
 
     tl, vl = get_data(devices, **config)
 
     model = select_model(args.model, **config)
-    # Load was here before
 
     if config["data"]["half_prec"]: model.half()
-    if args.load: load_model(model)
-    print("Data type", model.dtype)
+    
+    #for k,v in model.state_dict().items():
+    #    print(v[0,0].numpy())
+    #    break
+
+    if args.load: model.load()
+
+    #for k,v in model.state_dict().items():
+    #    print(v[0,0].numpy())
+    #    break
+
 
     if len(devices) > 1: model.send_copy(devices)
 
-    optim = select_optimizer(Opti.ADAM, model.parameters(), **config["opt"])
-    scheduler = ReduceLROnPlateau(optim, patience=config["opt"]["patience"], factor=config["opt"]["factor"])
+    optim = select_optimizer(Opti.SGD, model.parameters(), **config["opt"])
+    scheduler = select_lr_scheduler(LRScheduler.REDUCE, optim, **config)
 
     trainer = Trainer(model, tl, vl, optim, scheduler, **config)
     trainer.train()
-
-    #plot_loss(trainer.losses, trainer.model, save=True)
 
 
 def show_imgs(args, devices: List[str], filename: str = ""):

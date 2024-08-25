@@ -16,6 +16,13 @@ class Opti(Enum):
     ADAMW = "adamw"
     SGD = "sgd"
 
+class LRScheduler(Enum):
+    """LR Scheduler to use"""
+    REDUCE = "reduce"
+    CYCLE = "cycle"
+
+
+
 class Normalization(Enum):
     """Normalization method"""
     ZSCORE = 0
