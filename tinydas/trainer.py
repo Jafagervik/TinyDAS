@@ -51,10 +51,7 @@ class Trainer:
     def train_step(self, input_batch: Tensor):
         self.optim.zero_grad()
         
-        #(output,) = self.model(input_batch)
-        
         loss = self.model.criterion(input_batch).cast(dtypes.float32)
-        #(loss * self.loss_scaler).backward()
         loss.backward()
 
         #new_clip_and_grad(self.optim, self.loss_scaler)
@@ -63,6 +60,7 @@ class Trainer:
         
         return loss
 
+    @TinyJit
     def validate_step(self, input_batch: Tensor):
         Tensor.no_grad = True
         loss = self.model.criterion(input_batch).cast(dtypes.float32)

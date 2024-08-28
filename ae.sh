@@ -13,8 +13,8 @@
 
 module purge
 module load Python/3.11.5-GCCcore-13.2.0
-source /cluster/home/jorgenaf/master/bin/activate
+source sd/cluster/home/jorgenaf/master/bin/activate
 
 export PYTHONUNBUFFERED=1
-python main.py -t train -m ae -g 4 
+#####python main.py -t train -m ae -g 4 
 

@@ -4,7 +4,7 @@ data:
   batch_size: 32
   dataset: "data/"
   val_split: 0.2
-  seed: 1337 
+  seed: 1337
   nfiles: 25600
   half_prec: False
   num_workers: 4
@@ -15,7 +15,7 @@ opt:
   b1: 0.9
   b2: 0.99
   loss_scaler: 1.0
-  patience: 3
+  patience: 5
   lr_scheduler: 'reduce'
   factor: 0.5
   threshold: 0.0001
@@ -24,12 +24,11 @@ opt:
 mod:
   M: 625
   N: 2137
-  hidden: [1, 16, 32, 64]
-  latent: 128
+  hidden: [1, 16, 8, 8]
   p: 0.0 
 
 es:
-  patience: 7
+  patience: 10
   min_delta: 0.0001
 
 ad:

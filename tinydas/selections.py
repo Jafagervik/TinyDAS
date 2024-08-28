@@ -58,7 +58,9 @@ def select_model(model: str, **config):
             model.vae_init()
             return model
         case "cae":
-            return CAE(**config)
+            model = CAE(**config)
+            model.vae_init()
+            return model
         case "cvae":
             model = CVAE(**config)
             model.xavier_init()

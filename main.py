@@ -14,7 +14,8 @@ def train_mode(args):
     config = get_config(args.model)
     seed_all(config["data"]["seed"])
 
-    #dtypes.default_float = dtypes.half if config["data"]["half_prec"] else dtypes.float32
+    dtypes.default_float = dtypes.half if config["data"]["half_prec"] else dtypes.float32
+    print(dtypes.default_float)
 
     devices = get_gpus(args.gpus) 
 

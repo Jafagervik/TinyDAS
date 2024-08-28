@@ -114,20 +114,18 @@ class CVAE(BaseAE):
         # use mse not bce
         recon_loss, kl_div, total_loss = elbo(x, x_recon, mu, logvar, self.beta)
 
-        #recon_loss = mse(x, x_recon)
-        #kl_div = kl_divergence(mu, logvar)
-
-        total_loss = recon_loss + kl_div * self.beta #self.kld_weight
-        print(f"Recon Loss: {recon_loss.item()}, KL Div: {kl_div.item() * self.kld_weight}, Total Loss: {total_loss.item()}")
+        #print(f"Recon Loss: {recon_loss.item()}, KL Div: {kl_div.item() * self.kld_weight}, Total Loss: {total_loss.item()}")
         return total_loss
+
+    @staticmethod
+    def loss(x: Tensor, y: Tensor) -> Tensor: return mse(x, y)
+        
 
     @TinyJit
     def predict(self, x: Tensor) -> Tensor:
-        Tensor.no_grad = True
         x = x.reshape(1, 1, self.M, self.N)
-        (out,) = self(x)
+        out, _, _ = self(x)
         out = out.squeeze()
-        Tensor.no_grad = False 
         return out.realize()
 
   

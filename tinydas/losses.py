@@ -61,12 +61,14 @@ def kl_divergence(mu: Tensor, logvar: Tensor) -> Tensor:
 
 def elbo(x: Tensor, y: Tensor, mu: Tensor, logvar: Tensor, beta: float = 1.0, use_bce: bool = False):
     if use_bce:
-        recon_loss = BCE(y, x, reduction="sum") / (x.shape[0] * x.shape[1] * x.shape[2])
+        recon_loss = BCE(y, x, reduction="sum")
     else: 
         recon_loss = mse(x, y)
+        
     kld_loss = kl_divergence(mu, logvar)
     
-    return recon_loss, kld_loss, recon_loss + beta * kld_loss
+    total_loss = recon_loss + beta * kld_loss
+    return recon_loss, kld_loss, total_loss
 
     
     
@@ -82,7 +84,6 @@ def BCE(input: Tensor, target: Tensor, reduction: str = 'mean') -> Tensor:
     Returns:
     - Tensor: The computed loss
     """
-    # Ensure numerical stability
     eps = 1e-7
     input = input.clip(eps, 1 - eps)
     
@@ -93,7 +94,7 @@ def BCE(input: Tensor, target: Tensor, reduction: str = 'mean') -> Tensor:
     if reduction == 'mean':
         return bce.mean()
     elif reduction == 'sum':
-        return bce.sum()
+        return bce.sum(axis=1).mean()
     elif reduction == 'none':
         return bce
     else:

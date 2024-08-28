@@ -24,16 +24,14 @@ class VAE(BaseAE):
         self.input_shape = (self.M, self.N)
         self.flattened_dim = self.M * self.N
         self.latent = kwargs["mod"]["latent"]
-        self.beta = kwargs["opt"]["beta"]
-        #self.kld_weight = kwargs["mod"]["kld_weight"]
-
-        self.kld_weight = KLAnnealer(start=0, stop=1, n_steps=1000) 
+        self.beta = kwargs["mod"]["beta"]
+        self.kld_weight = kwargs["mod"]["kld_weight"]
 
         self.encoder = []
         in_features = self.flattened_dim
         for h in self.hidden:
             self.encoder.append(Linear(in_features, h))
-            self.encoder.append(Tensor.relu)
+            self.encoder.append(lambda x: x.leakyrelu(0.2))
             in_features = h
 
         self.encoder_mean = Linear(in_features, self.latent, bias=True)
@@ -43,9 +41,11 @@ class VAE(BaseAE):
         in_features = self.latent
         for h in reversed(self.hidden):
             self.decoder.append(Linear(in_features, h))
-            self.decoder.append(Tensor.relu)
+            self.decoder.append(lambda x: x.leakyrelu(0.2))
             in_features = h
+
         self.decoder.append(Linear(in_features, self.flattened_dim))
+        self.decoder.append(Tensor.sigmoid)
 
     def encode(self, x: Tensor):
         x = x.reshape(shape=(-1, self.flattened_dim))
@@ -68,18 +68,20 @@ class VAE(BaseAE):
         x_recon, mu, logvar = self(x)
         #x_recon, x, mu, logvar = x_recon.float()
 
-        recon_loss, kl_div, total_loss = elbo(x, x_recon, mu, logvar, self.beta)
+        recon_loss, kld_loss, total_loss = elbo(x, x_recon, mu, logvar, beta=self.beta, use_bce=False)
 
-        print(f"Recon Loss: {recon_loss.item():.8f}, KL Div: {kl_div.item() * self.beta:.3e}, Total Loss: {total_loss.item():.8f}")
+        #kld_weight = self.kld_weight * 20
+        
+        #total_loss = total_loss * kld_weight
+        
+        #print(f"Recon Loss: {recon_loss.item():.8f}, KL Div: {kld_loss.item():.8f}, Total Loss: {total_loss.item():.8f}")
         return total_loss
-
+    
+    @staticmethod
+    def loss(x: Tensor, y: Tensor) -> Tensor: return mse(x, y)
 
     def predict(self, x: Tensor) -> Tensor:
         x = x.reshape(1, 625, 2137)
         out, _, _ = self(x)
         out = out.squeeze()
         return out.realize()
-
-
-#recon_loss = mse(x, x_recon)
-#kl_div = -0.5 * (1 + logvar - mu**2 - logvar.exp()).sum()

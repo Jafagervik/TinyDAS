@@ -2,60 +2,15 @@ from tinygrad.nn import BatchNorm, Conv2d, ConvTranspose2d, Tensor
 
 
 class ConvBlock:
-    def __init__(
-        self,
-        in_channels: int,
-        out_channels: int,
-        kernel_size: int = 3,
-        stride: int = 2,
-        padding: int = 1,
-        act=lambda x: x.relu(),
-        bn: bool = True
-    ) -> None:
-        self.c = Conv2d(
-                in_channels,
-                out_channels=out_channels,
-                kernel_size=kernel_size,
-                stride=stride,
-                padding=padding,
-            )
-        self.b = BatchNorm(out_channels)
-        #self.b.weight.requires_grad = False
-        self.bn = bn
-        self.act = act
+    def __init__(self, in_channels, out_channels, kernel_size=3, padding=1, stride=1):
+        self.conv = Conv2d(in_channels, out_channels, kernel_size=kernel_size, padding=padding, stride=stride)
 
     def __call__(self, x: Tensor) -> Tensor:
-        x = self.c(x)
-        if self.bn:
-            x = self.b(x)
-        return self.act(x)
-
+        return self.conv(x).relu().max_pool2d(kernel_size=2,stride=2)
 
 class DeconvBlock:
-    def __init__(
-        self,
-        in_channels: int,
-        out_channels: int,
-        kernel_size: int = 3,
-        stride: int = 2,
-        padding: int = 1,
-        output_padding: int = 1,
-        act = lambda x: x.relu(),
-        bn: bool = True
-    ) -> None:
-        self.c = ConvTranspose2d(
-            in_channels,
-            out_channels=out_channels,
-            kernel_size=kernel_size,
-            stride=stride,
-            padding=padding,
-            output_padding=output_padding
-        )
-        self.b = BatchNorm(out_channels)
-        #self.b.weight.requires_grad = False
-        self.act = act
+    def __init__(self, in_channels, out_channels, kernel_size=3, padding=1, stride=2, output_padding=1):
+        self.deconv = ConvTranspose2d(in_channels, out_channels, kernel_size=kernel_size, padding=padding, stride=stride, output_padding=output_padding)
 
     def __call__(self, x: Tensor) -> Tensor:
-        x = self.c(x)
-        x = self.b(x)
-        return self.act(x)
+        return self.deconv(x).relu()
