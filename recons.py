@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 import os
 from main import show_imgs, find_recons
 from tinydas.utils import get_gpus, load_das_file_no_time, get_true_anomalies, get_config, load_model, minmax
@@ -20,11 +14,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 
-# ## Tinygrad
-
-# In[35]:
-
-
 class A:
     def __init__(self):
         self.model = "ae"
@@ -32,32 +21,20 @@ class A:
 args = A()
 
 
-# In[36]:
+
+get_ipython().system('')
 
 
 devices = get_gpus(1)
-
-
-# In[37]:
-
-
-#files = [f"./infer/{f}" for f in sorted(os.listdir("./infer"))]
 errors = []
 config = get_config(args.model)
-
-
-# In[38]:
 
 
 dataset = Dataset(
     path="infer/",
     normalize=Normalization.MINMAX,
-    dtype=dtypes.float16 
+    dtype=dtypes.float32
 )
-
-
-# In[39]:
-
 
 dl = DataLoader(
     dataset, 
@@ -66,24 +43,15 @@ dl = DataLoader(
 )
 
 
-# In[40]:
-
-
-model  = select_model(args.model, devices, **config)
-load_model(model)
-
-
-# In[41]:
+model  = select_model(args.model, **config)
+model.load()
 
 
 for data in dl:
     out = model.predict(data)
         
-    rec = mse(data, out).item()
+    rec = mse(data, out).float().item()
     errors.append(rec)
-
-
-# In[42]:
 
 
 errors = np.array(errors)
@@ -92,21 +60,11 @@ th = np.percentile(errors, 95)
 predicted_anomalies = errors > th
 
 
-# In[43]:
-
-
 true_anomalies = get_true_anomalies()
 
 
-# ### Conf Mat
-
-# In[23]:
-
 
 cm = confusion_matrix(true_anomalies, predicted_anomalies)
-
-
-# In[24]:
 
 
 plt.figure(figsize=(10,7))
@@ -117,14 +75,7 @@ plt.xlabel('Predicted Label')
 plt.show()
 
 
-# In[44]:
-
-
 print(classification_report(true_anomalies, predicted_anomalies))
-
-
-# In[45]:
-
 
 def compute_metrics(true_anomalies, reconstruction_errors):
     precisions, recalls, thresholds = precision_recall_curve(true_anomalies, reconstruction_errors)
@@ -133,22 +84,11 @@ def compute_metrics(true_anomalies, reconstruction_errors):
 
 precisions, recalls, f1_scores, thresholds = compute_metrics(true_anomalies, errors)
 
-# Find the threshold that gives the best F1 score
 best_threshold = thresholds[np.argmax(f1_scores)]
 print(f"Best threshold: {best_threshold}")
-
-# Use this threshold for your final predictions
 final_predictions = errors > best_threshold
 
-# Print the final classification report
 print(classification_report(true_anomalies, final_predictions))
-
-
-# 
-# ### Pr Curve
-
-# In[46]:
-
 
 plt.figure(figsize=(10,7))
 plt.plot(recalls, precisions, marker='.')
@@ -156,11 +96,6 @@ plt.title(f'{args.model} Precision-Recall Curve')
 plt.xlabel('Recall')
 plt.ylabel('Precision')
 plt.show()
-
-
-# ### ROC Curve
-
-# In[47]:
 
 
 from sklearn.metrics import roc_curve, auc

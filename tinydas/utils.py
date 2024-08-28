@@ -14,7 +14,6 @@ from tinygrad.helpers import colored
 
 
 def format_filename(filename: str) -> str:
-    #filename = filename or "./infer/20190415_032000.hdf5"
     return filename.split("/")[-1].split(".")[0]
     
 def get_size_in_gb(t: Tensor) -> float:
@@ -90,7 +89,7 @@ def parse_args():
 def get_gpus(amount: int = 1) -> List[str]:
     devices = [f"{Device.DEFAULT}:{i}" for i in range(amount)]
     for x in devices: Device[x]
-    print("Training on", len(devices), "devices")
+    print("Using", len(devices), "devices")
     return devices
 
 

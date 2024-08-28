@@ -15,15 +15,11 @@ class CVAE(BaseAE):
         self.M = 625
         self.N = 2137
         self.latent_dim = kwargs["mod"]["latent"]
-        self.hidden_dims = kwargs["mod"]["hidden"]  # Should be [16, 32, 64, 128]
+        self.hidden_dims = kwargs["mod"]["hidden"]  
         self.kld_weight = kwargs["mod"]["kld_weight"]
         self.input_shape = (self.M, self.N)
         self.beta = kwargs["mod"]["beta"]
 
-        print(f"Input shape: {self.input_shape}")
-        print(f"Hidden dims: {self.hidden_dims}")
-
-        # Encoder
         self.encoder = []
         in_channels = 1
         for h_dim in self.hidden_dims:
@@ -34,7 +30,6 @@ class CVAE(BaseAE):
             ])
             in_channels = h_dim
 
-        # Add an extra layer to reduce spatial dimensions further
         self.encoder.extend([
             Conv2d(self.hidden_dims[-1], self.hidden_dims[-1], kernel_size=3, stride=2, padding=1),
             BatchNorm2d(self.hidden_dims[-1]),
@@ -91,7 +86,7 @@ class CVAE(BaseAE):
         x = x.reshape(shape=(x.shape[0], -1))
 
         mean = self.fc_mu(x)
-        logvar = self.fc_logvar(x).clip(-10, 2)
+        logvar = self.fc_logvar(x).clip(-10, 10)
 
         return mean, logvar
 
@@ -119,7 +114,6 @@ class CVAE(BaseAE):
 
     @staticmethod
     def loss(x: Tensor, y: Tensor) -> Tensor: return mse(x, y)
-        
 
     @TinyJit
     def predict(self, x: Tensor) -> Tensor:

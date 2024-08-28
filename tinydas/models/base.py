@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import os
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 from tinydas.utils import model_name
 from tinygrad import Tensor, nn, TinyJit, dtypes
@@ -64,23 +64,43 @@ class BaseAE(ABC):
         for name, param in self.state_dict().items():
             if 'encoder' in name or 'decoder' in name:
                 if 'weight' in name:
-                    param.assign(Tensor.glorot_uniform(*param.shape))
+                    param.assign(Tensor.uniform(*param.shape, low=-0.08, high=0.08))
                 elif 'bias' in name:
                     param.assign(Tensor.zeros(*param.shape))
             
-            elif 'encoder_mean' in name:
+            elif 'fc_mu' in name: 
                 if 'weight' in name:
                     param.assign(Tensor.uniform(*param.shape, low=-0.01, high=0.01))
                 elif 'bias' in name:
                     param.assign(Tensor.zeros(*param.shape))
             
-            elif 'encoder_logvar' in name:
+            elif 'fc_logvar' in name: 
                 if 'weight' in name:
                     param.assign(Tensor.uniform(*param.shape, low=-0.001, high=0.001))
                 elif 'bias' in name:
                     # Initialize log variance biases to a small negative number
-                    # This starts the network with low variance
                     param.assign(Tensor.full(shape=param.shape, fill_value=-5))
+                    
+    def cvae_init(self):
+        for name, param in self.state_dict().items():
+            if 'encoder' in name or 'decoder' in name:
+                if 'weight' in name:
+                    param.assign(Tensor.uniform(*param.shape, low=-0.08, high=0.08, dtype=param.dtype))
+                elif 'bias' in name:
+                    param.assign(Tensor.zeros(*param.shape, dtype=param.dtype))
+            
+            elif 'fc_mu' in name:
+                if 'weight' in name:
+                    param.assign(Tensor.uniform(*param.shape, low=-0.01, high=0.01, dtype=param.dtype))
+                elif 'bias' in name:
+                    param.assign(Tensor.zeros(*param.shape, dtype=param.dtype))
+            
+            elif 'fc_logvar' in name:
+                if 'weight' in name:
+                    param.assign(Tensor.uniform(*param.shape, low=-0.001, high=0.001, dtype=param.dtype))
+                elif 'bias' in name:
+                    param.assign(Tensor.full(shape=param.shape, fill_value=-5.0, dtype=param.dtype))
+
     
     
     @property
@@ -106,11 +126,12 @@ class BaseAE(ABC):
             print(f"Model saved to {ae}/{final_or_best}.safetensors")
 
 
-    def load(self): 
+    def load(self, mname: Optional[str] = None): 
+        if mname is None: mname = "best"
         path = os.path.join(
             "./checkpoints",
-            f"{self.name}",
-            f"best.safetensors",
+            self.name,
+            f"{mname}.safetensors",
         )
         load_state_dict(self, safe_load(path))
     

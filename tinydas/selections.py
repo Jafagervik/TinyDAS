@@ -9,6 +9,7 @@ from tinydas.models.ae import AE
 from tinydas.models.cae import CAE
 from tinydas.models.vae import VAE
 from tinydas.models.cvae import CVAE
+from tinydas.models.cnnlstm import CNNLSTMAE
 
 
 def select_optimizer(optimizer: Opti, parameters: List[Tensor], **config) -> Optimizer:
@@ -59,11 +60,13 @@ def select_model(model: str, **config):
             return model
         case "cae":
             model = CAE(**config)
-            model.vae_init()
             return model
         case "cvae":
             model = CVAE(**config)
-            model.xavier_init()
+            model.cvae_init()
+            return model
+        case "cnnlstmae":
+            model = CNNLSTMAE(**config)
             return model
         case _:
             raise NotImplementedError

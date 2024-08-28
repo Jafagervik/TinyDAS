@@ -54,8 +54,6 @@ class Trainer:
         loss = self.model.criterion(input_batch).cast(dtypes.float32)
         loss.backward()
 
-        #new_clip_and_grad(self.optim, self.loss_scaler)
-
         self.optim.step()
         
         return loss

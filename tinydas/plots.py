@@ -13,7 +13,7 @@ def plot_loss(
     val_losses: List[float], 
     model: BaseAE, 
     show: bool = False, 
-    save: bool = True
+    save: bool = True,
 ) -> None:
     plt.figure(figsize=(10, 5))
     epochs = np.arange(start=1, stop=len(train_losses) + 1)
@@ -57,10 +57,10 @@ def plot_das_as_heatmap(
     time_per_sample = total_duration / total_samples
     
     # Generate time labels for the y-axis
-    time_labels = [start_timestamp + timedelta(seconds=i*time_per_sample) for i in range(total_samples)]
+    #time_labels = [start_timestamp + timedelta(seconds=i*time_per_sample) for i in range(total_samples)]
     
-    tick_indices = np.linspace(0, total_samples - 1, num_ticks).astype(int)
-    tick_labels = [time_labels[i].strftime('%H:%M:%S.%f')[:-3] for i in tick_indices]
+    #tick_indices = np.linspace(0, total_samples - 1, num_ticks).astype(int)
+    #tick_labels = [time_labels[i].strftime('%H:%M:%S.%f')[:-3] for i in tick_indices]
     
     # Plot the heatmap
     plt.figure(figsize=(10, 5))
@@ -72,18 +72,22 @@ def plot_das_as_heatmap(
         plt.imshow(das, aspect="auto", cmap="seismic", vmax=vmax)
     else:
         plt.imshow(das, aspect="auto", cmap="seismic")
-    plt.colorbar()
+    plt.axis('off')
+    #plt.colorbar()
     
     # Set the x-axis and y-axis labels
-    plt.xlabel("Channel")
-    plt.ylabel("Time")
-    plt.title(f"{ts}")
-    
+    #plt.xlabel("Channel")
+    #plt.ylabel("Time")
+    #plt.title(f"{ts}")
+
     # Set y-ticks with time labels
-    plt.yticks(tick_indices, tick_labels)
+    #plt.yticks(tick_indices, tick_labels)
     
+    if path is not None: 
+        plt.tight_layout()
+        plt.savefig(path, dpi=300, bbox_inches='tight')
     if show: plt.show()
-    if path is not None: plt.savefig(path)
+    plt.close()
 
 def visualize_latent_space(model, data, num_points=1000):
     # Ensure the model is in evaluation mode

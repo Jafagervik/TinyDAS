@@ -24,21 +24,12 @@ def train_mode(args):
     model = select_model(args.model, **config)
 
     if config["data"]["half_prec"]: model.half()
-    
-    #for k,v in model.state_dict().items():
-    #    print(v[0,0].numpy())
-    #    break
 
     if args.load: model.load()
 
-    #for k,v in model.state_dict().items():
-    #    print(v[0,0].numpy())
-    #    break
-
-
     if len(devices) > 1: model.send_copy(devices)
 
-    optim = select_optimizer(Opti.SGD, model.parameters(), **config["opt"])
+    optim = select_optimizer(Opti.ADAM, model.parameters(), **config["opt"])
     scheduler = select_lr_scheduler(LRScheduler.REDUCE, optim, **config)
 
     trainer = Trainer(model, tl, vl, optim, scheduler, **config)

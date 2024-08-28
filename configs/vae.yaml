@@ -1,37 +1,37 @@
-epochs: 200  # Increased number of epochs
+epochs: 20  # Increased number of epochs
 gpus: 4 
 data:
-  batch_size: 256  # Increased batch size
+  batch_size: 20 # Increased batch size
   dataset: "data/"
   val_split: 0.2
   seed: 1337 
-  nfiles: 25600
+  nfiles: 200
   half_prec: False
   num_workers: 4
   shuffle: True
 
 opt:
-  lr: 0.0001  # Reduced learning rate
+  lr: 0.0001
   b1: 0.9
-  b2: 0.999  # Slightly increased b2
+  b2: 0.999 
   lr_scheduler: 'reduce'
-  threshold: 0.0001
-  patience: 3  # Increased patience
+  threshold: 0.001
+  patience: 5 
   factor: 0.5
   loss_scale: 1.0
 
 mod:
   M: 625
   N: 2137
-  hidden: [512, 256]  # Added an extra hidden layer
-  latent: 200
-  kld_weight: 0.0001  # Reduced initial KL weight
-  beta: 0.001  # Reduced initial beta
-  p: 0.1  # Added some dropout
+  hidden: [1024, 512] 
+  latent: 256
+  kld_weight: 0.001
+  beta: 0.0001
+  p: 0.1  
 
 es:
-  patience: 10  # Increased early stopping patience
-  min_delta: 0.0001  # Reduced min delta for early stopping
+  patience: 10  
+  min_delta: 0.0001  
 
 ad:
   percentile: 95

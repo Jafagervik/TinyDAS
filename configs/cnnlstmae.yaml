@@ -1,35 +1,35 @@
-epochs: 100
-gpus: 4 
+epochs: 5
+gpus: 1
 data:
-  batch_size: 32
+  batch_size: 10
   dataset: "data/"
-  val_split: 0.002
-  seed: 42069
-  nfiles: 25600
+  val_split: 0.2
+  seed: 1337
+  nfiles: 100
   half_prec: False
   num_workers: 4
   shuffle: True
 
 opt:
-  lr: 0.002
+  lr: 0.001
   b1: 0.9
   b2: 0.99
   loss_scaler: 1.0
   patience: 5
   lr_scheduler: 'reduce'
   factor: 0.5
-  threshold: 0.00005
+  threshold: 0.0001
   loss_scale: 1.0
 
 mod:
   M: 625
   N: 2137
-  hidden: [1, 16, 32, 64]
+  hidden: [1, 16, 8, 8]
   p: 0.0 
 
 es:
   patience: 10
-  min_delta: 0.00005
+  min_delta: 0.0001
 
 ad:
   percentile: 95

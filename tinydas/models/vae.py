@@ -25,6 +25,7 @@ class VAE(BaseAE):
         self.flattened_dim = self.M * self.N
         self.latent = kwargs["mod"]["latent"]
         self.beta = kwargs["mod"]["beta"]
+        print(self.beta)
         self.kld_weight = kwargs["mod"]["kld_weight"]
 
         self.encoder = []
@@ -51,7 +52,7 @@ class VAE(BaseAE):
         x = x.reshape(shape=(-1, self.flattened_dim))
         x = x.sequential(self.encoder)
         mean = self.encoder_mean(x)
-        logvar = self.encoder_logvar(x) #.clip(-10, 2)  # Clip logvar to a reasonable range
+        logvar = self.encoder_logvar(x).clip(-10, 10)  # Clip logvar to a reasonable range
         return mean, logvar
 
     def decode(self, z: Tensor):
@@ -66,15 +67,13 @@ class VAE(BaseAE):
 
     def criterion(self, x: Tensor) -> Tensor:
         x_recon, mu, logvar = self(x)
-        #x_recon, x, mu, logvar = x_recon.float()
 
         recon_loss, kld_loss, total_loss = elbo(x, x_recon, mu, logvar, beta=self.beta, use_bce=False)
 
         #kld_weight = self.kld_weight * 20
-        
         #total_loss = total_loss * kld_weight
         
-        #print(f"Recon Loss: {recon_loss.item():.8f}, KL Div: {kld_loss.item():.8f}, Total Loss: {total_loss.item():.8f}")
+        print(f"Recon Loss: {recon_loss.item():.8f}, KL Div * BETA: {kld_loss.item() * self.beta:.8f}, Total Loss: {total_loss.item():.8f}")
         return total_loss
     
     @staticmethod

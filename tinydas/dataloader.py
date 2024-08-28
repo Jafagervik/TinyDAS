@@ -38,8 +38,8 @@ class DataLoader:
         end_index = min(self.current_index + self.batch_size, len(self.indices))
 
         batch_indices = self.indices[self.current_index:self.current_index + self.batch_size]
-        batch_data = self._load_batch_data(batch_indices)
-        #batch_data = [self.dataset[i] for i in batch_indices]
+        #batch_data = self._load_batch_data(batch_indices)
+        batch_data = [self.dataset[i] for i in batch_indices]
         
         self.current_index = end_index
         batch_tensor = Tensor.stack(*batch_data, dim=0)

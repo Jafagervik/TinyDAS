@@ -3,7 +3,6 @@ from typing import Callable, List, Optional, Tuple
 from tinygrad import GlobalCounters, Tensor, TinyJit, nn
 from tqdm import trange
 
-
 class LSTMCell:
     def __init__(self, input_size: int, hidden_size: int, dropout=0.0):
         self.dropout = dropout
@@ -60,15 +59,10 @@ class LSTM:
 
         for t in range(x.shape[0]):
             hc = _do_step(x[t] + 1 - 1, hc)  # TODO: why do we need to do this?
-            output = (
-                hc[-1:, : x.shape[1]]
-                if output is None
-                else output.cat(hc[-1:, : x.shape[1]], dim=0)
-            )
-            # if output is None:
-            #     output = hc[-1:, : x.shape[1]]
-            # else:
-            #     output = output.cat(hc[-1:, : x.shape[1]], dim=0).realize()
+            if output is None:
+                output = hc[-1:, : x.shape[1]]
+            else:
+                output = output.cat(hc[-1:, : x.shape[1]], dim=0).realize()
 
         return output, hc
 
@@ -87,32 +81,3 @@ class Model:
         out, hc = self.l(x)
         return out.relu()
 
-
-if __name__ == "__main__":
-    Tensor.manual_seed(42069)
-    model = Model()
-    lr = 2.0
-
-    params = nn.state.get_parameters(model)
-    opt = nn.optim.Adam(params, lr)
-
-    data = Tensor.ones(10, 5, 5)
-
-    # @TinyJit
-    def train_step() -> Tensor:
-        with Tensor.train():
-            opt.zero_grad()
-            loss = model(data).sub(data).square().mean().backward()
-            opt.step()
-            return loss
-
-    for i in (t := trange(5)):
-        GlobalCounters.reset()
-        loss = train_step()
-        t.set_description(f"Epoch {i+1} <> Loss: {loss.item():.4f}")
-
-    newd = Tensor.ones(5, 5)
-
-    out = model(newd).reshape(5, 5)
-
-    print(out.numpy())
