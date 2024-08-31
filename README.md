@@ -1,4 +1,8 @@
-# TinyDAS - Tinygrad meets PubDAS
+# TinyDAS - Tinygrad meets the PubDAS dataset
+
+## How to get data
+
+[See this pdf](https://dev.iris.edu/hq/files/initiatives/das_rcn/DAS-RCN-2022_12_02-Spica.pdf)
 
 ## Modules
 
@@ -10,53 +14,24 @@ Loads the HDF5 data in from the `data` folder and exports it to a pytorch esc da
 
 ### Dataloader
 
-Generates an iterator for the dataset of a certain batchsize
+Uses parallel workers to load single datafiles in parallel
 
 ### Models
 
-```python
-class MyAwesomeModel(BaseAE):
-    def __init__(self, kwargs**):
-        self.M = kwargs["data"]["M"]
-        self.N = kwargs["data"]["N"]
+See examples in the tinydas/models folder
 
-        self.net = [Linear(M*N, 1), Tensor.tanh]
-
-    def __call__(self, x: Tensor) -> Tuple[Tensor, ...]:
-        """In certain models, a forward pass returns multiple values"""
-        y = x.sequential(self.net)
-        return y,
-
-    @property
-    def convolutional(self) -> bool:
-        """If set to true, data needs to be reshaped in a different manner"""
-        return False
-
-    @abstractmethod
-    def criterion(self, x: Tensor) -> Dict[str, Tensor]:
-        """Stored as a dict in case you want to track several losses"""
-        (y, ) = self(x)
-        loss = mse(y, x)
-        return {"loss": loss}
-
-```
-
-Most models are based on this abstractclass
+All autoencoders are based on the BaseAE class
 
 ### Utils
 
 ### Finding anomalies
 
+Will upload jupyter notebooks soon
+
 ### Hyperparameters
 
 They are stored in yaml files under the `configs` directory.
 Name of the config is the name of the model in lowercase
-
-```yaml
-epochs: 10
-lr: 0.001
-batch_size: 16
-```
 
 ## How to run
 
@@ -67,3 +42,9 @@ or alternatively
 `python main.py -t detect -m ae`
 
 # NOTES:
+
+* Utils for loss scaling and clipping exist, but is kinda wonky. However, f16 inference is easy:
+
+1. Select model
+2. Load model
+3. model.half()
