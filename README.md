@@ -43,7 +43,7 @@ or alternatively
 
 # NOTES:
 
-* Utils for loss scaling and clipping exist, but is kinda wonky. However, f16 inference is easy:
+* Utils for loss scaling and clipping exist in this repo, but is kinda wonky for certain models. However, f16 inference is easy:
 
 1. Select model
 2. Load model
