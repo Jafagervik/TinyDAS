@@ -8,7 +8,6 @@ class AdaptiveKLWeight:
         self.weight += self.adaptive_rate * (current_kl - self.target_kl)
         return max(0, self.weight)  
 
-# 2. Implement a simple KL annealing schedule
 def kl_annealing(epoch, start_weight=0.0001, max_weight=0.01, num_epochs=100):
     return min(max_weight, start_weight + (max_weight - start_weight) * (epoch / num_epochs))
 
