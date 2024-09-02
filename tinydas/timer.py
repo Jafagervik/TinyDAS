@@ -13,6 +13,5 @@ class Timer:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.end_time = time()
         self.interval = self.end_time - self.start_time
-        # Return False to propagate any exceptions
         return False
     
