@@ -1,11 +1,11 @@
-epochs: 20  # Increased number of epochs
+epochs: 200  # Increased number of epochs
 gpus: 4 
 data:
-  batch_size: 20 # Increased batch size
+  batch_size: 256 # Increased batch size
   dataset: "data/"
   val_split: 0.2
   seed: 1337 
-  nfiles: 200
+  nfiles: 25600
   half_prec: False
   num_workers: 4
   shuffle: True
@@ -13,7 +13,7 @@ data:
 opt:
   lr: 0.0001
   b1: 0.9
-  b2: 0.999 
+  b2: 0.99
   lr_scheduler: 'reduce'
   threshold: 0.001
   patience: 5 
