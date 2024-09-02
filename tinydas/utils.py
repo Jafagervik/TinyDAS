@@ -146,11 +146,9 @@ def clip_and_grad(optimizer, loss_scaler):
             param.grad = (param.grad / Tensor.where(global_norm > 1.0, global_norm, 1.0)).cast(param.grad.dtype)
 
 def new_clip_and_grad(optimizer, loss_scaler, max_norm = 1.00):
-    # Compute global norm in float32
     global_norm = Tensor([0.0], dtype=dtypes.float32, device=optimizer.params[0].device) # realize()
     for param in optimizer.params:
         if param.grad is not None:
-            # Unscale gradients
             param.grad = param.grad / loss_scaler
             # Accumulate squared sum in float32
             global_norm += param.grad.float().square().sum()
@@ -161,7 +159,6 @@ def new_clip_and_grad(optimizer, loss_scaler, max_norm = 1.00):
     clip_factor = Tensor.where(global_norm > max_norm, max_norm / global_norm, 1.0)
     for param in optimizer.params:
         if param.grad is not None:
-            # Apply clipping and cast back to original dtype
             param.grad = (param.grad * clip_factor).cast(param.dtype)
 
 def load_das_file(filename: str):
