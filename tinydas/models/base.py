@@ -55,7 +55,6 @@ class BaseAE(ABC):
     def he_init(self):
         for name, param in self.state_dict().items():
             if 'weight' in name:
-                # He initialization for weights using kaiming_uniform
                 param.assign(Tensor.kaiming_uniform(*param.shape, a=0))
             elif 'bias' in name:
                 param.assign(Tensor.zeros(*param.shape))
@@ -78,7 +77,6 @@ class BaseAE(ABC):
                 if 'weight' in name:
                     param.assign(Tensor.uniform(*param.shape, low=-0.001, high=0.001))
                 elif 'bias' in name:
-                    # Initialize log variance biases to a small negative number
                     param.assign(Tensor.full(shape=param.shape, fill_value=-5))
                     
     def cvae_init(self):
