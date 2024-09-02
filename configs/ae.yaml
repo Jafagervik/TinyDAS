@@ -9,7 +9,6 @@ data:
   half_prec: False
   num_workers: 4
   shuffle: True
-  #normalize: "minmax"
 
 opt:
   lr: 0.001
@@ -29,8 +28,8 @@ mod:
   p: 0.0 # dropout
 
 es:
-  patience: 5
-  min_delta: 0.01
+  patience: 10
+  min_delta: 0.0001
 
 ad:
   percentile: 95
